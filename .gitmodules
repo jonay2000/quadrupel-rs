@@ -1,0 +1,12 @@
+[submodule "qemu/target-nordic-nrf51822"]
+	path = qemu/target-nordic-nrf51822
+	url = git@github.com:ARMmbed/target-nordic-nrf51822.git
+[submodule "qemu/nrf51822"]
+	path = qemu/nrf51822
+	url = git@github.com:krk/nrf51822.git
+[submodule "nrf51822"]
+	path = nrf51822
+	url = git@github.com:krk/nrf51822.git
+[submodule "qemu/qemu"]
+	path = qemu/qemu
+	url = https://gitlab.com/qemu-project/qemu.git
