@@ -2,11 +2,10 @@
 set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+BINARY=$1
 
-echo "test binary: $1"
-ln -sf $1 ./target/binary
+echo "Running with binary: $BINARY"
+rust-objcopy -O binary $BINARY $BINARY.bin
+rust-objcopy -O ihex $BINARY $BINARY.hex
 
-bash "$SCRIPT_DIR/build/generate_bin.sh" "$1" "$SCRIPT_DIR/target/output"
-
-
-bash "$SCRIPT_DIR/qemu/qemu.sh" "$SCRIPT_DIR/target/output.bin"
+qemu-system-arm -device loader,file="$BINARY.hex" -M microbit -semihosting-config enable=on,target=native -kernel "$BINARY.bin" -nographic

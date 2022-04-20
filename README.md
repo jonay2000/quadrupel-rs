@@ -5,8 +5,9 @@ Rust code to control the quadrupel quadcopter
 for the TU Delft course "embedded systems lab"
 
 ## Installation
-* Install `qemu-system-arm` to run and test the software in a virtual machine
-* use the following commands to install other dependencies
+* Install the following packages on Arch Linux, on other distros/OSes no clue:
+  arm-none-eabi-gdb qemu-arch-extra qemu-system-arm
+* use the following commands to install other dependencies (make sure .cargo/bin is in PATH)
 ```
 rustup target add thumbv6m-none-eabi
 
@@ -19,6 +20,8 @@ rustup update nightly
 ## Usage
 
 Using `cargo run` and `cargo test` you can run and
-test the software from within an emulator. However, to run
-it on an actual machine, run [`build_for_hardware.sh`](./build/build_for_hardware.sh)
-to generate a file called `output.bin` which you can upload to your hardware.
+test the software from within an emulator. 
+
+## Credit:
+- https://github.com/rust-embedded/cortex-m-quickstart
+- https://gitlab.tudelft.nl/embedded_systems_laboratory/fcb_software
