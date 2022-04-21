@@ -17,6 +17,8 @@ extern crate nrf51822;
 use core::alloc::Layout;
 use alloc_cortex_m::CortexMHeap;
 use cortex_m::asm;
+use cortex_m::delay::Delay;
+use cortex_m::prelude::*;
 
 #[cfg(not(test))]
 use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch panics
@@ -25,6 +27,7 @@ use panic_semihosting as _; // logs messages to the host stderr; requires a debu
 
 use cortex_m_rt::entry;
 use crate::hardware::gpio::QuadrupelGPIO;
+use crate::hardware::Hardware;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -40,13 +43,13 @@ fn main() -> ! {
     let peripherals = nrf51822::Peripherals::take().unwrap();
 
     //Create hardware
-    let mut gpio = QuadrupelGPIO::new(peripherals.GPIO);
+    let mut hardware = Hardware::new(peripherals);
 
     loop {
-        gpio.led_red().toggle();
-        gpio.led_yellow().toggle();
-        gpio.led_green().toggle();
-        gpio.led_blue().toggle();
+        hardware.led_red.toggle();
+        hardware.led_yellow.toggle();
+        hardware.led_green.toggle();
+        hardware.led_blue.toggle();
         asm::delay(10000000);
     }
 }
