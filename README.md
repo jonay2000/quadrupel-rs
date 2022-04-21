@@ -6,15 +6,17 @@ for the TU Delft course "embedded systems lab"
 
 ## Installation
 * Install the following packages on Arch Linux, on other distros/OSes no clue:
-  arm-none-eabi-gdb qemu-arch-extra
+  arm-none-eabi-gdb qemu-arch-extra python2
 * use the following commands to install other dependencies (make sure .cargo/bin is in PATH)
 ```
 rustup target add thumbv6m-none-eabi
-
 cargo install cargo-binutils
 rustup component add llvm-tools-preview
-
 rustup update nightly
+
+sudo usermod -a -G uucp jonathan (add yourself to the "uucp" group, restart to apply)
+sudo python2 -m ensurepip
+sudo pip2 install pyserial
 ```
 
 ## Usage

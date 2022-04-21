@@ -8,9 +8,19 @@ echo "Running with binary: $BINARY"
 rust-objcopy -O binary $BINARY $BINARY.bin
 rust-objcopy -O ihex $BINARY $BINARY.hex
 
-qemu-system-arm \
-  -device loader,file="$BINARY.hex"\
-   -M microbit \
-   -semihosting-config enable=on,target=native \
-   -kernel "$BINARY.bin" \
-   -nographic
+if [ "$HARDWARE" = 0 ]
+then
+  echo "Running software..."
+  qemu-system-arm \
+    -device loader,file="$BINARY.hex"\
+     -M microbit \
+     -semihosting-config enable=on,target=native \
+     -kernel "$BINARY.bin" \
+     -nographic
+fi
+
+if [ $HARDWARE = 1 ]
+then
+  echo "Running hardware..."
+  python2 "$SCRIPT_DIR/dfu_serial/serial_dfu.py" "$BINARY.bin"
+fi
