@@ -9,21 +9,23 @@ impl QuadrupelLed {
     pub fn new(pin: QuadrupelGPIOPin) -> Self {
         let mut obj = QuadrupelLed { pin };
         obj.pin.set_mode_write();
-        obj.pin.clear();
+        obj.pin.set();
         obj
     }
-}
 
-impl Deref for QuadrupelLed {
-    type Target = QuadrupelGPIOPin;
-
-    fn deref(&self) -> &Self::Target {
-        &self.pin
+    pub fn get(&self) -> bool {
+        self.pin.get()
     }
-}
 
-impl DerefMut for QuadrupelLed {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.pin
+    pub fn enable(&mut self) {
+        self.pin.clear();
+    }
+
+    pub fn disable(&mut self) {
+        self.pin.set();
+    }
+
+    pub fn toggle(&mut self) {
+        self.pin.toggle();
     }
 }

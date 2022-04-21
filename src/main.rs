@@ -40,17 +40,19 @@ fn main() -> ! {
     #[cfg(test)]
     test_main();
 
-    let peripherals = nrf51822::Peripherals::take().unwrap();
+    let periphs_cm = cortex_m::Peripherals::take().unwrap();
+    let periphs_nrf = nrf51822::Peripherals::take().unwrap();
 
     //Create hardware
-    let mut hardware = Hardware::new(peripherals);
+    let mut hardware = Hardware::new(periphs_cm, periphs_nrf);
 
     loop {
-        hardware.led_red.toggle();
-        hardware.led_yellow.toggle();
-        hardware.led_green.toggle();
-        hardware.led_blue.toggle();
-        asm::delay(10000000);
+        // hardware.led_red.enable();
+        // hardware.led_yellow.toggle();
+        // hardware.led_green.toggle();
+        // hardware.led_blue.toggle();
+        // asm::delay(10000000);
+        asm::nop();
     }
 }
 
