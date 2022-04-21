@@ -4,9 +4,11 @@
 #![cfg_attr(test, feature(custom_test_frameworks))]
 #![cfg_attr(test, test_runner(crate::test::test_runner))]
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
+#![feature(concat_idents)]
 
 #[cfg(test)]
 mod test;
+mod hardware;
 
 extern crate alloc;
 extern crate cortex_m;
@@ -22,6 +24,7 @@ use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch
 use panic_semihosting as _; // logs messages to the host stderr; requires a debugger
 
 use cortex_m_rt::entry;
+use crate::hardware::gpio::QuadrupelGPIO;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -36,23 +39,14 @@ fn main() -> ! {
 
     let peripherals = nrf51822::Peripherals::take().unwrap();
 
-    peripherals.GPIO.dirset.write(|w| w.pin22().set_bit());
-    peripherals.GPIO.dirset.write(|w| w.pin24().set_bit());
-    peripherals.GPIO.dirset.write(|w| w.pin28().set_bit());
-    peripherals.GPIO.dirset.write(|w| w.pin30().set_bit());
-
-
+    //Create hardware
+    let mut gpio = QuadrupelGPIO::new(peripherals.GPIO);
 
     loop {
-        peripherals.GPIO.outclr.write(|w| w.pin22().set_bit());
-        peripherals.GPIO.outclr.write(|w| w.pin24().set_bit());
-        peripherals.GPIO.outclr.write(|w| w.pin28().set_bit());
-        peripherals.GPIO.outclr.write(|w| w.pin30().set_bit());
-        asm::delay(10000000);
-        peripherals.GPIO.outset.write(|w| w.pin22().set_bit());
-        peripherals.GPIO.outset.write(|w| w.pin24().set_bit());
-        peripherals.GPIO.outset.write(|w| w.pin28().set_bit());
-        peripherals.GPIO.outset.write(|w| w.pin30().set_bit());
+        gpio.led_red().toggle();
+        gpio.led_yellow().toggle();
+        gpio.led_green().toggle();
+        gpio.led_blue().toggle();
         asm::delay(10000000);
     }
 }
