@@ -9,12 +9,13 @@
 mod test;
 
 extern crate alloc;
+extern crate cortex_m;
+extern crate nrf51822;
 
 use alloc::*;
 use core::alloc::Layout;
 use alloc_cortex_m::CortexMHeap;
 use cortex_m::asm;
-// pick a panicking behavior
 
 #[cfg(not(test))]
 use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch panics
@@ -31,25 +32,24 @@ const HEAP_SIZE: usize = 1024; // in bytes
 
 #[entry]
 fn main() -> ! {
-    unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
+    // unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
 
-    #[cfg(test)]
-    test_main();
+    // #[cfg(test)]
+    // test_main();
 
-    // hprintln!("Hello, world!");
-    asm::nop();
+    let peripherals = nrf51822::Peripherals::take().unwrap();
 
-    let mut peripherals = nrf51822::Peripherals::take().unwrap();
+    peripherals.GPIO.dirset.write(|w| w.pin22().set_bit());
+    peripherals.GPIO.dirset.write(|w| w.pin24().set_bit());
+    peripherals.GPIO.dirset.write(|w| w.pin28().set_bit());
+    peripherals.GPIO.dirset.write(|w| w.pin30().set_bit());
 
-    peripherals.GPIO.dirset.write(|w| w.pin30().set());
+    peripherals.GPIO.outset.write(|w| w.pin22().set_bit());
+    peripherals.GPIO.outset.write(|w| w.pin24().set_bit());
+    peripherals.GPIO.outset.write(|w| w.pin28().set_bit());
+    peripherals.GPIO.outset.write(|w| w.pin30().set_bit());
 
-    loop {
-        asm::wfi();
-        peripherals.GPIO.outset.write(|w| w.pin30().set_bit());
-        asm::delay(10000);
-        peripherals.GPIO.outset.write(|w| w.pin30().clear_bit());
-        asm::delay(10000);
-    }
+    loop {}
 }
 
 #[alloc_error_handler]

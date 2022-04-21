@@ -105,6 +105,7 @@ name = "nrf51822"
 version = "0.1.0"
 dependencies = [
  "cortex-m",
+ "cortex-m-rt",
  "vcell",
 ]
 
