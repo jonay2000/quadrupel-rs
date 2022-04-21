@@ -15,6 +15,9 @@ panic-halt = "0.2.0"
 #nrf51822 = {path = "./sdk/nrf51822", features = ["rt"]} #TODO not working!
 alloc-cortex-m = "0.4.2"
 
+[dev-dependencies]
+panic-semihosting = { version = "0.6.0", features = ["exit"] }
+
 [profile.release]
 codegen-units = 1 # better optimizations
 debug = true # symbols are nice and they don't increase the size on Flash
