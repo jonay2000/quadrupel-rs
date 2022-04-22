@@ -14,14 +14,16 @@ panic-halt = "0.2.0"
 nrf51822 = {path = "./sdk/nrf51822", features = ["rt"]}
 alloc-cortex-m = "0.4.2"
 fixed = "1.14.0"
+ringbuffer = "0.8.4"
 
 [dev-dependencies]
 panic-semihosting = { version = "0.6.0", features = ["exit"] }
 
 [profile.release]
-codegen-units = 1 # better optimizations
-debug = true # symbols are nice and they don't increase the size on Flash
-lto = true # better optimizations
+codegen-units = 1
+debug = true
+lto = true
+opt-level = 2
 incremental = false
 
 [profile.dev]

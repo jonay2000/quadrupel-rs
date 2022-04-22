@@ -1,8 +1,8 @@
 use crate::hardware::gpio::QuadrupelGPIOPin;
-use crate::utils::array_queue::ArrayQueue;
 use cortex_m::peripheral::NVIC;
 use nrf51822::interrupt;
 use nrf51822::{Interrupt, Peripherals};
+use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
 
 /// Can be used for interfacing with the UART.
 /// It uses an interrupt to send bytes, when they're ready to send.
@@ -13,8 +13,8 @@ pub struct QuadrupelUART {
 /// These 3 fields are used as state for the UART.
 /// There is only one UART, and the UART interrupt routine needs access to this state, so they are static mut.
 static mut TXD_AVAILABLE: bool = true;
-static mut RX_QUEUE: ArrayQueue<256> = ArrayQueue::new();
-static mut TX_QUEUE: ArrayQueue<256> = ArrayQueue::new();
+static mut RX_QUEUE: ConstGenericRingBuffer<u8, 256> = ConstGenericRingBuffer::new();
+static mut TX_QUEUE: ConstGenericRingBuffer<u8, 256> = ConstGenericRingBuffer::new();
 
 impl QuadrupelUART {
     pub fn new(
@@ -70,9 +70,7 @@ impl QuadrupelUART {
                 TXD_AVAILABLE = false;
                 self.uart.txd.write(|w| w.txd().bits(byte));
             } else {
-                if !TX_QUEUE.enqueue(byte) {
-                    panic!("UART queue is full.")
-                }
+                TX_QUEUE.push(byte);
             }
         });
     }
@@ -100,7 +98,7 @@ unsafe fn UART0() {
     //Ready to read a bit
     if uart.events_rxdrdy.read().bits() != 0 {
         uart.events_rxdrdy.reset();
-        RX_QUEUE.enqueue(uart.rxd.read().rxd().bits());
+        RX_QUEUE.push(uart.rxd.read().rxd().bits());
     }
 
     //Ready to write a bit
