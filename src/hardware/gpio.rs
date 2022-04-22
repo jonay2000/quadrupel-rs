@@ -27,6 +27,7 @@ impl QuadrupelGPIO {
 }
 
 /// This represent access to a single GPIO pin.
+/// It is important that all writes are atomic using the outset/outclr registers, to avoid issues like read-interrupt-write.
 pub struct QuadrupelGPIOPin {
     gpio: nrf51822::GPIO,
     pin: u8,
@@ -37,35 +38,33 @@ impl QuadrupelGPIOPin {
         (self.gpio.out.read().bits() & (1 << self.pin)) != 0
     }
     pub fn toggle(&mut self) {
-        self.gpio.out.modify(|r, w| {
-            unsafe { w.bits(r.bits() ^ (1 << self.pin)) }
-        });
+        if self.get() { self.clear() }
+        else { self.set() }
     }
     pub fn bit(&mut self, b: bool) {
-        self.gpio.out.modify(|r, w| {
-            unsafe { w.bits((r.bits() & !(1 << self.pin)) | ((b as u32 & 1) << self.pin)) }
-        });
+        if b { self.set() }
+        else { self.clear() }
     }
     pub fn set(&mut self) {
-        self.gpio.out.modify(|r, w| {
-            unsafe { w.bits(r.bits() | (1 << self.pin)) }
+        self.gpio.outset.write(|w| {
+            unsafe { w.bits(1 << self.pin) }
         });
     }
     pub fn clear(&mut self) {
-        self.gpio.out.modify(|r, w| {
-            unsafe { w.bits(r.bits() & !(1 << self.pin)) }
+        self.gpio.outclr.write(|w| {
+            unsafe { w.bits(1 << self.pin) }
         });
     }
 
     pub fn set_mode_read(&mut self) {
-        self.gpio.dir.modify(|r, w| {
-            unsafe { w.bits(r.bits() & !(1 << self.pin)) }
+        self.gpio.dirclr.write(|w| {
+            unsafe { w.bits(1 << self.pin) }
         });
     }
 
     pub fn set_mode_write(&mut self) {
-        self.gpio.dir.modify(|r, w| {
-            unsafe { w.bits(r.bits() | (1 << self.pin)) }
+        self.gpio.dirset.write(|w| {
+            unsafe { w.bits(1 << self.pin) }
         });
     }
 }

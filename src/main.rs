@@ -47,12 +47,16 @@ fn main() -> ! {
     let mut hardware = Hardware::new(periphs_cm, periphs_nrf);
 
     loop {
-        // hardware.led_red.enable();
-        // hardware.led_yellow.toggle();
-        // hardware.led_green.toggle();
-        // hardware.led_blue.toggle();
-        // asm::delay(10000000);
-        asm::nop();
+        hardware.led_red.enable();
+        hardware.led_yellow.enable();
+        hardware.led_green.enable();
+        hardware.led_blue.enable();
+        asm::delay(10000000);
+        hardware.led_red.disable();
+        hardware.led_yellow.disable();
+        hardware.led_green.disable();
+        hardware.led_blue.disable();
+        asm::delay(10000000);
     }
 }
 
