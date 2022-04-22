@@ -55,8 +55,9 @@ fn main() -> ! {
         hardware.led_yellow.enable();
         hardware.led_green.enable();
         hardware.led_blue.enable();
+        hardware.adc.request_sample();
 
-        hardware.uart.put_bytes("Testet".as_bytes());
+        log::info!("ADC: {}", hardware.timers.get_time_us());
 
         asm::delay(10000000);
         hardware.led_red.disable();

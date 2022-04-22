@@ -16,8 +16,8 @@ then
      -M microbit \
      -semihosting-config enable=on,target=native \
      -kernel "$BINARY.bin" \
-     -S -s \
      -nographic
+#     -S -s \
 fi
 
 if [ ! -z "$HARDWARE" ]

@@ -1,4 +1,4 @@
-use log::{LevelFilter, Log, Metadata, Record, set_logger_racy};
+use log::{LevelFilter, Log, Metadata, Record, set_logger_racy, set_max_level};
 use crate::QuadrupelUART;
 use core::fmt::Write;
 
@@ -17,6 +17,7 @@ impl UartLogger {
     }
 
     pub fn initialize() {
+        set_max_level(LevelFilter::Trace);
         unsafe {
             set_logger_racy(&LOGGER).expect("failed to initialize logger");
         }
@@ -32,7 +33,7 @@ impl Log for UartLogger {
         if self.enabled(record.metadata()) {
             let mut uart = QuadrupelUART::get().writer();
 
-            let _ = write!(&mut uart, "{}: {}", record.level().as_str(), record.args());
+            let _ = writeln!(&mut uart, "{}: {}", record.level().as_str(), record.args());
         }
     }
 
