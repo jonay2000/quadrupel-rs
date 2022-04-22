@@ -28,8 +28,8 @@ impl<T> CSCell<T> where T: Copy {
     /// Get the contents without a critical section. This
     /// may be useful in interrupts when other interrupts can
     /// never happen.
-    pub fn get_unchecked(&self) -> T {
-        self.update(|i| *i)
+    pub unsafe fn get_unchecked(&self) -> T {
+        self.update_unchecked(|i| *i)
     }
 
     pub fn get(&self) -> T {
