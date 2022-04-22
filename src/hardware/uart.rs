@@ -1,11 +1,11 @@
 use core::fmt::Write;
-use crate::hardware::gpio::QUADRUPEL_GPIO;
 use cortex_m::peripheral::NVIC;
 use nrf51822::interrupt;
 use nrf51822::Interrupt;
 use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
 use crate::library::cs_cell::CSCell;
 use crate::library::once_cell::OnceCell;
+use crate::QuadrupelGPIO;
 
 pub struct InnerUart {
     rx_queue: ConstGenericRingBuffer<u8, 256>,
@@ -44,8 +44,8 @@ impl QuadrupelUART {
         uart: nrf51822::UART0,
         nvic: &mut NVIC,
     ) -> &'static Self {
-        let tx_pin = QUADRUPEL_GPIO.get().pin(14);
-        let rx_pin = QUADRUPEL_GPIO.get().pin(16);
+        let tx_pin = QuadrupelGPIO::get().pin(14);
+        let rx_pin = QuadrupelGPIO::get().pin(16);
         tx_pin.set_mode_write();
         rx_pin.set_mode_read();
 

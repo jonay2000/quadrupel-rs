@@ -1,7 +1,8 @@
 use cortex_m::peripheral::NVIC;
+use log::info;
 use nrf51822::{GPIOTE, Interrupt, PPI, TIMER0, TIMER1, TIMER2, interrupt, Peripherals};
-use crate::hardware::gpio::{QUADRUPEL_GPIO, QuadrupelGPIOPin};
 use crate::hardware::motors::MOTORS;
+use crate::{QuadrupelGPIO, QuadrupelUART};
 
 pub struct QuadrupleTimers { }
 
@@ -17,6 +18,10 @@ const PIN_20_UKNOWN: u8 = 20;
 
 impl QuadrupleTimers {
     pub fn new(_timer0: TIMER0, timer1: TIMER1, timer2: TIMER2, nvic: &mut NVIC, ppi: &mut PPI, gpiote: &mut GPIOTE) -> Self {
+        // Configure pins
+        let gpio = QuadrupelGPIO::get();
+        gpio.pin(MOTOR_0_PIN).set_mode_write();
+
         // Configure gpiote
         gpiote.config[0].write(|w| unsafe { w.mode().task().psel().bits(MOTOR_0_PIN).polarity().toggle().outinit().set_bit() });
         gpiote.config[1].write(|w| unsafe { w.mode().task().psel().bits(MOTOR_1_PIN).polarity().toggle().outinit().set_bit() });
@@ -83,7 +88,7 @@ impl QuadrupleTimers {
             .ch4().set_bit().ch5().set_bit()
             .ch6().set_bit().ch7().set_bit());
 
-        let pin20 = QUADRUPEL_GPIO.get().pin(20);
+        let pin20 = QuadrupelGPIO::get().pin(20);
         pin20.set_mode_write();
 
 
@@ -118,7 +123,7 @@ unsafe fn TIMER2() {
 unsafe fn TIMER1() {
     let timer1 = Peripherals::steal().TIMER1;
     let motors = MOTORS.get().get_values();
-    let pin20 = QUADRUPEL_GPIO.get().pin(20);
+    let pin20 = QuadrupelGPIO::get().pin(PIN_20_UKNOWN);
 
     if timer1.events_compare[3].read().bits() != 0 {
         timer1.events_compare[3].reset();

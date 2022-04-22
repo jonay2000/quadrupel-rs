@@ -6,7 +6,7 @@ use crate::library::once_cell::OnceCell;
 pub struct QuadrupelGPIO {
 }
 
-pub static QUADRUPEL_GPIO: OnceCell<QuadrupelGPIO> = OnceCell::new();
+static QUADRUPEL_GPIO: OnceCell<QuadrupelGPIO> = OnceCell::new();
 
 impl QuadrupelGPIO {
     pub fn get() -> &'static Self {
