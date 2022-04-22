@@ -6,7 +6,7 @@ pub struct QuadrupelLed {
 
 impl QuadrupelLed {
     pub fn new(pin: QuadrupelGPIOPin) -> Self {
-        let mut obj = QuadrupelLed { pin };
+        let obj = QuadrupelLed { pin };
         obj.pin.set_mode_write();
         obj.pin.set();
         obj

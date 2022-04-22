@@ -5,7 +5,7 @@ use nrf51822::Interrupt;
 use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
 use crate::library::cs_cell::CSCell;
 use crate::library::once_cell::OnceCell;
-use crate::QuadrupelGPIO;
+use crate::{QuadrupelGPIO, UartLogger};
 
 pub struct InnerUart {
     rx_queue: ConstGenericRingBuffer<u8, 256>,
@@ -81,14 +81,18 @@ impl QuadrupelUART {
             NVIC::unmask(Interrupt::UART0);
         }
 
-        QUADRUPEL_UART.initialize(QuadrupelUART {
+        let init = QUADRUPEL_UART.initialize(QuadrupelUART {
             uart,
             inner: CSCell::new(InnerUart {
                 rx_queue: ConstGenericRingBuffer::new_const(),
                 tx_queue: ConstGenericRingBuffer::new_const(),
                 tx_data_available: true,
             }),
-        })
+        });
+
+        UartLogger::initialize();
+
+        init
     }
 
     /// Pushes a single byte over uart

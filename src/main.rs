@@ -48,36 +48,20 @@ fn main() -> ! {
     //Create hardware
     let mut hardware = Hardware::initialize(periphs_cm, periphs_nrf);
 
-    UartLogger::initialize();
-
-    hardware.led_red.disable();
-    hardware.led_yellow.disable();
-    hardware.led_green.disable();
-    hardware.led_blue.disable();
-
     loop {
-        if QuadrupelGPIO::get().pin(21).get() {
-            hardware.led_red.enable();
-            hardware.led_yellow.enable();
-            hardware.led_green.enable();
-            hardware.led_blue.enable();
-            asm::delay(1000000000);
-        }
-        //
-        // hardware.led_red.enable();
-        // hardware.led_yellow.enable();
-        // hardware.led_green.enable();
-        // hardware.led_blue.enable();
-        // hardware.adc.request_sample();
-        //
-        // log::info!("ADC: {}", hardware.timers.get_time_us());
-        //
-        // asm::delay(10000000);
-        // hardware.led_red.disable();
-        // hardware.led_yellow.disable();
-        // hardware.led_green.disable();
-        // hardware.led_blue.disable();
-        // asm::delay(10000000);
+        hardware.led_red.enable();
+        hardware.led_yellow.enable();
+        hardware.led_green.enable();
+        hardware.led_blue.enable();
+        hardware.adc.request_sample();
+        log::info!("Print!");
+
+        asm::delay(10000000);
+        hardware.led_red.disable();
+        hardware.led_yellow.disable();
+        hardware.led_green.disable();
+        hardware.led_blue.disable();
+        asm::delay(10000000);
     }
 }
 

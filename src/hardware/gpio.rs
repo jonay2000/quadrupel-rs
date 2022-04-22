@@ -46,7 +46,7 @@ impl QuadrupelGPIOPin {
         self.pin
     }
     pub fn get(&self) -> bool {
-        (self.gpio.out.read().bits() & (1 << self.pin)) != 0
+        (self.gpio.in_.read().bits() & (1 << self.pin)) != 0
     }
     pub fn toggle(&self) {
         //TODO not atomic, but also not super critical?

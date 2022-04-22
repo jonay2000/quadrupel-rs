@@ -1,8 +1,7 @@
 use cortex_m::peripheral::NVIC;
-use log::info;
 use nrf51822::{GPIOTE, Interrupt, PPI, TIMER0, TIMER1, TIMER2, interrupt, Peripherals};
 use crate::hardware::motors::MOTORS;
-use crate::{QuadrupelGPIO, QuadrupelUART};
+use crate::{QuadrupelGPIO};
 
 pub struct QuadrupleTimers { }
 
