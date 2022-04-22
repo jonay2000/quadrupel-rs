@@ -4,10 +4,14 @@ use cortex_m::peripheral::NVIC;
 use nrf51822::interrupt;
 use nrf51822::{Interrupt, Peripherals};
 
+/// Can be used for interfacing with the UART.
+/// It uses an interrupt to send bytes, when they're ready to send.
 pub struct QuadrupelUART {
     uart: nrf51822::UART0,
 }
 
+/// These 3 fields are used as state for the UART.
+/// There is only one UART, and the UART interrupt routine needs access to this state, so they are static mut.
 static mut TXD_AVAILABLE: bool = true;
 static mut RX_QUEUE: ArrayQueue<256> = ArrayQueue::new();
 static mut TX_QUEUE: ArrayQueue<256> = ArrayQueue::new();
@@ -57,6 +61,7 @@ impl QuadrupelUART {
         QuadrupelUART { uart }
     }
 
+    /// Pushes a single byte over uart
     pub fn put_byte(&mut self, byte: u8) {
         cortex_m::interrupt::free(|_| unsafe {
             // We are in a no-interrupts section, so we can safely mutate globals!
@@ -65,11 +70,14 @@ impl QuadrupelUART {
                 TXD_AVAILABLE = false;
                 self.uart.txd.write(|w| w.txd().bits(byte));
             } else {
-                TX_QUEUE.enqueue(byte);
+                if !TX_QUEUE.enqueue(byte) {
+                    panic!("UART queue is full.")
+                }
             }
         });
     }
 
+    /// Pushes multiple bytes over uart
     pub fn put_bytes(&mut self, bytes: &[u8]) {
         for byte in bytes {
             self.put_byte(*byte);

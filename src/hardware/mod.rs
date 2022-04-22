@@ -1,4 +1,4 @@
-// use crate::hardware::adc::QuadrupelAdc;
+use crate::hardware::adc::QuadrupelAdc;
 use crate::hardware::led::QuadrupelLed;
 use crate::hardware::uart::QuadrupelUART;
 use crate::QuadrupelGPIO;
@@ -6,11 +6,10 @@ use crate::QuadrupelGPIO;
 pub mod adc;
 pub mod gpio;
 pub mod led;
-pub mod motor;
 pub mod uart;
 
 pub struct Hardware {
-    // pub adc: QuadrupelAdc,
+    pub adc: QuadrupelAdc,
     pub led_red: QuadrupelLed,
     pub led_yellow: QuadrupelLed,
     pub led_green: QuadrupelLed,
@@ -32,7 +31,7 @@ impl Hardware {
         let led_green = QuadrupelLed::new(gpio_pins[28].take().unwrap());
         let led_blue = QuadrupelLed::new(gpio_pins[30].take().unwrap());
 
-        // let adc = QuadrupelAdc::new(periphs_nrf.ADC, &mut periphs_cm.NVIC);
+        let adc = QuadrupelAdc::new(periphs_nrf.ADC, &mut periphs_cm.NVIC);
 
         let uart = QuadrupelUART::new(
             periphs_nrf.UART0,
@@ -42,7 +41,7 @@ impl Hardware {
         );
 
         Hardware {
-            // adc,
+            adc,
             led_red,
             led_yellow,
             led_green,

@@ -15,6 +15,7 @@ extern crate alloc;
 extern crate cortex_m;
 extern crate nrf51822;
 
+use alloc::format;
 use alloc_cortex_m::CortexMHeap;
 use core::alloc::Layout;
 use cortex_m::asm;
@@ -50,7 +51,9 @@ fn main() -> ! {
         hardware.led_yellow.enable();
         hardware.led_green.enable();
         hardware.led_blue.enable();
-        hardware.uart.put_bytes(b"Test string\n");
+        hardware.adc.request_sample();
+        hardware.uart.put_bytes(format!("{}", hardware.adc.most_recent_voltage()).as_bytes());
+        hardware.uart.put_byte(b'\n');
         asm::delay(10000000);
         hardware.led_red.disable();
         hardware.led_yellow.disable();

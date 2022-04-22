@@ -1,39 +1,52 @@
-// use cortex_m::peripheral::NVIC;
-// use nrf51822::interrupt;
-// use nrf51822::{Interrupt, ADC};
-//
-// pub struct QuadrupelAdc {
-//     adc: ADC,
-// }
-//
-// #[interrupt]
-// fn ADC() {
-//     let periph = unsafe { nrf51822::Peripherals::steal() }; // Safe, since we're in an interrupt
-//     periph.ADC.events_end.write(|w| unsafe { w.bits(0) });
-//
-//     //TODO read periph.ADC.result
-// }
-//
-// impl QuadrupelAdc {
-//     pub fn new(adc: ADC, nvic: &mut NVIC) -> Self {
-//         // //Configure ADC
-//         // //We want to use Analog Input 4 as an input.
-//         // adc.config.write(|w| w.psel().analog_input4());
-//         // //We want to use an analog input with two thirds prescaling
-//         // adc.config.write(|w| w.inpsel().analog_input_two_thirds_prescaling());
-//         // //We want to enable ADC now
-//         // adc.enable.write(|w| w.enable().enabled());
-//         // //We want to enable interrupt on ADC sample ready event, priority 3
-//         // adc.intenset.write(|w| w.end().set_bit());
-//         // unsafe { nvic.set_priority(Interrupt::ADC, 3); }
-//         // unsafe { NVIC::unmask(Interrupt::ADC); }
-//         // //For some reason, there is no field inside this register, so we set it to 1 manually.
-//         // adc.tasks_start.write(|w| unsafe { w.bits(1) } );
-//
-//         QuadrupelAdc { adc }
-//     }
-//
-//     pub fn adc_request_sample(&mut self) {
-//         //TODO
-//     }
-// }
+use cortex_m::peripheral::NVIC;
+use fixed::{FixedU16, types};
+use nrf51822::interrupt;
+use nrf51822::{Interrupt, ADC};
+
+//TODO verify this is the correct format??
+pub type FU16 = FixedU16<types::extra::U12>;
+
+pub struct QuadrupelAdc {
+    adc: ADC,
+}
+
+static mut ADC_RESULT: u16 = 0;
+
+#[interrupt]
+unsafe fn ADC() {
+    let adc = nrf51822::Peripherals::steal().ADC;
+    adc.events_end.reset();
+    ADC_RESULT = adc.result.read().result().bits();
+}
+
+impl QuadrupelAdc {
+    pub fn new(adc: ADC, nvic: &mut NVIC) -> Self {
+        //We want to use Analog Input 4 as an input.
+        adc.config.write(|w| w.psel().analog_input4());
+
+        //We want to use an analog input with two thirds prescaling
+        adc.config.write(|w| w.inpsel().analog_input_two_thirds_prescaling());
+
+        //We want to enable ADC now
+        adc.enable.write(|w| w.enable().enabled());
+
+        //We want to enable interrupt on ADC sample ready event, priority 3
+        adc.intenset.write(|w| w.end().set_bit());
+        unsafe { nvic.set_priority(Interrupt::ADC, 3); }
+        unsafe { NVIC::unmask(Interrupt::ADC); }
+
+        QuadrupelAdc { adc }
+    }
+
+    pub fn request_sample(&mut self) {
+        if !self.adc.busy.read().busy().bit() {
+            //For some reason, there is no field inside this register, so we set it to 1 manually.
+            self.adc.tasks_start.write(|w| unsafe { w.bits(1) } );
+        }
+    }
+
+    pub fn most_recent_voltage(&self) -> FU16 {
+        //Safety: Reading a u16 is atomic
+        FU16::from_bits(unsafe { ADC_RESULT })
+    }
+}
