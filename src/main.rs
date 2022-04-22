@@ -5,8 +5,12 @@
 #![cfg_attr(test, test_runner(crate::test::test_runner))]
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![feature(concat_idents)]
+#![feature(once_cell)]
 
+#[macro_use]
+pub mod library;
 pub mod hardware;
+
 #[cfg(test)]
 mod test;
 
@@ -14,7 +18,6 @@ extern crate alloc;
 extern crate cortex_m;
 extern crate nrf51822;
 
-use alloc::format;
 use alloc_cortex_m::CortexMHeap;
 use core::alloc::Layout;
 use cortex_m::asm;
@@ -27,6 +30,8 @@ use panic_semihosting as _; // logs messages to the host stderr; requires a debu
 use crate::hardware::gpio::QuadrupelGPIO;
 use crate::hardware::Hardware;
 use cortex_m_rt::entry;
+use crate::hardware::uart::QuadrupelUART;
+use crate::library::logger::UartLogger;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -43,7 +48,9 @@ fn main() -> ! {
     let periphs_nrf = nrf51822::Peripherals::take().unwrap();
 
     //Create hardware
-    let mut hardware = Hardware::new(periphs_cm, periphs_nrf);
+    let mut hardware = Hardware::initialize(periphs_cm, periphs_nrf);
+
+    UartLogger::initialize();
 
     loop {
         hardware.led_red.enable();
@@ -51,8 +58,9 @@ fn main() -> ! {
         hardware.led_green.enable();
         hardware.led_blue.enable();
         hardware.adc.request_sample();
-        hardware.uart.put_bytes(format!("ADC: {}", hardware.adc.most_recent_voltage()).as_bytes());
-        hardware.uart.put_byte(b'\n');
+
+        log::info!("ADC: {}", hardware.adc.most_recent_voltage());
+
         asm::delay(10000000);
         hardware.led_red.disable();
         hardware.led_yellow.disable();

@@ -14,11 +14,10 @@ pub struct Hardware {
     pub led_yellow: QuadrupelLed,
     pub led_green: QuadrupelLed,
     pub led_blue: QuadrupelLed,
-    pub uart: QuadrupelUART,
 }
 
 impl Hardware {
-    pub fn new(
+    pub fn initialize(
         mut periphs_cm: cortex_m::Peripherals,
         periphs_nrf: nrf51822::Peripherals,
     ) -> Hardware {
@@ -33,7 +32,7 @@ impl Hardware {
 
         let adc = QuadrupelAdc::new(periphs_nrf.ADC, &mut periphs_cm.NVIC);
 
-        let uart = QuadrupelUART::new(
+        let _ = QuadrupelUART::initialize(
             periphs_nrf.UART0,
             gpio_pins[14].take().unwrap(),
             gpio_pins[16].take().unwrap(),
@@ -46,7 +45,7 @@ impl Hardware {
             led_yellow,
             led_green,
             led_blue,
-            uart,
         }
     }
 }
+

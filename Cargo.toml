@@ -15,6 +15,7 @@ nrf51822 = {path = "./sdk/nrf51822", features = ["rt"]}
 alloc-cortex-m = "0.4.2"
 fixed = "1.14.0"
 ringbuffer = {git = "https://github.com/NULLx76/ringbuffer/", branch = "const-fn", features = ["const-fn"], version = "0.8.5"}
+log = "0.4.16"
 
 [dev-dependencies]
 panic-semihosting = { version = "0.6.0", features = ["exit"] }
