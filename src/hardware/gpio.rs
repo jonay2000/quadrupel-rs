@@ -9,17 +9,18 @@ pub struct QuadrupelGPIO {
 
 impl QuadrupelGPIO {
     pub fn new(_gpio: nrf51822::GPIO) -> Self {
-        QuadrupelGPIO { _gpio  }
+        QuadrupelGPIO { _gpio }
     }
 
     pub fn pins(self) -> [QuadrupelGPIOPin; 32] {
-        let mut pins: [MaybeUninit<QuadrupelGPIOPin>; 32] = unsafe { MaybeUninit::uninit().assume_init() };
+        let mut pins: [MaybeUninit<QuadrupelGPIOPin>; 32] =
+            unsafe { MaybeUninit::uninit().assume_init() };
         for pin in 0..32u8 {
             pins[pin as usize] = MaybeUninit::new(QuadrupelGPIOPin {
                 //Safety: We know we have access to GPIO in self.
                 // We can clone it multiple times here, because QuadrupelGPIOPin will only use its own pin.
                 gpio: unsafe { nrf51822::Peripherals::steal().GPIO },
-                pin
+                pin,
             });
         }
         unsafe { mem::transmute::<_, [QuadrupelGPIOPin; 32]>(pins) }
@@ -34,37 +35,39 @@ pub struct QuadrupelGPIOPin {
 }
 
 impl QuadrupelGPIOPin {
+    pub fn pin(&self) -> u8 {
+        self.pin
+    }
     pub fn get(&self) -> bool {
         (self.gpio.out.read().bits() & (1 << self.pin)) != 0
     }
     pub fn toggle(&mut self) {
-        if self.get() { self.clear() }
-        else { self.set() }
+        if self.get() {
+            self.clear()
+        } else {
+            self.set()
+        }
     }
     pub fn bit(&mut self, b: bool) {
-        if b { self.set() }
-        else { self.clear() }
+        if b {
+            self.set()
+        } else {
+            self.clear()
+        }
     }
     pub fn set(&mut self) {
-        self.gpio.outset.write(|w| {
-            unsafe { w.bits(1 << self.pin) }
-        });
+        self.gpio.outset.write(|w| unsafe { w.bits(1 << self.pin) });
     }
     pub fn clear(&mut self) {
-        self.gpio.outclr.write(|w| {
-            unsafe { w.bits(1 << self.pin) }
-        });
+        self.gpio.outclr.write(|w| unsafe { w.bits(1 << self.pin) });
     }
 
     pub fn set_mode_read(&mut self) {
-        self.gpio.dirclr.write(|w| {
-            unsafe { w.bits(1 << self.pin) }
-        });
+        self.gpio.dirclr.write(|w| unsafe { w.bits(1 << self.pin) });
+        self.gpio.pin_cnf[self.pin as usize].write(|w| w.pull().disabled());
     }
 
     pub fn set_mode_write(&mut self) {
-        self.gpio.dirset.write(|w| {
-            unsafe { w.bits(1 << self.pin) }
-        });
+        self.gpio.dirset.write(|w| unsafe { w.bits(1 << self.pin) });
     }
 }

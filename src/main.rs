@@ -6,28 +6,27 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![feature(concat_idents)]
 
+pub mod hardware;
 #[cfg(test)]
 mod test;
-mod hardware;
+pub mod utils;
 
 extern crate alloc;
 extern crate cortex_m;
 extern crate nrf51822;
 
-use core::alloc::Layout;
 use alloc_cortex_m::CortexMHeap;
+use core::alloc::Layout;
 use cortex_m::asm;
-use cortex_m::delay::Delay;
-use cortex_m::prelude::*;
 
 #[cfg(not(test))]
 use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch panics
 #[cfg(test)]
 use panic_semihosting as _; // logs messages to the host stderr; requires a debugger
 
-use cortex_m_rt::entry;
 use crate::hardware::gpio::QuadrupelGPIO;
 use crate::hardware::Hardware;
+use cortex_m_rt::entry;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -51,6 +50,7 @@ fn main() -> ! {
         hardware.led_yellow.enable();
         hardware.led_green.enable();
         hardware.led_blue.enable();
+        hardware.uart.put_bytes(b"Test string\n");
         asm::delay(10000000);
         hardware.led_red.disable();
         hardware.led_yellow.disable();
