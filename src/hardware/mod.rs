@@ -17,7 +17,7 @@ pub struct Hardware {
     pub led_yellow: QuadrupelLed,
     pub led_green: QuadrupelLed,
     pub led_blue: QuadrupelLed,
-    pub uart: QuadrupelUART,
+    pub uart: &'static QuadrupelUART,
     pub timers: QuadrupleTimers,
 }
 
@@ -37,7 +37,7 @@ impl Hardware {
 
         let adc = QuadrupelAdc::new(periphs_nrf.ADC, &mut periphs_cm.NVIC);
 
-        let _ = QuadrupelUART::initialize(
+        let uart = QuadrupelUART::initialize(
             periphs_nrf.UART0,
             gpio_pins[14].take().unwrap(),
             gpio_pins[16].take().unwrap(),
