@@ -5,12 +5,10 @@
 #![cfg_attr(test, test_runner(crate::test::test_runner))]
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![feature(concat_idents)]
-#![feature(once_cell)]
 
 #[macro_use]
 pub mod library;
 pub mod hardware;
-
 #[cfg(test)]
 mod test;
 
