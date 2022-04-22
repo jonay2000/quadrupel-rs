@@ -13,8 +13,8 @@ pub struct QuadrupelUART {
 /// These 3 fields are used as state for the UART.
 /// There is only one UART, and the UART interrupt routine needs access to this state, so they are static mut.
 static mut TXD_AVAILABLE: bool = true;
-static mut RX_QUEUE: ConstGenericRingBuffer<u8, 256> = ConstGenericRingBuffer::new();
-static mut TX_QUEUE: ConstGenericRingBuffer<u8, 256> = ConstGenericRingBuffer::new();
+static mut RX_QUEUE: ConstGenericRingBuffer<u8, 256> = ConstGenericRingBuffer::new_const();
+static mut TX_QUEUE: ConstGenericRingBuffer<u8, 256> = ConstGenericRingBuffer::new_const();
 
 impl QuadrupelUART {
     pub fn new(
@@ -113,6 +113,7 @@ unsafe fn UART0() {
     //Ready to process an error
     if uart.events_error.read().bits() != 0 {
         uart.events_error.reset();
+        //TODO log somehow
         panic!(
             "Uart error: (Framing: {}) (Overrun: {}) (Parity: {})",
             uart.errorsrc.read().framing().bit(),
