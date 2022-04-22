@@ -2,7 +2,7 @@ use core::fmt::Write;
 use crate::hardware::gpio::QUADRUPEL_GPIO;
 use cortex_m::peripheral::NVIC;
 use nrf51822::interrupt;
-use nrf51822::{Interrupt, Peripherals};
+use nrf51822::Interrupt;
 use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
 use crate::library::cs_cell::CSCell;
 use crate::library::once_cell::OnceCell;
@@ -131,36 +131,34 @@ impl<'a> Write for QuadrupelUartWriter<'a> {
 #[interrupt]
 unsafe fn UART0() {
     //We are the only thing running, so we can access the uart safely
-    let uart = Peripherals::steal().UART0;
-
-    let global_uart = QuadrupelUART::get();
+    let uart = QuadrupelUART::get();
 
     //Ready to read a bit
-    if uart.events_rxdrdy.read().bits() != 0 {
-        uart.events_rxdrdy.reset();
-        let byte = uart.rxd.read().rxd().bits();
+    if uart.uart.events_rxdrdy.read().bits() != 0 {
+        uart.uart.events_rxdrdy.reset();
+        let byte = uart.uart.rxd.read().rxd().bits();
 
-        global_uart.inner.update_unchecked(|i| i.rx_queue.push(byte));
+        uart.inner.update_unchecked(|i| i.rx_queue.push(byte));
     }
 
     //Ready to write a bit
-    if uart.events_txdrdy.read().bits() != 0 {
-        uart.events_txdrdy.reset();
-        match global_uart.inner.update_unchecked(|i| i.tx_queue.dequeue()) {
-            Some(byte) => uart.txd.write(|w| w.txd().bits(byte)),
-            None => global_uart.inner.update_unchecked(|i| i.tx_data_available = true),
+    if uart.uart.events_txdrdy.read().bits() != 0 {
+        uart.uart.events_txdrdy.reset();
+        match uart.inner.update_unchecked(|i| i.tx_queue.dequeue()) {
+            Some(byte) => uart.uart.txd.write(|w| w.txd().bits(byte)),
+            None => uart.inner.update_unchecked(|i| i.tx_data_available = true),
         }
     }
 
     //Ready to process an error
-    if uart.events_error.read().bits() != 0 {
-        uart.events_error.reset();
+    if uart.uart.events_error.read().bits() != 0 {
+        uart.uart.events_error.reset();
         //TODO log somehow
         panic!(
             "Uart error: (Framing: {}) (Overrun: {}) (Parity: {})",
-            uart.errorsrc.read().framing().bit(),
-            uart.errorsrc.read().overrun().bit(),
-            uart.errorsrc.read().parity().bit()
+            uart.uart.errorsrc.read().framing().bit(),
+            uart.uart.errorsrc.read().overrun().bit(),
+            uart.uart.errorsrc.read().parity().bit()
         )
     }
 }
