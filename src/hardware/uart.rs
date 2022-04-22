@@ -98,7 +98,7 @@ impl QuadrupelUART {
                 i.tx_data_available = false;
                 self.uart.txd.write(|w| unsafe { w.txd().bits(byte) });
             } else {
-                i.rx_queue.push(byte);
+                i.tx_queue.push(byte);
             }
         });
     }

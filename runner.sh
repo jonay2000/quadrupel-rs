@@ -24,4 +24,6 @@ if [ ! -z "$HARDWARE" ]
 then
   echo "Running hardware..."
   python2 "$SCRIPT_DIR/dfu_serial/serial_dfu.py" "$BINARY.bin"
+  cd pc_terminal
+  make run
 fi

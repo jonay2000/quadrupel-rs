@@ -55,9 +55,8 @@ fn main() -> ! {
         hardware.led_yellow.enable();
         hardware.led_green.enable();
         hardware.led_blue.enable();
-        hardware.adc.request_sample();
 
-        log::info!("ADC: {}", hardware.adc.most_recent_voltage());
+        hardware.uart.put_bytes("Testet".as_bytes());
 
         asm::delay(10000000);
         hardware.led_red.disable();
