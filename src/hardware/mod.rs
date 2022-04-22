@@ -27,27 +27,23 @@ impl Hardware {
         mut periphs_nrf: nrf51822::Peripherals,
     ) -> Hardware {
         //Create hardware
-        let gpio = QuadrupelGPIO::new(periphs_nrf.GPIO);
-        let mut gpio_pins = gpio.pins().map(Option::Some);
+        let gpio = QuadrupelGPIO::initialize(periphs_nrf.GPIO);
 
-        let led_red = QuadrupelLed::new(gpio_pins[22].take().unwrap());
-        let led_yellow = QuadrupelLed::new(gpio_pins[24].take().unwrap());
-        let led_green = QuadrupelLed::new(gpio_pins[28].take().unwrap());
-        let led_blue = QuadrupelLed::new(gpio_pins[30].take().unwrap());
+        let led_red = QuadrupelLed::new(gpio.pin(22));
+        let led_yellow = QuadrupelLed::new(gpio.pin(24));
+        let led_green = QuadrupelLed::new(gpio.pin(28));
+        let led_blue = QuadrupelLed::new(gpio.pin(30));
 
         let adc = QuadrupelAdc::new(periphs_nrf.ADC, &mut periphs_cm.NVIC);
 
         let uart = QuadrupelUART::initialize(
             periphs_nrf.UART0,
-            gpio_pins[14].take().unwrap(),
-            gpio_pins[16].take().unwrap(),
             &mut periphs_cm.NVIC,
         );
         let timers = QuadrupleTimers::new(
             periphs_nrf.TIMER0,
             periphs_nrf.TIMER1,
             periphs_nrf.TIMER2,
-            gpio_pins[20].take().unwrap(),
             &mut periphs_cm.NVIC,
             &mut periphs_nrf.PPI,
             &mut periphs_nrf.GPIOTE);

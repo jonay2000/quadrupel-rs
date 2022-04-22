@@ -1,5 +1,5 @@
 use core::fmt::Write;
-use crate::hardware::gpio::QuadrupelGPIOPin;
+use crate::hardware::gpio::QUADRUPEL_GPIO;
 use cortex_m::peripheral::NVIC;
 use nrf51822::interrupt;
 use nrf51822::{Interrupt, Peripherals};
@@ -42,10 +42,10 @@ impl QuadrupelUART {
     /// can only be called once cince UART0 only exists once.
     pub fn initialize(
         uart: nrf51822::UART0,
-        mut tx_pin: QuadrupelGPIOPin,
-        mut rx_pin: QuadrupelGPIOPin,
         nvic: &mut NVIC,
     ) -> &'static Self {
+        let tx_pin = QUADRUPEL_GPIO.get().pin(14);
+        let rx_pin = QUADRUPEL_GPIO.get().pin(16);
         tx_pin.set_mode_write();
         rx_pin.set_mode_read();
 

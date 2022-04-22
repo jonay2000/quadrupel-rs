@@ -1,14 +1,9 @@
 use cortex_m::peripheral::NVIC;
 use nrf51822::{GPIOTE, Interrupt, PPI, TIMER0, TIMER1, TIMER2, interrupt, Peripherals};
-use crate::hardware::gpio::QuadrupelGPIOPin;
+use crate::hardware::gpio::{QUADRUPEL_GPIO, QuadrupelGPIOPin};
 use crate::hardware::motors::MOTORS;
 
-pub struct QuadrupleTimers {
-    _timer0: TIMER0,
-    _timer1: TIMER1,
-    _timer2: TIMER2,
-    _pin20: QuadrupelGPIOPin
-}
+pub struct QuadrupleTimers { }
 
 static mut GLOBAL_TIME: u32 = 0;
 
@@ -18,8 +13,10 @@ const MOTOR_1_PIN: u8 = 23;
 const MOTOR_2_PIN: u8 = 25;
 const MOTOR_3_PIN: u8 = 29;
 
+const PIN_20_UKNOWN: u8 = 20;
+
 impl QuadrupleTimers {
-    pub fn new(timer0: TIMER0, timer1: TIMER1, timer2: TIMER2, mut pin20: QuadrupelGPIOPin, nvic: &mut NVIC, ppi: &mut PPI, gpiote: &mut GPIOTE) -> Self {
+    pub fn new(_timer0: TIMER0, timer1: TIMER1, timer2: TIMER2, nvic: &mut NVIC, ppi: &mut PPI, gpiote: &mut GPIOTE) -> Self {
         // Configure gpiote
         gpiote.config[0].write(|w| unsafe { w.mode().task().psel().bits(MOTOR_0_PIN).polarity().toggle().outinit().set_bit() });
         gpiote.config[1].write(|w| unsafe { w.mode().task().psel().bits(MOTOR_1_PIN).polarity().toggle().outinit().set_bit() });
@@ -86,10 +83,11 @@ impl QuadrupleTimers {
             .ch4().set_bit().ch5().set_bit()
             .ch6().set_bit().ch7().set_bit());
 
+        let pin20 = QUADRUPEL_GPIO.get().pin(20);
         pin20.set_mode_write();
 
 
-        QuadrupleTimers { _timer0: timer0, _timer1: timer1, _timer2: timer2, _pin20: pin20 }
+        QuadrupleTimers { }
     }
 
     pub fn get_time_us(&self) -> u32 {
@@ -120,17 +118,17 @@ unsafe fn TIMER2() {
 unsafe fn TIMER1() {
     let timer1 = Peripherals::steal().TIMER1;
     let motors = MOTORS.get().get_values();
-    let gpio = Peripherals::steal().GPIO;
+    let pin20 = QUADRUPEL_GPIO.get().pin(20);
 
     if timer1.events_compare[3].read().bits() != 0 {
         timer1.events_compare[3].reset();
         timer1.tasks_capture[2].write(|w| w.bits(1) );
 
         if timer1.cc[2].read().bits() < 500 {
-            gpio.outset.write(|w| w.pin20().set_bit());
+            pin20.set();
             timer1.cc[0].write(|w| w.bits((1000 + motors[0]) as u32) );
             timer1.cc[1].write(|w| w.bits((1000 + motors[1]) as u32) );
-            gpio.outclr.write(|w| w.pin20().set_bit());
+            pin20.clear();
         }
     }
 }

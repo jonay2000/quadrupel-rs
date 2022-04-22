@@ -56,7 +56,7 @@ fn main() -> ! {
         hardware.led_green.enable();
         hardware.led_blue.enable();
 
-        hardware.uart.put_bytes("Testet".as_bytes());
+        hardware.uart.put_bytes("Testet\n".as_bytes());
 
         asm::delay(10000000);
         hardware.led_red.disable();
