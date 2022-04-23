@@ -35,6 +35,7 @@ use nrf51_hal::gpio::{Level};
 use nrf51_hal::pac::twi0::frequency::FREQUENCY_A;
 use nrf51_hal::{uart};
 use crate::hardware::init_hardware;
+use crate::hardware::motors::Motors;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -51,30 +52,21 @@ fn main() -> ! {
     let pn = nrf51_hal::pac::Peripherals::take().unwrap();
     let mut hardware = init_hardware(pc, pn);
 
-    // loop {
-    //     hardware.leds.led_red.set_low().unwrap();
-    //     hardware.leds.led_yellow.set_low().unwrap();
-    //     hardware.leds.led_green.set_low().unwrap();
-    //     hardware.leds.led_blue.set_low().unwrap();
-    //
-    //     hardware.uart.put_bytes(b"Test string\n");
-    //     hardware.timer0.delay_ms(1000u32);
-    //
-    //     hardware.leds.led_red.set_high().unwrap();
-    //     hardware.leds.led_yellow.set_high().unwrap();
-    //     hardware.leds.led_green.set_high().unwrap();
-    //     hardware.leds.led_blue.set_high().unwrap();
-    //     hardware.timer0.delay_ms(1000u32);
-    // }
+    loop {
+        hardware.leds.led_red.set_low().unwrap();
+        hardware.leds.led_yellow.set_low().unwrap();
+        hardware.leds.led_green.set_low().unwrap();
+        hardware.leds.led_blue.set_low().unwrap();
 
+        hardware.uart.put_bytes(b"Test string\n");
+        hardware.timer0.delay_ms(1000u32);
 
-    for i in 0.. {
-        let ypr = hardware.mpu.block_read_most_recent();
-
-        if i % 25 != 0 { continue; }
-        hardware.uart.put_bytes(format!("YPR: {:?}\n", ypr).as_bytes());
+        hardware.leds.led_red.set_high().unwrap();
+        hardware.leds.led_yellow.set_high().unwrap();
+        hardware.leds.led_green.set_high().unwrap();
+        hardware.leds.led_blue.set_high().unwrap();
+        hardware.timer0.delay_ms(1000u32);
     }
-    loop {}
 }
 
 #[alloc_error_handler]

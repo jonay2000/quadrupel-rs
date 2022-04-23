@@ -24,14 +24,6 @@ impl<T> OnceCell<T> {
         }
     }
 
-    pub fn get_or_init(&self, v: impl FnOnce() -> T) -> &T {
-        if let Some(i) = self.try_get() {
-            i
-        } else {
-            self.initialize(v())
-        }
-    }
-
     /// panics on second invocation.
     pub fn initialize(&self, v: T) -> &T {
         if self.is_set.load(Ordering::SeqCst) {
@@ -50,14 +42,6 @@ impl<T> OnceCell<T> {
             unsafe {(&*self.value.get()).assume_init_ref()}
         } else {
             panic!("contents have not yet been initialized");
-        }
-    }
-
-    pub fn try_get(&self) -> Option<&T> {
-        if self.is_set.load(Ordering::SeqCst) {
-            Some(unsafe {(&*self.value.get()).assume_init_ref()})
-        } else {
-            None
         }
     }
 }

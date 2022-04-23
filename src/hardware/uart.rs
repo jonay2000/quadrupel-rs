@@ -36,10 +36,6 @@ impl QUart {
         QUADRUPEL_UART.get()
     }
 
-    pub fn try_get() -> Option<&'static Self> {
-        QUADRUPEL_UART.try_get()
-    }
-
     /// Create a new instance of the UART controller. This function
     /// can only be called once cince UART0 only exists once.
     pub fn initialize(

@@ -27,7 +27,7 @@ panic-semihosting = { version = "0.6.0", features = ["exit"] }
 
 [profile.release]
 codegen-units = 1
-debug = true
+#debug = true
 lto = true
 opt-level = 2
 incremental = false

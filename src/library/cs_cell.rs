@@ -51,6 +51,10 @@ impl<T> CSCell<T> {
         f(&mut *self.cell.get())
     }
 
+    pub unsafe fn get_mut(&self) -> &mut T {
+        &mut *self.cell.get()
+    }
+
     pub fn update<U>(&self, f: impl FnMut(&mut T) -> U) -> U {
         cortex_m::interrupt::free(|_| {
             unsafe {self.update_unchecked(f)}
