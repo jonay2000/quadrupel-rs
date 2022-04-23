@@ -29,7 +29,7 @@ impl<T> OnceCell<T> {
         if self.is_set.load(Ordering::SeqCst) {
             panic!("contents already initialized");
         } else {
-            unsafe {*self.value.get() = MaybeUninit::new(v)};
+            unsafe { *self.value.get() = MaybeUninit::new(v) };
 
             self.is_set.store(true, Ordering::SeqCst);
 
@@ -39,7 +39,7 @@ impl<T> OnceCell<T> {
 
     pub fn get(&self) -> &T {
         if self.is_set.load(Ordering::SeqCst) {
-            unsafe {(&*self.value.get()).assume_init_ref()}
+            unsafe { (&*self.value.get()).assume_init_ref() }
         } else {
             panic!("contents have not yet been initialized");
         }

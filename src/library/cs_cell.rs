@@ -13,7 +13,10 @@ pub struct CSCell<T> {
 
 unsafe impl<T> Sync for CSCell<T> {}
 
-impl<T> CSCell<T> where T: Copy {
+impl<T> CSCell<T>
+where
+    T: Copy,
+{
     pub fn set(&self, v: T) {
         self.update(|i| *i = v);
     }
@@ -40,24 +43,27 @@ impl<T> CSCell<T> where T: Copy {
 impl<T> CSCell<T> {
     pub const fn new(v: T) -> Self {
         Self {
-            cell: UnsafeCell::new(v)
+            cell: UnsafeCell::new(v),
         }
     }
 
     /// Update the contents without a critical section. This
     /// may be useful in interrupts when other interrupts can
     /// never happen.
+    /// # Safety: Should only be used in an interrupt
     pub unsafe fn update_unchecked<U>(&self, mut f: impl FnMut(&mut T) -> U) -> U {
         f(&mut *self.cell.get())
     }
 
+    /// Update the contents without a critical section. This
+    /// may be useful in interrupts when other interrupts can
+    /// never happen.
+    /// # Safety: Should only be used in an interrupt
     pub unsafe fn get_mut(&self) -> &mut T {
         &mut *self.cell.get()
     }
 
     pub fn update<U>(&self, f: impl FnMut(&mut T) -> U) -> U {
-        cortex_m::interrupt::free(|_| {
-            unsafe {self.update_unchecked(f)}
-        })
+        cortex_m::interrupt::free(|_| unsafe { self.update_unchecked(f) })
     }
 }

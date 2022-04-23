@@ -1,7 +1,7 @@
 use cortex_m::peripheral::NVIC;
-use fixed::{FixedU16, types};
+use fixed::{types, FixedU16};
 use nrf51_pac::interrupt;
-use nrf51_pac::{Interrupt};
+use nrf51_pac::Interrupt;
 
 //TODO verify this is the correct format??
 pub type FU16 = FixedU16<types::extra::U12>;
@@ -25,15 +25,20 @@ impl QAdc {
         adc.config.write(|w| w.psel().analog_input4());
 
         //We want to use an analog input with two thirds prescaling
-        adc.config.write(|w| w.inpsel().analog_input_two_thirds_prescaling());
+        adc.config
+            .write(|w| w.inpsel().analog_input_two_thirds_prescaling());
 
         //We want to enable ADC now
         adc.enable.write(|w| w.enable().enabled());
 
         //We want to enable interrupt on ADC sample ready event, priority 3
         adc.intenset.write(|w| w.end().set_bit());
-        unsafe { nvic.set_priority(Interrupt::ADC, 3); }
-        unsafe { NVIC::unmask(Interrupt::ADC); }
+        unsafe {
+            nvic.set_priority(Interrupt::ADC, 3);
+        }
+        unsafe {
+            NVIC::unmask(Interrupt::ADC);
+        }
 
         QAdc { adc }
     }
@@ -41,7 +46,7 @@ impl QAdc {
     pub fn request_sample(&mut self) {
         if !self.adc.busy.read().busy().bit() {
             //For some reason, there is no field inside this register, so we set it to 1 manually.
-            self.adc.tasks_start.write(|w| unsafe { w.bits(1) } );
+            self.adc.tasks_start.write(|w| unsafe { w.bits(1) });
         }
     }
 

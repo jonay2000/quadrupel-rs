@@ -1,14 +1,14 @@
-use core::fmt::Write;
-use cortex_m::peripheral::NVIC;
-use nrf51_hal::gpio::Disconnected;
-use nrf51_hal::gpio::p0::{P0_14, P0_16};
-use nrf51_pac::interrupt;
-use nrf51_pac::Interrupt;
-use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
-use crate::Level;
 use crate::library::cs_cell::CSCell;
 use crate::library::logger::UartLogger;
 use crate::library::once_cell::OnceCell;
+use crate::Level;
+use core::fmt::Write;
+use cortex_m::peripheral::NVIC;
+use nrf51_hal::gpio::p0::{P0_14, P0_16};
+use nrf51_hal::gpio::Disconnected;
+use nrf51_pac::interrupt;
+use nrf51_pac::Interrupt;
+use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
 
 pub struct InnerUart {
     rx_queue: ConstGenericRingBuffer<u8, 256>,
@@ -49,10 +49,8 @@ impl QUart {
         let _rx_pin = rx_pin.into_floating_input();
 
         // Specify tx/rx pins
-        uart.pseltxd
-            .write(|w| unsafe { w.bits(14) });
-        uart.pselrxd
-            .write(|w| unsafe { w.bits(16) });
+        uart.pseltxd.write(|w| unsafe { w.bits(14) });
+        uart.pselrxd.write(|w| unsafe { w.bits(16) });
 
         //Set baudrate and start
         uart.baudrate.write(|w| w.baudrate().baud115200());

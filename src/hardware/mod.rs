@@ -1,23 +1,17 @@
-pub mod leds;
-pub mod uart;
 pub mod adc;
 pub mod i2c;
+pub mod leds;
 pub mod motors;
+pub mod uart;
 
-use mpu6050_dmp::address::Address;
-use mpu6050_dmp::sensor::Mpu6050;
-use nrf51_hal::gpio::Pin;
-use nrf51_hal::{Timer, Twi, Uart};
-
-
-use nrf51_hal::twi::Pins;
-use nrf51_pac::{TIMER0, TWI0, UART0};
-use crate::{FREQUENCY_A, Motors};
 use crate::hardware::adc::QAdc;
-use crate::hardware::i2c::{I2C, QMpu};
+use crate::hardware::i2c::{QMpu, I2C};
 use crate::hardware::leds::QLeds;
 use crate::hardware::uart::QUart;
 use crate::library::cs_cell::CSCell;
+use crate::Motors;
+use nrf51_hal::Timer;
+use nrf51_pac::TIMER0;
 
 pub struct Hardware {
     pub leds: QLeds,
@@ -28,7 +22,10 @@ pub struct Hardware {
     pub motors: &'static CSCell<Motors>,
 }
 
-pub fn init_hardware(mut pc: cortex_m::Peripherals, mut pn: nrf51_hal::pac::Peripherals) -> Hardware {
+pub fn init_hardware(
+    mut pc: cortex_m::Peripherals,
+    mut pn: nrf51_hal::pac::Peripherals,
+) -> Hardware {
     let gpio = nrf51_hal::gpio::p0::Parts::new(pn.GPIO);
 
     let mut timer0 = Timer::new(pn.TIMER0);
@@ -39,7 +36,14 @@ pub fn init_hardware(mut pc: cortex_m::Peripherals, mut pn: nrf51_hal::pac::Peri
     let mpu = QMpu::new(i2c, &mut timer0);
     let adc = QAdc::new(pn.ADC, &mut pc.NVIC);
 
-    let motors = Motors::initialize(pn.TIMER1, pn.TIMER2, &mut pc.NVIC, &mut pn.PPI, &mut pn.GPIOTE, gpio.p0_20);
+    let motors = Motors::initialize(
+        pn.TIMER1,
+        pn.TIMER2,
+        &mut pc.NVIC,
+        &mut pn.PPI,
+        &mut pn.GPIOTE,
+        gpio.p0_20,
+    );
 
     Hardware {
         leds,
@@ -47,6 +51,6 @@ pub fn init_hardware(mut pc: cortex_m::Peripherals, mut pn: nrf51_hal::pac::Peri
         mpu,
         adc,
         timer0,
-        motors
+        motors,
     }
 }

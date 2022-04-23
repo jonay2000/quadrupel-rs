@@ -1,6 +1,6 @@
-use log::{LevelFilter, Log, Metadata, Record, set_logger_racy, set_max_level};
-use core::fmt::Write;
 use crate::hardware::uart::QUart;
+use core::fmt::Write;
+use log::{set_logger_racy, set_max_level, LevelFilter, Log, Metadata, Record};
 
 #[cfg(not(test))]
 pub static LOGGER: UartLogger = UartLogger::with_level(LevelFilter::Info);
@@ -8,12 +8,12 @@ pub static LOGGER: UartLogger = UartLogger::with_level(LevelFilter::Info);
 pub static LOGGER: UartLogger = UartLogger::with_level(LevelFilter::Debug);
 
 pub struct UartLogger {
-    level: LevelFilter
+    level: LevelFilter,
 }
 
 impl UartLogger {
     pub const fn with_level(level: LevelFilter) -> Self {
-        Self {level}
+        Self { level }
     }
 
     pub fn initialize() {
@@ -39,5 +39,3 @@ impl Log for UartLogger {
 
     fn flush(&self) {}
 }
-
-
