@@ -15,7 +15,6 @@ pub mod hardware;
 extern crate alloc;
 extern crate cortex_m;
 
-use alloc::format;
 use alloc_cortex_m::CortexMHeap;
 use core::alloc::Layout;
 use core::fmt::Write;
@@ -27,16 +26,12 @@ use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch
 use panic_semihosting as _; // logs messages to the host stderr; requires a debugger
 
 use cortex_m_rt::entry;
-use mpu6050_dmp::address::Address;
-use mpu6050_dmp::quaternion::Quaternion;
-use mpu6050_dmp::sensor::Mpu6050;
-use mpu6050_dmp::yaw_pitch_roll::YawPitchRoll;
-use nrf51_hal::gpio::{Level, Pin};
+use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
+use nrf51_hal::gpio::{Level};
 use nrf51_hal::pac::twi0::frequency::FREQUENCY_A;
-use nrf51_hal::{Timer, Twi, Uart, uart};
-use nrf51_hal::pac::uart0::baudrate::BAUDRATE_A;
-use nrf51_hal::twi::{Pins};
-use nrf51_hal::uart::Parity;
+use nrf51_hal::{uart};
+use crate::hardware::init_hardware;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -49,46 +44,52 @@ fn main() -> ! {
     #[cfg(test)]
     test_main();
 
-    let pn = Peripherals::take().unwrap();
-    let p = nrf51_hal::pac::Peripherals::take().unwrap();
-    let port0 = nrf51_hal::gpio::p0::Parts::new(p.GPIO);
+    let pc = Peripherals::take().unwrap();
+    let pn = nrf51_hal::pac::Peripherals::take().unwrap();
+    let mut hardware = init_hardware(pc, pn);
 
-    let led = port0.p0_22;
-    let mut led = led.into_push_pull_output(Level::Low);
+    loop {
+        hardware.leds.led_red.set_low().unwrap();
+        hardware.leds.led_yellow.set_low().unwrap();
+        hardware.leds.led_green.set_low().unwrap();
+        hardware.leds.led_blue.set_low().unwrap();
 
-    let rx_pin = Pin::from(port0.p0_16).into_floating_input();
-    let tx_pin = Pin::from(port0.p0_14).into_push_pull_output(Level::Low);
-    let mut uart = Uart::new(p.UART0, uart::Pins {
-        rxd: rx_pin,
-        txd: tx_pin,
-        cts: None,
-        rts: None
-    }, Parity::INCLUDED, BAUDRATE_A::BAUD115200);
+        hardware.uart.put_bytes(b"Test string\n");
+        hardware.timer0.delay_ms(1000u32);
 
-
-    let mut timer = Timer::new(p.TIMER0);
-
-    let scl_pin = port0.p0_04.into_floating_input();
-    let sda_pin = port0.p0_02.into_floating_input();
-    let twi = Twi::new(p.TWI0, Pins { scl: Pin::from(scl_pin), sda: Pin::from(sda_pin) }, FREQUENCY_A::K400);
-    let mut mpu = Mpu6050::new(twi, Address::default()).unwrap();
-
-    mpu.initialize_dmp(&mut timer).unwrap();
-    mpu.calibrate_accel(100).unwrap();
-
-    for i in 0.. {
-        let len = mpu.get_fifo_count().unwrap();
-        let mut buf = [0; 28];
-        if len >= 28 {
-            let buf = mpu.read_fifo(&mut buf).unwrap();
-            let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-            let ypr = YawPitchRoll::from(q);
-            if i % 10 == 0 {
-                uart.write_str(&format!("YPR: {:?}\n", ypr));
-            }
-        }
+        hardware.leds.led_red.set_high().unwrap();
+        hardware.leds.led_yellow.set_high().unwrap();
+        hardware.leds.led_green.set_high().unwrap();
+        hardware.leds.led_blue.set_high().unwrap();
+        hardware.timer0.delay_ms(1000u32);
+        // pn.
     }
-    loop { }
+
+
+
+
+
+
+    // for i in 0.. {
+    //     let len = mpu.get_fifo_count().unwrap();
+    //     let mut buf = [0; 28];
+    //     if len >= 28 {
+    //         let buf = mpu.read_fifo(&mut buf).unwrap();
+    //         let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
+    //         let ypr = YawPitchRoll::from(q);
+    //         if i % 10 == 0 {
+    //             uart.write_str(&format!("YPR: {:?}\n", ypr));
+    //         }
+    //     }
+    // }
+    // loop {
+    //     uart.write_str("This is a test\n");
+    //     led.set_low();
+    //     timer.delay_ms(1000u32);
+    //     uart.write_str("Or not?\n");
+    //     led.set_high();
+    //     timer.delay_ms(1000u32);
+    // }
     //
     // loop {
     //     uart.write_str("This is a test\n");

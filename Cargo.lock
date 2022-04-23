@@ -267,6 +267,7 @@ dependencies = [
  "log",
  "mpu6050-dmp",
  "nrf51-hal",
+ "nrf51-pac",
  "panic-halt",
  "panic-semihosting",
  "ringbuffer",
