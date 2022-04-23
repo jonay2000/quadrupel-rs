@@ -37,6 +37,7 @@ pub fn init_hardware(pc: cortex_m::Peripherals, pn: nrf51_hal::pac::Peripherals)
     let twi = Twi::new(pn.TWI0, Pins { scl: Pin::from(scl_pin), sda: Pin::from(sda_pin) }, FREQUENCY_A::K400);
     let mut mpu = Mpu6050::new(twi, Address::default()).unwrap();
     mpu.initialize_dmp(&mut timer0).unwrap();
+    mpu.set_sample_rate_divider(1);
 
 
     let adc = QuadrupelAdc::new(pn.ADC, &mut nvic);

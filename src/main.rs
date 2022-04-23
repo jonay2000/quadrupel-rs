@@ -15,6 +15,7 @@ pub mod hardware;
 extern crate alloc;
 extern crate cortex_m;
 
+use alloc::format;
 use alloc_cortex_m::CortexMHeap;
 use core::alloc::Layout;
 use core::fmt::Write;
@@ -28,6 +29,8 @@ use panic_semihosting as _; // logs messages to the host stderr; requires a debu
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
+use mpu6050_dmp::quaternion::Quaternion;
+use mpu6050_dmp::yaw_pitch_roll::YawPitchRoll;
 use nrf51_hal::gpio::{Level};
 use nrf51_hal::pac::twi0::frequency::FREQUENCY_A;
 use nrf51_hal::{uart};
@@ -48,40 +51,41 @@ fn main() -> ! {
     let pn = nrf51_hal::pac::Peripherals::take().unwrap();
     let mut hardware = init_hardware(pc, pn);
 
-    loop {
-        hardware.leds.led_red.set_low().unwrap();
-        hardware.leds.led_yellow.set_low().unwrap();
-        hardware.leds.led_green.set_low().unwrap();
-        hardware.leds.led_blue.set_low().unwrap();
-
-        hardware.uart.put_bytes(b"Test string\n");
-        hardware.timer0.delay_ms(1000u32);
-
-        hardware.leds.led_red.set_high().unwrap();
-        hardware.leds.led_yellow.set_high().unwrap();
-        hardware.leds.led_green.set_high().unwrap();
-        hardware.leds.led_blue.set_high().unwrap();
-        hardware.timer0.delay_ms(1000u32);
-        // pn.
-    }
-
-
-
-
-
-
-    // for i in 0.. {
-    //     let len = mpu.get_fifo_count().unwrap();
-    //     let mut buf = [0; 28];
-    //     if len >= 28 {
-    //         let buf = mpu.read_fifo(&mut buf).unwrap();
-    //         let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-    //         let ypr = YawPitchRoll::from(q);
-    //         if i % 10 == 0 {
-    //             uart.write_str(&format!("YPR: {:?}\n", ypr));
-    //         }
-    //     }
+    // loop {
+    //     hardware.leds.led_red.set_low().unwrap();
+    //     hardware.leds.led_yellow.set_low().unwrap();
+    //     hardware.leds.led_green.set_low().unwrap();
+    //     hardware.leds.led_blue.set_low().unwrap();
+    //
+    //     hardware.uart.put_bytes(b"Test string\n");
+    //     hardware.timer0.delay_ms(1000u32);
+    //
+    //     hardware.leds.led_red.set_high().unwrap();
+    //     hardware.leds.led_yellow.set_high().unwrap();
+    //     hardware.leds.led_green.set_high().unwrap();
+    //     hardware.leds.led_blue.set_high().unwrap();
+    //     hardware.timer0.delay_ms(1000u32);
     // }
+
+
+
+
+
+
+    hardware.mpu.calibrate_accel(1).unwrap();
+    for i in 0.. {
+        let len = hardware.mpu.get_fifo_count().unwrap();
+        let mut buf = [0; 28];
+        if len >= 28 {
+            let buf = hardware.mpu.read_fifo(&mut buf).unwrap();
+            let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
+            let ypr = YawPitchRoll::from(q);
+            if i % 25 == 0 {
+                hardware.uart.put_bytes(format!("YPR: {:?}\n", ypr).as_bytes());
+            }
+        }
+    }
+    loop {}
     // loop {
     //     uart.write_str("This is a test\n");
     //     led.set_low();
