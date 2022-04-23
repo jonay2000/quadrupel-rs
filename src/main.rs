@@ -48,20 +48,33 @@ fn main() -> ! {
 
     let mut hardware = init_hardware(pc, pn);
 
+    let start_time = Motors::get_time_us();
+    let mut count = 0;
+
     loop {
+        count += 1;
         hardware.leds.led_red.set_low().unwrap();
-        hardware.leds.led_yellow.set_low().unwrap();
-        hardware.leds.led_green.set_low().unwrap();
-        hardware.leds.led_blue.set_low().unwrap();
-
-        log::info!("Test string");
-        hardware.timer0.delay_ms(1000u32);
-
+        let ypr = hardware.mpu.block_read_most_recent();
         hardware.leds.led_red.set_high().unwrap();
-        hardware.leds.led_yellow.set_high().unwrap();
-        hardware.leds.led_green.set_high().unwrap();
-        hardware.leds.led_blue.set_high().unwrap();
-        hardware.timer0.delay_ms(1000u32);
+
+        let d_time = (Motors::get_time_us() - start_time) / count;
+        log::info!("us per iteration: {} {} {} {}", d_time, ypr.pitch, ypr.roll, ypr.yaw);
+
+
+
+
+        // hardware.leds.led_yellow.set_low().unwrap();
+        // hardware.leds.led_green.set_low().unwrap();
+        // hardware.leds.led_blue.set_low().unwrap();
+        //
+        // log::info!("Test string");
+
+        // log::info!("YPR: {:?}", ypr);
+        //
+
+        // hardware.leds.led_yellow.set_high().unwrap();
+        // hardware.leds.led_green.set_high().unwrap();
+        // hardware.leds.led_blue.set_high().unwrap();
     }
 }
 

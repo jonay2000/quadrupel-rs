@@ -3,6 +3,7 @@ pub mod i2c;
 pub mod leds;
 pub mod motors;
 pub mod uart;
+pub mod barometer;
 
 use crate::hardware::adc::QAdc;
 use crate::hardware::i2c::{QMpu, I2C};
@@ -32,7 +33,7 @@ pub fn init_hardware(
     let leds = QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30);
     let uart = QUart::initialize(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC);
 
-    let i2c = I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02);
+    let i2c = I2C::new(pn.TWI1, gpio.p0_04, gpio.p0_02);
     let mpu = QMpu::new(i2c, &mut timer0);
     let adc = QAdc::new(pn.ADC, &mut pc.NVIC);
 

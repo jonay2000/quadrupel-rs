@@ -203,7 +203,7 @@ impl Motors {
         }))
     }
 
-    pub fn get_time_us(&self) -> u32 {
+    pub fn get_time_us() -> u32 {
         unsafe { GLOBAL_TIME }
     }
 

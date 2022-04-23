@@ -7,12 +7,22 @@ use nrf51_hal::gpio::{Disconnected, Pin};
 use nrf51_hal::twi::Pins;
 use nrf51_hal::{Timer, Twi};
 use nrf51_pac::twi0::frequency::FREQUENCY_A;
-use nrf51_pac::{TIMER0, TWI0};
+use nrf51_pac::{TIMER0, TWI0, TWI1};
+
+// THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
+// Vanilla sample takes 2500 us -> 400 Hz
+// Measure us per iteration, choose the lowest number that is often enough
+// 1 = 2500 us
+// 2 = 5000 us
+// 3 = 7500 us
+// 4 = 10k  us
+// etc..
+const SAMPLE_RATE_DIVIDER: u8 = 2;
 
 pub struct I2C {}
 
 impl I2C {
-    pub fn new(twi: TWI0, scl_pin: P0_04<Disconnected>, sda_pin: P0_02<Disconnected>) -> Twi<TWI0> {
+    pub fn new(twi: TWI1, scl_pin: P0_04<Disconnected>, sda_pin: P0_02<Disconnected>) -> Twi<TWI1> {
         let scl_pin = scl_pin.into_floating_input();
         let sda_pin = sda_pin.into_floating_input();
         Twi::new(
@@ -27,13 +37,13 @@ impl I2C {
 }
 
 pub struct QMpu {
-    mpu: Mpu6050<Twi<TWI0>>,
+    mpu: Mpu6050<Twi<TWI1>>,
 }
 impl QMpu {
-    pub fn new(twi: Twi<TWI0>, timer0: &mut Timer<TIMER0>) -> Self {
+    pub fn new(twi: Twi<TWI1>, timer0: &mut Timer<TIMER0>) -> Self {
         let mut mpu = Mpu6050::new(twi, Address::default()).unwrap();
         mpu.initialize_dmp(timer0).unwrap();
-        mpu.set_sample_rate_divider(1).unwrap();
+        mpu.set_sample_rate_divider(SAMPLE_RATE_DIVIDER).unwrap();
         QMpu { mpu }
     }
 
