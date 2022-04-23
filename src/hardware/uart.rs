@@ -22,16 +22,16 @@ pub struct InnerUart {
 
 /// Can be used for interfacing with the UART.
 /// It uses an interrupt to send bytes, when they're ready to send.
-pub struct QUART {
+pub struct QUart {
     uart: nrf51_pac::UART0,
     inner: CSCell<InnerUart>,
 }
 
 // only set once with QuadrupelUART.initialize() which can
 // only be called once.
-static QUADRUPEL_UART: OnceCell<QUART> = OnceCell::new();
+static QUADRUPEL_UART: OnceCell<QUart> = OnceCell::new();
 
-impl QUART {
+impl QUart {
     pub fn get() -> &'static Self {
         QUADRUPEL_UART.get()
     }
@@ -83,7 +83,7 @@ impl QUART {
             NVIC::unmask(Interrupt::UART0);
         }
 
-        let init = QUADRUPEL_UART.initialize(QUART {
+        let init = QUADRUPEL_UART.initialize(QUart {
             uart,
             inner: CSCell::new(InnerUart {
                 rx_queue: ConstGenericRingBuffer::new_const(),
@@ -123,7 +123,7 @@ impl QUART {
     }
 }
 
-pub struct QuadrupelUartWriter<'a>(&'a QUART);
+pub struct QuadrupelUartWriter<'a>(&'a QUart);
 
 impl<'a> Write for QuadrupelUartWriter<'a> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
@@ -135,7 +135,7 @@ impl<'a> Write for QuadrupelUartWriter<'a> {
 #[interrupt]
 unsafe fn UART0() {
     //We are the only thing running, so we can access the uart safely
-    let uart = QUART::get();
+    let uart = QUart::get();
 
     //Ready to read a bit
     if uart.uart.events_rxdrdy.read().bits() != 0 {

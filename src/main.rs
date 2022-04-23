@@ -68,58 +68,13 @@ fn main() -> ! {
     // }
 
 
-
-
-
-
-    hardware.mpu.calibrate_accel(1).unwrap();
     for i in 0.. {
-        let len = hardware.mpu.get_fifo_count().unwrap();
-        let mut buf = [0; 28];
-        if len >= 28 {
-            let buf = hardware.mpu.read_fifo(&mut buf).unwrap();
-            let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-            let ypr = YawPitchRoll::from(q);
-            if i % 25 == 0 {
-                hardware.uart.put_bytes(format!("YPR: {:?}\n", ypr).as_bytes());
-            }
-        }
+        let ypr = hardware.mpu.block_read_most_recent();
+
+        if i % 25 != 0 { continue; }
+        hardware.uart.put_bytes(format!("YPR: {:?}\n", ypr).as_bytes());
     }
     loop {}
-    // loop {
-    //     uart.write_str("This is a test\n");
-    //     led.set_low();
-    //     timer.delay_ms(1000u32);
-    //     uart.write_str("Or not?\n");
-    //     led.set_high();
-    //     timer.delay_ms(1000u32);
-    // }
-    //
-    // loop {
-    //     uart.write_str("This is a test\n");
-    //     led.set_low();
-    //     delay.delay_ms(1000);
-    //     uart.write_str("Or not?\n");
-    //     led.set_high();
-    //     delay.delay_ms(1000);
-    // }
-
-
-    // loop {
-    //     hardware.led_red.enable();
-    //     hardware.led_yellow.enable();
-    //     hardware.led_green.enable();
-    //     hardware.led_blue.enable();
-    //     hardware.adc.request_sample();
-    //     log::info!("Print!");
-    //
-    //     asm::delay(10000000);
-    //     hardware.led_red.disable();
-    //     hardware.led_yellow.disable();
-    //     hardware.led_green.disable();
-    //     hardware.led_blue.disable();
-    //     asm::delay(10000000);
-    // }
 }
 
 #[alloc_error_handler]

@@ -6,7 +6,7 @@ use nrf51_pac::{Interrupt};
 //TODO verify this is the correct format??
 pub type FU16 = FixedU16<types::extra::U12>;
 
-pub struct QuadrupelAdc {
+pub struct QAdc {
     adc: nrf51_pac::ADC,
 }
 
@@ -19,7 +19,7 @@ unsafe fn ADC() {
     ADC_RESULT = adc.result.read().result().bits();
 }
 
-impl QuadrupelAdc {
+impl QAdc {
     pub fn new(adc: nrf51_pac::ADC, nvic: &mut NVIC) -> Self {
         //We want to use Analog Input 4 as an input.
         adc.config.write(|w| w.psel().analog_input4());
@@ -35,7 +35,7 @@ impl QuadrupelAdc {
         unsafe { nvic.set_priority(Interrupt::ADC, 3); }
         unsafe { NVIC::unmask(Interrupt::ADC); }
 
-        QuadrupelAdc { adc }
+        QAdc { adc }
     }
 
     pub fn request_sample(&mut self) {
