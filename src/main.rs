@@ -50,6 +50,7 @@ fn main() -> ! {
 
     let pc = Peripherals::take().unwrap();
     let pn = nrf51_hal::pac::Peripherals::take().unwrap();
+
     let mut hardware = init_hardware(pc, pn);
 
     loop {
@@ -58,7 +59,7 @@ fn main() -> ! {
         hardware.leds.led_green.set_low().unwrap();
         hardware.leds.led_blue.set_low().unwrap();
 
-        hardware.uart.put_bytes(b"Test string\n");
+        log::info!("Test string");
         hardware.timer0.delay_ms(1000u32);
 
         hardware.leds.led_red.set_high().unwrap();

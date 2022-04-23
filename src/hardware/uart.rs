@@ -7,6 +7,7 @@ use nrf51_pac::Interrupt;
 use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
 use crate::Level;
 use crate::library::cs_cell::CSCell;
+use crate::library::logger::UartLogger;
 use crate::library::once_cell::OnceCell;
 
 pub struct InnerUart {
@@ -87,6 +88,9 @@ impl QUart {
                 tx_data_available: true,
             }),
         });
+
+        //Configure logging crate
+        UartLogger::initialize();
 
         init
     }
