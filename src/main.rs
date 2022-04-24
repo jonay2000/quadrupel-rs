@@ -28,7 +28,6 @@ use crate::hardware::init_hardware;
 use crate::hardware::motors::Motors;
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
-use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
 
 use nrf51_hal::gpio::Level;
 
@@ -58,10 +57,13 @@ fn main() -> ! {
         hardware.leds.led_red.set_high().unwrap();
 
         let d_time = (Motors::get_time_us() - start_time) / count;
-        log::info!("us per iteration: {} {} {} {}", d_time, ypr.pitch, ypr.roll, ypr.yaw);
-
-
-
+        log::info!(
+            "us per iteration: {} {} {} {}",
+            d_time,
+            ypr.pitch,
+            ypr.roll,
+            ypr.yaw
+        );
 
         // hardware.leds.led_yellow.set_low().unwrap();
         // hardware.leds.led_green.set_low().unwrap();

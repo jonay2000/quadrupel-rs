@@ -1,9 +1,9 @@
 pub mod adc;
+pub mod barometer;
 pub mod i2c;
 pub mod leds;
 pub mod motors;
 pub mod uart;
-pub mod barometer;
 
 use crate::hardware::adc::QAdc;
 use crate::hardware::i2c::{QMpu, I2C};
