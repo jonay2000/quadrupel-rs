@@ -71,13 +71,7 @@ impl QUart {
         uart.intenset
             .write(|w| w.rxdrdy().set_bit().txdrdy().set_bit().error().set_bit());
 
-        //Configure NVIC correctly
-        NVIC::unpend(Interrupt::UART0);
-        unsafe { nvic.set_priority(Interrupt::UART0, 3) };
-        unsafe {
-            NVIC::unmask(Interrupt::UART0);
-        }
-
+        //Init global state
         let init = QUADRUPEL_UART.initialize(QUart {
             uart,
             inner: CSCell::new(InnerUart {
@@ -86,6 +80,13 @@ impl QUart {
                 tx_data_available: true,
             }),
         });
+
+        //Start interrupt
+        NVIC::unpend(Interrupt::UART0);
+        unsafe { nvic.set_priority(Interrupt::UART0, 3) };
+        unsafe {
+            NVIC::unmask(Interrupt::UART0);
+        }
 
         //Configure logging crate
         UartLogger::initialize();

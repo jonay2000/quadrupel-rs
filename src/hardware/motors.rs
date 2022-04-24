@@ -6,6 +6,7 @@ use embedded_hal::digital::v2::OutputPin;
 use nrf51_hal::gpio::p0::P0_20;
 use nrf51_hal::gpio::{Disconnected, Output, PushPull};
 use nrf51_pac::{interrupt, Interrupt, GPIOTE, PPI};
+use crate::hardware::uart::QUart;
 
 pub struct Motors {
     motor_values: [u16; 4],
@@ -102,23 +103,6 @@ impl Motors {
         timer2.tasks_start.write(|w| unsafe { w.bits(1) });
         timer1.tasks_start.write(|w| unsafe { w.bits(1) });
 
-        // Configure interrupts
-        NVIC::unpend(Interrupt::TIMER2);
-        unsafe {
-            nvic.set_priority(Interrupt::TIMER2, 1);
-        }
-        unsafe {
-            NVIC::unmask(Interrupt::TIMER2);
-        }
-
-        NVIC::unpend(Interrupt::TIMER1);
-        unsafe {
-            nvic.set_priority(Interrupt::TIMER1, 1);
-        }
-        unsafe {
-            NVIC::unmask(Interrupt::TIMER1);
-        }
-
         // Link motor 0 - gpiote 0
         ppi.ch[0]
             .eep
@@ -194,13 +178,33 @@ impl Motors {
                 .set_bit()
         });
 
+        //Set up global state
         let pin20 = pin20.into_push_pull_output(Level::Low);
-        MOTORS.initialize(CSCell::new(Motors {
+        let reff = MOTORS.initialize(CSCell::new(Motors {
             motor_values: [0; 4],
             timer1,
             timer2,
             pin20,
-        }))
+        }));
+
+        // Configure interrupts
+        NVIC::unpend(Interrupt::TIMER2);
+        unsafe {
+            nvic.set_priority(Interrupt::TIMER2, 1);
+        }
+        unsafe {
+            NVIC::unmask(Interrupt::TIMER2);
+        }
+
+        NVIC::unpend(Interrupt::TIMER1);
+        unsafe {
+            nvic.set_priority(Interrupt::TIMER1, 1);
+        }
+        unsafe {
+            NVIC::unmask(Interrupt::TIMER1);
+        }
+
+        reff
     }
 
     pub fn get_time_us() -> u32 {
