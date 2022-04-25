@@ -1,3 +1,4 @@
+use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use mpu6050_dmp::address::Address;
 use mpu6050_dmp::sensor::Mpu6050;
@@ -47,23 +48,32 @@ impl QMpu {
     }
 
     pub fn read_most_recent(&mut self) -> Option<YawPitchRoll> {
+        // If there isn't a full packet ready, return none
         let mut len = self.mpu.get_fifo_count().unwrap();
-        let mut buf = [0; 28];
         if len < 28 {
             return None;
         }
+
+        // Keep reading while there are more full packets
+        let mut buf = [0; 28];
         while len >= 28 {
             self.mpu.read_fifo(&mut buf).unwrap();
             len -= 28;
         }
-        let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-        Some(YawPitchRoll::from(q))
+
+        // Convert the last full packet we received to yaw-pitch-roll
+        let q = Quaternion::from_bytes(&buf[..16]).unwrap();
+        let ypr = YawPitchRoll::from(q);
+        Some(ypr)
     }
 
-    pub fn block_read_most_recent(&mut self) -> YawPitchRoll {
+    pub fn block_read_most_recent(&mut self, timer0: &mut Timer<TIMER0>) -> YawPitchRoll {
         loop {
             match self.read_most_recent() {
-                None => {}
+                None => {
+                    //Try again after 100 us
+                    timer0.delay_us(100u32);
+                }
                 Some(ypr) => return ypr,
             }
         }

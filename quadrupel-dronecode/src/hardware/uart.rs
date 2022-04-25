@@ -93,6 +93,8 @@ impl QUart {
         //Configure logging crate
         UartLogger::initialize();
 
+        log::info!("UART init.");
+
         init
     }
 
