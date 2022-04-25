@@ -1,12 +1,17 @@
 use alloc::string::String;
+use alloc::vec::Vec;
 use bincode::config::standard;
 use bincode::{Encode, Decode};
 use bincode::enc::write::Writer;
-use bincode::error::EncodeError;
-use crate::control::state::State;
-use crate::control::MotorValue;
+use bincode::error::{DecodeError, EncodeError};
+use crate::MotorValue;
+use crate::state::State;
 
-#[derive(Encode)]
+#[cfg(feature = "python")]
+use serde::{Serialize, Deserialize};
+
+#[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
+#[derive(Decode, Encode)]
 pub enum SendMessage {
     Log(String),
     CurrentState(State),
@@ -26,8 +31,15 @@ impl SendMessage {
     pub fn encode(&self, w: impl Writer) -> Result<(), EncodeError> {
         bincode::encode_into_writer(self, w, standard())
     }
+
+    #[cfg(feature = "python")]
+    pub fn decode(r: &[u8]) -> Result<(Self, usize), DecodeError> {
+        bincode::decode_from_slice(r, standard())
+    }
 }
 
+
+#[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub enum Motor {
     M0 = 0,
@@ -36,7 +48,9 @@ pub enum Motor {
     M3 = 3,
 }
 
-#[derive(Decode)]
+
+#[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
+#[derive(Decode, Encode)]
 pub enum ReceiveMessage {
     ChangeState(State),
     MotorValue {
@@ -53,5 +67,16 @@ pub enum ReceiveMessage {
     TargetHeight(u32),
     TunePID {
         /* TODO */
+    }
+}
+
+impl ReceiveMessage {
+    #[cfg(feature = "python")]
+    pub fn encode_vec(&self) -> Result<Vec<u8>, EncodeError> {
+        bincode::encode_to_vec(self, standard())
+    }
+
+    pub fn decode(r: &[u8]) -> Result<(Self, usize), DecodeError> {
+        bincode::decode_from_slice(r, standard())
     }
 }

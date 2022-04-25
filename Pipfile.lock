@@ -1,0 +1,59 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "8905b1e60defcc03ff6b754e74299a9e84b37a484ec061e03e793fb4fdeca45d"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.10"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "maturin": {
+            "hashes": [
+                "sha256:09f8a91fca3076050d7dc90c33c051813519306040263657736ed7c98c6b060d",
+                "sha256:0a8370c107a575b2c01aa5fdbf584a01985cdc9b3da357f468891266f7ee04e1",
+                "sha256:2194d6506c9db7436c4b2bbfe5a644c3ea2fef2326de149a0cb3cd760d823ca9",
+                "sha256:26c11295f79a65cbdf08bbab7a29ffca9ca20427bce70c41057ff68a59292e9e",
+                "sha256:31a0e1a1936be4f33903564c9122cdc0477dc4451b62e4c7c8f500543959996f",
+                "sha256:37e0ddf2370811e8cad215f45dde03a94f3816e95851ca3101a7ef2fc4d333cc",
+                "sha256:47b8ef7a8e7b9ccd04fbc792cf18a5bc120457ed6ebd87a7dd8405effd680c57",
+                "sha256:5f83d3de4a077716f994d522454858f0bb3b180449eaada0cd0ca7961ee67309",
+                "sha256:608012e7ee88c62eff347c9e6ca257dcf60447ee2575b83f5142fba8ea5d71e7",
+                "sha256:6679a54c1ada50c49953dfc29105ae456f53ac5a4a21896af71793b3a6508567",
+                "sha256:6b68a7e70e7b05db517ca77814ce12157bc97e3842ab0ea16c827d04de7d334a",
+                "sha256:6b739e765785a9dae1be1d2b57e1e009b209aebd8e0e3b307aafdff08bfad40d",
+                "sha256:916e065e0fc8c9879de26c67d1f9713eda8989b791b0ee787eb7322f69469bcc",
+                "sha256:a20702274aacb53cad97c4e8ae0ac64517b8d97c3a779c138aa7c842f0666e24",
+                "sha256:c021a76988d4aa6e3f70568d4fcf245b6c779fbd194e80137e6b86bfd4be4d61",
+                "sha256:ea1e1510695eef3e15a1e87b495c2b03f13be2b922048c634e66c1fa30b61089",
+                "sha256:fd03805eafdd03279e1f8d77a240c325ffd5ea585f349bf7d823288ab655914b"
+            ],
+            "index": "pypi",
+            "version": "==0.12.13"
+        },
+        "quadrupel-python-bindings": {
+            "hashes": [
+                "sha256:8ec51b40493b99fc863c9807e8b4a2b1cca5bfd04088417bfef6bbcb0005dea5"
+            ],
+            "path": "./target/wheels/quadrupel_python_bindings-0.1.0-cp310-cp310-linux_x86_64.whl",
+            "version": "==0.1.0"
+        },
+        "tomli": {
+            "hashes": [
+                "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
+                "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"
+            ],
+            "markers": "python_version < '3.11'",
+            "version": "==2.0.1"
+        }
+    },
+    "develop": {}
+}
