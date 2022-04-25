@@ -28,6 +28,7 @@ use crate::hardware::init_hardware;
 use crate::hardware::motors::Motors;
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
 
 use nrf51_hal::gpio::Level;
 
@@ -53,8 +54,14 @@ fn main() -> ! {
     loop {
         count += 1;
         hardware.leds.led_red.set_low().unwrap();
+        hardware.leds.led_yellow.set_low().unwrap();
+        hardware.leds.led_green.set_low().unwrap();
+        hardware.leds.led_blue.set_low().unwrap();
         let ypr = hardware.mpu.block_read_most_recent();
         hardware.leds.led_red.set_high().unwrap();
+        hardware.leds.led_yellow.set_high().unwrap();
+        hardware.leds.led_green.set_high().unwrap();
+        hardware.leds.led_blue.set_high().unwrap();
 
         let d_time = (Motors::get_time_us() - start_time) / count;
         log::info!(
@@ -65,18 +72,16 @@ fn main() -> ! {
             ypr.yaw
         );
 
-        // hardware.leds.led_yellow.set_low().unwrap();
-        // hardware.leds.led_green.set_low().unwrap();
-        // hardware.leds.led_blue.set_low().unwrap();
+        hardware.timer0.delay_ms(1000u32);
+
+
         //
         // log::info!("Test string");
 
         // log::info!("YPR: {:?}", ypr);
         //
 
-        // hardware.leds.led_yellow.set_high().unwrap();
-        // hardware.leds.led_green.set_high().unwrap();
-        // hardware.leds.led_blue.set_high().unwrap();
+
     }
 }
 
