@@ -10,6 +10,7 @@
     <option name="backtrace" value="SHORT" />
     <envs>
       <env name="HARDWARE" value="1" />
+      <env name="PORT" value="ttyUSB0" />
     </envs>
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />

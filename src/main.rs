@@ -54,34 +54,25 @@ fn main() -> ! {
     loop {
         count += 1;
         hardware.leds.led_red.set_low().unwrap();
+        let ypr = hardware.mpu.block_read_most_recent();
+        hardware.leds.led_red.set_high().unwrap();
+
         hardware.leds.led_yellow.set_low().unwrap();
         hardware.leds.led_green.set_low().unwrap();
         hardware.leds.led_blue.set_low().unwrap();
-        let ypr = hardware.mpu.block_read_most_recent();
-        hardware.leds.led_red.set_high().unwrap();
-        hardware.leds.led_yellow.set_high().unwrap();
-        hardware.leds.led_green.set_high().unwrap();
-        hardware.leds.led_blue.set_high().unwrap();
+        hardware.timer0.delay_ms(500u32);
 
-        let d_time = (Motors::get_time_us() - start_time) / count;
-        log::info!(
-            "us per iteration: {} {} {} {}",
-            d_time,
-            ypr.pitch,
-            ypr.roll,
-            ypr.yaw
-        );
-
-        hardware.timer0.delay_ms(1000u32);
-
-
+        // hardware.leds.led_yellow.set_low().unwrap();
+        // hardware.leds.led_green.set_low().unwrap();
+        // hardware.leds.led_blue.set_low().unwrap();
         //
         // log::info!("Test string");
 
         // log::info!("YPR: {:?}", ypr);
-        //
 
-
+        // hardware.leds.led_yellow.set_high().unwrap();
+        // hardware.leds.led_green.set_high().unwrap();
+        // hardware.leds.led_blue.set_high().unwrap();
     }
 }
 
