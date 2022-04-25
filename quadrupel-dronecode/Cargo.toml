@@ -20,18 +20,3 @@ nrf51-pac = "0.11.0"
 cordic = "0.1.5"
 quadrupel-shared = {path = "../quadrupel-shared"}
 bincode = {version = "2.0.0-rc.1", default-features = false, features=["alloc"]}
-
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = 2
-incremental = false
-
-[profile.dev]
-incremental = false
-
-[profile.test]
-incremental = false
-
-[profile.bench]
-incremental = false

@@ -1,5 +1,4 @@
 use alloc::string::String;
-use alloc::vec::Vec;
 use bincode::config::standard;
 use bincode::{Encode, Decode};
 use bincode::enc::write::Writer;
