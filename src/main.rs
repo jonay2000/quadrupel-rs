@@ -19,7 +19,7 @@ extern crate cortex_m;
 
 use alloc_cortex_m::CortexMHeap;
 use core::alloc::Layout;
-use cortex_m::Peripherals;
+use cortex_m::{asm, Peripherals};
 
 #[cfg(not(test))]
 use panic_halt as _;
@@ -31,7 +31,6 @@ use crate::hardware::init_hardware;
 use crate::hardware::motors::Motors;
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::OutputPin;
-use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
 
 use nrf51_hal::gpio::Level;
 
@@ -46,6 +45,8 @@ fn main() -> ! {
     #[cfg(test)]
     test_main();
 
+    asm::delay(2500000);
+
     let pc = Peripherals::take().unwrap();
     let pn = nrf51_hal::pac::Peripherals::take().unwrap();
 
@@ -57,7 +58,7 @@ fn main() -> ! {
     loop {
         count += 1;
         hardware.leds.led_red.set_low().unwrap();
-        let ypr = hardware.mpu.block_read_most_recent();
+        let ypr = hardware.mpu.block_read_most_recent(&mut hardware.timer0);
         hardware.leds.led_red.set_high().unwrap();
 
         let d_time = (Motors::get_time_us() - start_time) / count;

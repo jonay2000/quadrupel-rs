@@ -1,3 +1,4 @@
+use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use mpu6050_dmp::address::Address;
 use mpu6050_dmp::sensor::Mpu6050;
@@ -7,6 +8,7 @@ use nrf51_hal::twi::Pins;
 use nrf51_hal::{Timer, Twi};
 use nrf51_pac::twi0::frequency::FREQUENCY_A;
 use nrf51_pac::{TIMER0, TWI1};
+use crate::Motors;
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz
@@ -47,6 +49,7 @@ impl QMpu {
     }
 
     pub fn read_most_recent(&mut self) -> Option<YawPitchRoll> {
+        let start = Motors::get_time_us();
         let mut len = self.mpu.get_fifo_count().unwrap();
         let mut buf = [0; 28];
         if len < 28 {
@@ -56,14 +59,19 @@ impl QMpu {
             self.mpu.read_fifo(&mut buf).unwrap();
             len -= 28;
         }
-        let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-        Some(YawPitchRoll::from(q))
+        let q = Quaternion::from_bytes(&buf[..16]).unwrap();
+        let ypr = YawPitchRoll::from(q);
+        log::info!("{}", Motors::get_time_us() - start);
+        Some(ypr)
     }
 
-    pub fn block_read_most_recent(&mut self) -> YawPitchRoll {
+    pub fn block_read_most_recent(&mut self, timer0: &mut Timer<TIMER0>) -> YawPitchRoll {
         loop {
             match self.read_most_recent() {
-                None => {}
+                None => {
+                    //Try again after 100 us
+                    timer0.delay_us(100u32);
+                }
                 Some(ypr) => return ypr,
             }
         }
