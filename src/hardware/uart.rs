@@ -3,6 +3,8 @@ use crate::library::logger::UartLogger;
 use crate::library::once_cell::OnceCell;
 use crate::Level;
 use core::fmt::Write;
+use bincode::enc::write::Writer;
+use bincode::error::EncodeError;
 use cortex_m::peripheral::NVIC;
 use nrf51_hal::gpio::p0::{P0_14, P0_16};
 use nrf51_hal::gpio::Disconnected;
@@ -127,6 +129,13 @@ pub struct QuadrupelUartWriter<'a>(&'a QUart);
 impl<'a> Write for QuadrupelUartWriter<'a> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.0.put_bytes(s.as_bytes());
+        Ok(())
+    }
+}
+
+impl<'a> Writer for QuadrupelUartWriter<'a> {
+    fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
+        self.0.put_bytes(bytes);
         Ok(())
     }
 }
