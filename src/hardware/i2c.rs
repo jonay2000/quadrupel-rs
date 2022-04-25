@@ -48,7 +48,7 @@ impl QMpu {
         QMpu { mpu }
     }
 
-    pub fn read_most_recent(&mut self) -> Option<YawPitchRoll> {
+    pub fn read_most_recent(&mut self) -> Option<mpu6050_dmp::yaw_pitch_roll::YawPitchRoll> {
         let mut len = self.mpu.get_fifo_count().unwrap();
         let mut buf = [0; 28];
         if len < 28 {
@@ -59,16 +59,15 @@ impl QMpu {
             len -= 28;
         }
         // let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-        // let qo = mpu6050_dmp::quaternion::Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
+        let q = mpu6050_dmp::quaternion::Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
         // let q = Quaternion::from_bytes(&buf[..16]).unwrap();
         // let qo = mpu6050_dmp::quaternion::Quaternion::from_bytes(&buf[..16]).unwrap();
         // log::info!("{:?} {:?}", q, qo);
         // log::info!("{:?} {:?}", q.magnitude(), qo.magnitude());
-        // Some(YawPitchRoll::from(q))
-        todo!()
+        Some(mpu6050_dmp::yaw_pitch_roll::YawPitchRoll::from(q))
     }
 
-    pub fn block_read_most_recent(&mut self) -> YawPitchRoll {
+    pub fn block_read_most_recent(&mut self) -> mpu6050_dmp::yaw_pitch_roll::YawPitchRoll {
         loop {
             match self.read_most_recent() {
                 None => {}
