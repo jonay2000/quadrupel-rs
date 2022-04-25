@@ -1,13 +1,14 @@
 use mpu6050_dmp::address::Address;
-use mpu6050_dmp::quaternion::Quaternion;
 use mpu6050_dmp::sensor::Mpu6050;
-use mpu6050_dmp::yaw_pitch_roll::YawPitchRoll;
 use nrf51_hal::gpio::p0::{P0_02, P0_04};
 use nrf51_hal::gpio::{Disconnected, Pin};
 use nrf51_hal::twi::Pins;
 use nrf51_hal::{Timer, Twi};
 use nrf51_pac::twi0::frequency::FREQUENCY_A;
 use nrf51_pac::{TIMER0, TWI1};
+// use mpu6050_dmp::quaternion::Quaternion;
+// use mpu6050_dmp::yaw_pitch_roll::YawPitchRoll;
+use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz
@@ -58,6 +59,7 @@ impl QMpu {
             len -= 28;
         }
         let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
+        log::info!("{:?}", q);
         Some(YawPitchRoll::from(q))
     }
 
