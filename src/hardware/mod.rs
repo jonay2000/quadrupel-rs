@@ -1,5 +1,4 @@
 pub mod adc;
-pub mod barometer;
 pub mod i2c;
 pub mod leds;
 pub mod motors;

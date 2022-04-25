@@ -1,3 +1,4 @@
+use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use mpu6050_dmp::address::Address;
 use mpu6050_dmp::sensor::Mpu6050;
 use nrf51_hal::gpio::p0::{P0_02, P0_04};
@@ -6,9 +7,6 @@ use nrf51_hal::twi::Pins;
 use nrf51_hal::{Timer, Twi};
 use nrf51_pac::twi0::frequency::FREQUENCY_A;
 use nrf51_pac::{TIMER0, TWI1};
-// use mpu6050_dmp::quaternion::Quaternion;
-// use mpu6050_dmp::yaw_pitch_roll::YawPitchRoll;
-use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz
@@ -48,7 +46,7 @@ impl QMpu {
         QMpu { mpu }
     }
 
-    pub fn read_most_recent(&mut self) -> Option<mpu6050_dmp::yaw_pitch_roll::YawPitchRoll> {
+    pub fn read_most_recent(&mut self) -> Option<YawPitchRoll> {
         let mut len = self.mpu.get_fifo_count().unwrap();
         let mut buf = [0; 28];
         if len < 28 {
@@ -58,16 +56,11 @@ impl QMpu {
             self.mpu.read_fifo(&mut buf).unwrap();
             len -= 28;
         }
-        // let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-        let q = mpu6050_dmp::quaternion::Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-        // let q = Quaternion::from_bytes(&buf[..16]).unwrap();
-        // let qo = mpu6050_dmp::quaternion::Quaternion::from_bytes(&buf[..16]).unwrap();
-        // log::info!("{:?} {:?}", q, qo);
-        // log::info!("{:?} {:?}", q.magnitude(), qo.magnitude());
-        Some(mpu6050_dmp::yaw_pitch_roll::YawPitchRoll::from(q))
+        let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
+        Some(YawPitchRoll::from(q))
     }
 
-    pub fn block_read_most_recent(&mut self) -> mpu6050_dmp::yaw_pitch_roll::YawPitchRoll {
+    pub fn block_read_most_recent(&mut self) -> YawPitchRoll {
         loop {
             match self.read_most_recent() {
                 None => {}

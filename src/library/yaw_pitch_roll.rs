@@ -1,10 +1,8 @@
 use cordic::{atan2, sqrt};
-use fixed::{FixedI32, types};
-// use fixed::traits::*;
-// use fixed::prelude::*;
-// use fixed::types::*;
+use fixed::{types, FixedI32, FixedI64};
 
 pub type FI32 = FixedI32<types::extra::U14>;
+pub type FI64 = FixedI64<types::extra::U14>;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Quaternion {
@@ -23,13 +21,17 @@ impl Quaternion {
         let x = FI32::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
         let y = FI32::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]]);
         let z = FI32::from_be_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]);
-        Some(Quaternion { w,x,y,z })
+        Some(Quaternion { w, x, y, z })
     }
 
     pub fn magnitude(&self) -> FI32 {
-        let q = self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z;
-        log::info!("{}", q);
-        sqrt(q)
+        let w: FI64 = self.w.into();
+        let x: FI64 = self.x.into();
+        let y: FI64 = self.y.into();
+        let z: FI64 = self.z.into();
+
+        let mag: FI64 = sqrt(w * w + x * x + y * y + z * z);
+        mag.to_num()
     }
 
     pub fn normalize(&self) -> Self {
@@ -70,32 +72,23 @@ pub struct YawPitchRoll {
 
 impl From<Quaternion> for YawPitchRoll {
     fn from(q: Quaternion) -> Self {
-        log::info!("x1");
         let gravity = Gravity::from(q);
-        log::info!("x2");
+
         // yaw: (about Z axis)
         let yaw = atan2(
             2 * q.x * q.y - 2 * q.w * q.z,
             2 * q.w * q.w + 2 * q.x * q.x - FI32::from(1i16),
         );
-        log::info!("x3 {:?} {}", gravity, (gravity.y * gravity.y + gravity.z * gravity.z));
         // pitch: (nose up/down, about Y axis)
-        let part = sqrt((gravity.y * gravity.y + gravity.z * gravity.z));
-        log::info!("x3.5");
         let pitch = atan2(
             gravity.x,
-            part,
+            sqrt(gravity.y * gravity.y + gravity.z * gravity.z),
         );
-        log::info!("x4");
         // roll: (tilt left/right, about X axis)
         let roll = atan2(gravity.y, gravity.z);
-        log::info!("x5");
+
         //pitch = PI - pitch;
 
-        Self {
-            yaw,
-            pitch,
-            roll,
-        }
+        Self { yaw, pitch, roll }
     }
 }
