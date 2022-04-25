@@ -1,7 +1,6 @@
 use cordic::{atan2, sqrt};
-use fixed::{types, FixedI32, FixedI64};
+use fixed::{types, FixedI32};
 
-pub type FI32O = FixedI32<types::extra::U30>;
 pub type FI32 = FixedI32<types::extra::U16>;
 
 #[derive(Debug, Copy, Clone)]
@@ -17,10 +16,10 @@ impl Quaternion {
         if bytes.len() != 16 {
             return None;
         }
-        let w = FI32O::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
-        let x = FI32O::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
-        let y = FI32O::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]]);
-        let z = FI32O::from_be_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]);
+        let w = FixedI32::<types::extra::U30>::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
+        let x = FixedI32::<types::extra::U30>::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
+        let y = FixedI32::<types::extra::U30>::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]]);
+        let z = FixedI32::<types::extra::U30>::from_be_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]);
         Some(Quaternion { w: FI32::from_num(w), x: FI32::from_num(x), y: FI32::from_num(y), z: FI32::from_num(z) })
     }
 }
@@ -32,6 +31,7 @@ pub struct YawPitchRoll {
 }
 
 impl From<Quaternion> for YawPitchRoll {
+    // Rust shows some errors in this function if using CLion, they're fake
     fn from(q: Quaternion) -> Self {
         let Quaternion { w, x, y, z } = q;
 
