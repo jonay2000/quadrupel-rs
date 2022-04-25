@@ -58,9 +58,14 @@ impl QMpu {
             self.mpu.read_fifo(&mut buf).unwrap();
             len -= 28;
         }
-        let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
-        log::info!("{:?}", q);
-        Some(YawPitchRoll::from(q))
+        // let q = Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
+        // let qo = mpu6050_dmp::quaternion::Quaternion::from_bytes(&buf[..16]).unwrap().normalize();
+        // let q = Quaternion::from_bytes(&buf[..16]).unwrap();
+        // let qo = mpu6050_dmp::quaternion::Quaternion::from_bytes(&buf[..16]).unwrap();
+        // log::info!("{:?} {:?}", q, qo);
+        // log::info!("{:?} {:?}", q.magnitude(), qo.magnitude());
+        // Some(YawPitchRoll::from(q))
+        todo!()
     }
 
     pub fn block_read_most_recent(&mut self) -> YawPitchRoll {

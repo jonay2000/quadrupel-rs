@@ -27,7 +27,9 @@ impl Quaternion {
     }
 
     pub fn magnitude(&self) -> FI32 {
-        sqrt(self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z)
+        let q = self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z;
+        log::info!("{}", q);
+        sqrt(q)
     }
 
     pub fn normalize(&self) -> Self {
