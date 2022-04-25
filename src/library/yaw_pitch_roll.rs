@@ -26,25 +26,6 @@ impl Quaternion {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct Gravity {
-    pub x: FI32,
-    pub y: FI32,
-    pub z: FI32,
-}
-
-impl Gravity {}
-
-impl From<Quaternion> for Gravity {
-    fn from(q: Quaternion) -> Self {
-        Self {
-            x: 2 * (q.x * q.z - q.w * q.y),
-            y: 2 * (q.w * q.x + q.y * q.z),
-            z: q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z,
-        }
-    }
-}
-
 pub struct YawPitchRoll {
     pub yaw: FI32,
     pub pitch: FI32,
@@ -53,23 +34,27 @@ pub struct YawPitchRoll {
 
 impl From<Quaternion> for YawPitchRoll {
     fn from(q: Quaternion) -> Self {
-        let gravity = Gravity::from(q);
+        let Quaternion { w, x, y, z } = q;
+        
+        let gx = 2 * (x * z - w * y);
+        let gy = 2 * (w * x + y * z);
+        let gz = w * w - x * x - y * y + z * z;
 
         // yaw: (about Z axis)
         let yaw = atan2(
-            2 * q.x * q.y - 2 * q.w * q.z,
-            2 * q.w * q.w + 2 * q.x * q.x - FI32::from_num(1),
+            2 * x * y - 2 * w * z,
+            2 * w * w + 2 * x * x - FI32::from_num(1),
         );
+
         // pitch: (nose up/down, about Y axis)
         let pitch = atan2(
-            gravity.x,
-            sqrt(gravity.y * gravity.y + gravity.z * gravity.z),
+            gx,
+            sqrt(gy * gy + gz * gz),
         );
+
         // roll: (tilt left/right, about X axis)
-        let roll = atan2(gravity.y, gravity.z);
+        let roll = atan2(gy, gz);
 
-        //pitch = PI - pitch;
-
-        Self { yaw,pitch,roll }
+        Self { yaw, pitch, roll }
     }
 }

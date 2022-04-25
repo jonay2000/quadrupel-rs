@@ -8,7 +8,6 @@ use nrf51_hal::twi::Pins;
 use nrf51_hal::{Timer, Twi};
 use nrf51_pac::twi0::frequency::FREQUENCY_A;
 use nrf51_pac::{TIMER0, TWI1};
-use crate::Motors;
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz
@@ -49,19 +48,22 @@ impl QMpu {
     }
 
     pub fn read_most_recent(&mut self) -> Option<YawPitchRoll> {
-        let start = Motors::get_time_us();
+        // If there isn't a full packet ready, return none
         let mut len = self.mpu.get_fifo_count().unwrap();
-        let mut buf = [0; 28];
         if len < 28 {
             return None;
         }
+
+        // Keep reading while there are more full packets
+        let mut buf = [0; 28];
         while len >= 28 {
             self.mpu.read_fifo(&mut buf).unwrap();
             len -= 28;
         }
+
+        // Convert the last full packet we received to yaw-pitch-roll
         let q = Quaternion::from_bytes(&buf[..16]).unwrap();
         let ypr = YawPitchRoll::from(q);
-        log::info!("{}", Motors::get_time_us() - start);
         Some(ypr)
     }
 
