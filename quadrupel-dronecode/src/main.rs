@@ -57,7 +57,7 @@ fn main() -> ! {
     loop {
         count += 1;
         hardware.leds.led_red.set_low().unwrap();
-        let ypr = hardware.mpu.block_read_most_recent(&mut hardware.timer0);
+        let ypr = hardware.mpu.block_read_mpu(&mut hardware.timer0);
         hardware.leds.led_red.set_high().unwrap();
 
         let d_time = (Motors::get_time_us() - start_time) / count;
@@ -70,21 +70,6 @@ fn main() -> ! {
                 ypr.yaw
             );
         }
-
-        // hardware.leds.led_yellow.set_low().unwrap();
-        // hardware.leds.led_green.set_low().unwrap();
-        // hardware.leds.led_blue.set_low().unwrap();
-        // hardware.timer0.delay_ms(500u32);
-        //
-        // log::info!("Test string");
-        //
-        // // log::info!("YPR: {:?}", ypr);
-        //
-        //
-        // hardware.leds.led_yellow.set_high().unwrap();
-        // hardware.leds.led_green.set_high().unwrap();
-        // hardware.leds.led_blue.set_high().unwrap();
-        // hardware.timer0.delay_ms(500u32);
     }
 }
 

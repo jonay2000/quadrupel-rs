@@ -1,6 +1,8 @@
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
+use mpu6050_dmp::accel::Accel;
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use mpu6050_dmp::address::Address;
+use mpu6050_dmp::gyro::Gyro;
 use mpu6050_dmp::sensor::Mpu6050;
 use nrf51_hal::gpio::p0::{P0_02, P0_04};
 use nrf51_hal::gpio::{Disconnected, Pin};
@@ -47,7 +49,15 @@ impl QMpu {
         QMpu { mpu }
     }
 
-    pub fn read_most_recent(&mut self) -> Option<YawPitchRoll> {
+    pub fn disable_mpu(&mut self) {
+        self.mpu.disable_dmp().unwrap();
+    }
+
+    pub fn enable_mpu(&mut self) {
+        self.mpu.enable_dmp().unwrap();
+    }
+
+    pub fn read_mpu(&mut self) -> Option<YawPitchRoll> {
         // If there isn't a full packet ready, return none
         let mut len = self.mpu.get_fifo_count().unwrap();
         if len < 28 {
@@ -67,9 +77,9 @@ impl QMpu {
         Some(ypr)
     }
 
-    pub fn block_read_most_recent(&mut self, timer0: &mut Timer<TIMER0>) -> YawPitchRoll {
+    pub fn block_read_mpu(&mut self, timer0: &mut Timer<TIMER0>) -> YawPitchRoll {
         loop {
-            match self.read_most_recent() {
+            match self.read_mpu() {
                 None => {
                     //Try again after 100 us
                     timer0.delay_us(100u32);
@@ -78,4 +88,11 @@ impl QMpu {
             }
         }
     }
+
+    pub fn read_accel_gyro(&mut self) -> (Accel, Gyro) {
+        let acc = self.mpu.accel().unwrap();
+        let gyro = self.mpu.gyro().unwrap();
+        (acc, gyro)
+    }
 }
+
