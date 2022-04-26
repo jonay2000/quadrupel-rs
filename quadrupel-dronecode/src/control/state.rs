@@ -1,5 +1,5 @@
-use quadrupel_shared::state::State;
 use crate::library::cs_cell::CSCell;
+use quadrupel_shared::state::State;
 
 static GLOBAL_STATE: CSCell<State> = CSCell::new(State::Safe);
 

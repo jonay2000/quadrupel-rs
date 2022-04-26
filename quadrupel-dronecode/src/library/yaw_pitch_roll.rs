@@ -16,11 +16,22 @@ impl Quaternion {
         if bytes.len() != 16 {
             return None;
         }
-        let w = FixedI32::<types::extra::U30>::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
-        let x = FixedI32::<types::extra::U30>::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
-        let y = FixedI32::<types::extra::U30>::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]]);
-        let z = FixedI32::<types::extra::U30>::from_be_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]);
-        Some(Quaternion { w: FI32::from_num(w), x: FI32::from_num(x), y: FI32::from_num(y), z: FI32::from_num(z) })
+        let w =
+            FixedI32::<types::extra::U30>::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
+        let x =
+            FixedI32::<types::extra::U30>::from_be_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
+        let y = FixedI32::<types::extra::U30>::from_be_bytes([
+            bytes[8], bytes[9], bytes[10], bytes[11],
+        ]);
+        let z = FixedI32::<types::extra::U30>::from_be_bytes([
+            bytes[12], bytes[13], bytes[14], bytes[15],
+        ]);
+        Some(Quaternion {
+            w: FI32::from_num(w),
+            x: FI32::from_num(x),
+            y: FI32::from_num(y),
+            z: FI32::from_num(z),
+        })
     }
 }
 
@@ -46,10 +57,7 @@ impl From<Quaternion> for YawPitchRoll {
         );
 
         // pitch: (nose up/down, about Y axis)
-        let pitch = atan2(
-            gx,
-            sqrt(gy * gy + gz * gz),
-        );
+        let pitch = atan2(gx, sqrt(gy * gy + gz * gz));
 
         // roll: (tilt left/right, about X axis)
         let roll = atan2(gy, gz);

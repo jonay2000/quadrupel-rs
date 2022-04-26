@@ -1,7 +1,7 @@
 pub mod state;
 
-use quadrupel_shared::MotorValue;
 use crate::library::yaw_pitch_roll::YawPitchRoll;
+use quadrupel_shared::MotorValue;
 
 pub struct SensorValues {
     mpu: YawPitchRoll,

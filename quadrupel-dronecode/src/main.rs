@@ -17,7 +17,9 @@ mod control;
 extern crate alloc;
 extern crate cortex_m;
 
+use alloc::boxed::Box;
 use alloc::format;
+use alloc::vec::Vec;
 use alloc_cortex_m::CortexMHeap;
 use core::alloc::Layout;
 use core::panic::PanicInfo;
@@ -29,8 +31,8 @@ use cortex_m_rt::entry;
 use cortex_m_semihosting::hprintln;
 use embedded_hal::digital::v2::OutputPin;
 
-use nrf51_hal::gpio::Level;
 use crate::hardware::uart::QUart;
+use nrf51_hal::gpio::Level;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -87,6 +89,5 @@ fn panic(info: &PanicInfo) -> ! {
     #[cfg(not(test))]
     QUart::get().put_bytes(format!("{}", info).as_bytes());
 
-
-    loop{}
+    loop {}
 }

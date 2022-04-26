@@ -1,6 +1,6 @@
+use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
 use mpu6050_dmp::accel::Accel;
-use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use mpu6050_dmp::address::Address;
 use mpu6050_dmp::gyro::Gyro;
 use mpu6050_dmp::sensor::Mpu6050;
@@ -23,15 +23,15 @@ use nrf51_pac::{TIMER0, TWI1};
 // ... increasing in increments of 2500 us
 const SAMPLE_RATE_DIVIDER: u8 = 2;
 
-pub struct QMpu {
-    mpu: Mpu6050<Twi<TWI1>>,
+pub struct QMpu6050<T: nrf51_hal::twi::Instance> {
+    mpu: Mpu6050<Twi<T>>,
 }
-impl QMpu {
-    pub fn new(twi: Twi<TWI1>, timer0: &mut Timer<TIMER0>) -> Self {
+impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
+    pub fn new(twi: Twi<T>, timer0: &mut Timer<TIMER0>) -> Self {
         let mut mpu = Mpu6050::new(twi, Address::default()).unwrap();
         mpu.initialize_dmp(timer0).unwrap();
         mpu.set_sample_rate_divider(SAMPLE_RATE_DIVIDER).unwrap();
-        QMpu { mpu }
+        QMpu6050 { mpu }
     }
 
     pub fn disable_mpu(&mut self) {

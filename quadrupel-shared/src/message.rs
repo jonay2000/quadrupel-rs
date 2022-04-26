@@ -1,13 +1,13 @@
+use crate::state::State;
+use crate::MotorValue;
 use alloc::string::String;
 use bincode::config::standard;
-use bincode::{Encode, Decode};
 use bincode::enc::write::Writer;
 use bincode::error::{DecodeError, EncodeError};
-use crate::MotorValue;
-use crate::state::State;
+use bincode::{Decode, Encode};
 
 #[cfg(feature = "python")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Decode, Encode)]
@@ -20,9 +20,7 @@ pub enum SendMessage {
         pitch: u32,
         yaw: u32,
     },
-    MotorPidParams {
-        /* TODO */
-    },
+    MotorPidParams {/* TODO */},
     Battery(u16),
 }
 
@@ -37,36 +35,26 @@ impl SendMessage {
     }
 }
 
-
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
 pub enum Motor {
     M0 = 0,
-    M1 = 1 ,
+    M1 = 1,
     M2 = 2,
     M3 = 3,
 }
-
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Decode, Encode)]
 pub enum ReceiveMessage {
     ChangeState(State),
-    MotorValue {
-        motor: Motor,
-        value: MotorValue,
-    },
-    MotorValueRel {
-        motor: Motor,
-        value: MotorValue,
-    },
+    MotorValue { motor: Motor, value: MotorValue },
+    MotorValueRel { motor: Motor, value: MotorValue },
     TargetYaw(u32),
     TargetPitch(u32),
     TargetRoll(u32),
     TargetHeight(u32),
-    TunePID {
-        /* TODO */
-    }
+    TunePID {/* TODO */},
 }
 
 impl ReceiveMessage {

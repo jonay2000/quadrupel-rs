@@ -1,7 +1,7 @@
-use bincode::{Encode, Decode};
+use bincode::{Decode, Encode};
 
 #[cfg(feature = "python")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode)]
