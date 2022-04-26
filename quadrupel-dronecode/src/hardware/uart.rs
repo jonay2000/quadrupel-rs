@@ -117,7 +117,7 @@ impl QUart {
         }
     }
 
-    pub fn get_byte(&mut self) -> Option<u8> {
+    pub fn get_byte(&self) -> Option<u8> {
         self.inner.update(|i| i.rx_queue.dequeue())
     }
 

@@ -1,6 +1,7 @@
 use crate::state::State;
 use crate::MotorValue;
 use alloc::string::String;
+use alloc::vec::Vec;
 use bincode::config::standard;
 use bincode::enc::write::Writer;
 use bincode::error::{DecodeError, EncodeError};

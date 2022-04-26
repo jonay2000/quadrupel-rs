@@ -56,22 +56,29 @@ fn main() -> ! {
     let start_time = Motors::get_time_us();
     let mut count = 0;
 
+
+
     loop {
         count += 1;
         hardware.leds.led_red.set_low().unwrap();
         let ypr = hardware.mpu.block_read_mpu(&mut hardware.timer0);
         hardware.leds.led_red.set_high().unwrap();
 
-        let d_time = (Motors::get_time_us() - start_time) / count;
-        if count % 50 == 0 {
-            log::info!(
-                "us per iteration: {} {} {} {}",
-                d_time,
-                ypr.pitch,
-                ypr.roll,
-                ypr.yaw
-            );
+        //Uart echo server
+        while let Some(b) = QUart::get().get_byte() {
+            QUart::get().put_byte(b);
         }
+
+        // let d_time = (Motors::get_time_us() - start_time) / count;
+        // if count % 50 == 0 {
+        //     log::info!(
+        //         "us per iteration: {} {} {} {}",
+        //         d_time,
+        //         ypr.pitch,
+        //         ypr.roll,
+        //         ypr.yaw
+        //     );
+        // }
     }
 }
 
