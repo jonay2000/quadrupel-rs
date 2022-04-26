@@ -3,15 +3,17 @@ pub mod i2c;
 pub mod leds;
 pub mod motors;
 pub mod uart;
+pub mod mpu6050;
 
 use crate::hardware::adc::QAdc;
-use crate::hardware::i2c::{QMpu, I2C};
+use crate::hardware::i2c::{I2C};
 use crate::hardware::leds::QLeds;
 use crate::hardware::uart::QUart;
 use crate::library::cs_cell::CSCell;
 use crate::Motors;
 use nrf51_hal::Timer;
 use nrf51_pac::TIMER0;
+use crate::hardware::mpu6050::QMpu;
 
 pub struct Hardware {
     pub leds: QLeds,

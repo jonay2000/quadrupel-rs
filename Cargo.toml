@@ -1,3 +1,18 @@
 [workspace]
 members = ["quadrupel-dronecode", "quadrupel-shared", "quadrupel_python_bindings"]
 default-members = ["quadrupel-dronecode", "quadrupel-shared"]
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+incremental = false
+
+[profile.dev]
+incremental = false
+
+[profile.test]
+incremental = false
+
+[profile.bench]
+incremental = false

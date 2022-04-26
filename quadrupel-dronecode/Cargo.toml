@@ -9,7 +9,6 @@ readme = "README.md"
 cortex-m = {version = "0.7.4", features = ["inline-asm"]}
 cortex-m-rt = "0.6.15"
 cortex-m-semihosting = "0.5.0"
-panic-halt = "0.2.0"
 alloc-cortex-m = "0.4.2"
 fixed = "1.14.0"
 ringbuffer = {git = "https://github.com/NULLx76/ringbuffer/", branch = "const-fn", features = ["const-fn"], version = "0.8.5"}
@@ -21,21 +20,3 @@ nrf51-pac = "0.11.0"
 cordic = "0.1.5"
 quadrupel-shared = {path = "../quadrupel-shared"}
 bincode = {version = "2.0.0-rc.1", default-features = false, features=["alloc"]}
-
-[dev-dependencies]
-panic-semihosting = { version = "0.6.0", features = ["exit"] }
-
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = 2
-incremental = false
-
-[profile.dev]
-incremental = false
-
-[profile.test]
-incremental = false
-
-[profile.bench]
-incremental = false
