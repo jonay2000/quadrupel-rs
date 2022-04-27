@@ -62,7 +62,7 @@ fn main() -> ! {
     loop {
         hardware.leds.led_red.set_low().unwrap();
         // let ypr = hardware.mpu.block_read_mpu(&mut hardware.timer0);
-        let pressure = hardware.baro.read_most_recent();
+        let pressure = hardware.baro.read_pressure();
         hardware.leds.led_red.set_high().unwrap();
 
         //Uart echo server
