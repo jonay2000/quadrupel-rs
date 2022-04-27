@@ -56,12 +56,13 @@ fn main() -> ! {
     let start_time = Motors::get_time_us();
     let mut count = 0;
 
+    let mut last_pressure = 0;
 
 
     loop {
-        count += 1;
         hardware.leds.led_red.set_low().unwrap();
-        let ypr = hardware.mpu.block_read_mpu(&mut hardware.timer0);
+        // let ypr = hardware.mpu.block_read_mpu(&mut hardware.timer0);
+        let pressure = hardware.baro.read_most_recent();
         hardware.leds.led_red.set_high().unwrap();
 
         //Uart echo server
@@ -69,16 +70,20 @@ fn main() -> ! {
             QUart::get().put_byte(b);
         }
 
-        // let d_time = (Motors::get_time_us() - start_time) / count;
-        // if count % 50 == 0 {
-        //     log::info!(
-        //         "us per iteration: {} {} {} {}",
-        //         d_time,
-        //         ypr.pitch,
-        //         ypr.roll,
-        //         ypr.yaw
-        //     );
-        // }
+        if last_pressure != pressure {
+            count += 1;
+            let d_time = (Motors::get_time_us() - start_time) / count;
+            last_pressure = pressure;
+            if count % 10 != 0 { continue; }
+            log::info!(
+                "us per iteration: {} {}",
+                d_time,
+                pressure
+                // ypr.pitch,
+                // ypr.roll,
+                // ypr.yaw
+            );
+        }
     }
 }
 

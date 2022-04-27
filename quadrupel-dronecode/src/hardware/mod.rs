@@ -20,8 +20,8 @@ use crate::hardware::ms5611::QMs5611;
 pub struct Hardware {
     pub leds: QLeds,
     pub uart: &'static QUart,
-    pub mpu: QMpu6050<TWI0>,
-    // pub baro: QMs5611<TWI0>,
+    // pub mpu: QMpu6050<TWI0>,
+    pub baro: QMs5611<TWI0>,
     pub adc: QAdc,
     pub timer0: Timer<TIMER0>,
     pub motors: &'static CSCell<Motors>,
@@ -38,8 +38,8 @@ pub fn init_hardware(
     let uart = QUart::initialize(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC);
 
     let i2c = I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02);
-    let mpu = QMpu6050::new(i2c, &mut timer0);
-    // let baro = QMs5611::new()
+    // let mpu = QMpu6050::new(i2c, &mut timer0);
+    let baro = QMs5611::new(i2c);
     let adc = QAdc::new(pn.ADC, &mut pc.NVIC);
 
     let motors = Motors::initialize(
@@ -54,7 +54,8 @@ pub fn init_hardware(
     Hardware {
         leds,
         uart,
-        mpu,
+        // mpu,
+        baro,
         adc,
         timer0,
         motors,
