@@ -111,7 +111,7 @@ fn main() -> ! {
         }
 
         //Check heartbeat
-        if state.get_mode() == Mode::Safe && (Motors::get_time_us() - last_message_time) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
+        if state.get_mode() != Mode::Safe && (Motors::get_time_us() - last_message_time) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
             state.set_mode(Mode::Panic);
         }
 
