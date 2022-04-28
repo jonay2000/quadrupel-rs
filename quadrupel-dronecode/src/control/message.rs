@@ -32,7 +32,7 @@ pub fn process_message(message: ReceiveMessage, state: &mut FlightState) {
                 state.update_motor(motor, value)
             }
             msg => {
-                log::warn!("ignoring {:?} in", msg)
+                // log::warn!("ignoring {:?} in", msg)
             }
         }
     }

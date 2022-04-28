@@ -75,11 +75,12 @@ def main(ser):
 
     print("Init")
 
-    # while not all(x == 1000 for x in controller.getSliders()[:4]):
-    #     pass
-    #
-    # while not all(x == 0 for x in controller.getSliders()[:4]):
-    #     pass
+    while not all(x == 1000 for x in controller.getSliders()[:4]):
+        print(controller.getSliders())
+        pass
+
+    while not all(x == 0 for x in controller.getSliders()[:4]):
+        pass
 
     print("Armed!")
 
@@ -100,7 +101,7 @@ def main(ser):
     w4.bind("<ButtonRelease-1>", lambda x: slider_control(3, ser))
     w4.set(0)
     w4.grid(column=3, row=0)
-    Button(master, text='reset', command=reset).grid(column=1,row=1,columnspan=2)
+    Button(master, text='reset', command=lambda: reset(ser)).grid(column=1,row=1,columnspan=2)
 
     for x in [w1,w2,w3,w4]:
         x.config(bg="green")

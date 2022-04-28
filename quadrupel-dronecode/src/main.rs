@@ -28,6 +28,7 @@ use crate::hardware::motors::Motors;
 use cortex_m_rt::entry;
 #[cfg(test)]
 use cortex_m_semihosting::hprintln;
+use embedded_hal::digital::v2::OutputPin;
 
 use crate::hardware::uart::QUart;
 use nrf51_hal::gpio::Level;
@@ -44,7 +45,7 @@ static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 const HEAP_SIZE: usize = 1024; // in bytes
 
 const HEARTBEAT_FREQ: u32 = 100000;
-const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 5;
+const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
 
 #[entry]
 fn main() -> ! {
@@ -112,6 +113,7 @@ fn main() -> ! {
 
         //Check heartbeat
         if state.get_mode() != Mode::Safe && (Motors::get_time_us() - last_message_time) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
+            log::info!("{}", Motors::get_time_us() - last_message_time);
             state.set_mode(Mode::Panic);
         }
 

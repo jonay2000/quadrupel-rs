@@ -27,7 +27,7 @@ class Serial:
     def heartbeat(self):
         self.send(msgs.heartbeat())
 
-        if not self.do_heartbeat:
+        if self.do_heartbeat:
             threading.Timer(0.1, self.heartbeat).start()
 
     def send(self, msg: str):
