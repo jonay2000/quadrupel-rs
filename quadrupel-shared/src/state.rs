@@ -4,10 +4,11 @@ use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode)]
-pub enum State {
+#[derive(Encode, Decode, Copy, Clone, Debug, Eq, PartialEq)]
+pub enum Mode {
     Safe,
     Calibration,
     Panic,
     FullControl,
+    IndividualMotorControl,
 }
