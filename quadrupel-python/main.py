@@ -12,6 +12,18 @@ class MessageQueue:
         self.messages.append((n, create_message_for_drone(msg)))
 
 
+def abort() -> str:
+    return change_state("Panic")
+
+
+def change_state(state: str) -> str:
+    return f"""
+    {{
+        "ChangeState": "{state}" 
+    }}
+    """
+
+
 def motor_message(motor: int, value: int) -> str:
     return f"""
     {{
@@ -25,11 +37,7 @@ def motor_message(motor: int, value: int) -> str:
 
 if __name__ == '__main__':
     msgs = MessageQueue()
-    msgs.send_at(3, """
-    {
-        "ChangeState": "IndividualMotorControl"
-    }
-    """)
+    msgs.send_at(3, change_state("IndividualMotorControl"))
     msgs.send_at(5, motor_message(0, 300))
     msgs.send_at(8, motor_message(1, 310))
     msgs.send_at(11, motor_message(2, 320))
