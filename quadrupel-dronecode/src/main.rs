@@ -43,8 +43,8 @@ use crate::control::modes::safe::safe_mode;
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 const HEAP_SIZE: usize = 1024; // in bytes
 
-const HEARTBEAT_FREQ: usize = 100000;
-const HEARTBEAT_TIMEOUT_MULTIPLE: usize = 5;
+const HEARTBEAT_FREQ: u32 = 100000;
+const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 5;
 
 #[entry]
 fn main() -> ! {
@@ -111,7 +111,7 @@ fn main() -> ! {
         }
 
         //Check heartbeat
-        if (Motors::get_time_us() - last_message_time) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
+        if state.get_mode() == Mode::Safe && (Motors::get_time_us() - last_message_time) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
             state.set_mode(Mode::Panic);
         }
 
