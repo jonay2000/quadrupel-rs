@@ -4,7 +4,7 @@ use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Copy, Clone, Debug)]
+#[derive(Encode, Decode, Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Mode {
     Safe,
     Calibration,
