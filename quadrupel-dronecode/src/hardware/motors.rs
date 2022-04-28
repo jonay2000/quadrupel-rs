@@ -6,6 +6,7 @@ use embedded_hal::digital::v2::OutputPin;
 use nrf51_hal::gpio::p0::P0_20;
 use nrf51_hal::gpio::{Disconnected, Output, PushPull};
 use nrf51_pac::{interrupt, Interrupt, GPIOTE, PPI};
+use crate::hardware::uart::QUart;
 
 pub struct Motors {
     motor_values: [u16; 4],

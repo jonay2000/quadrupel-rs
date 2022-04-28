@@ -3,9 +3,6 @@ use fixed::{types, FixedU16};
 use nrf51_pac::interrupt;
 use nrf51_pac::Interrupt;
 
-//TODO verify this is the correct format??
-pub type FU16 = FixedU16<types::extra::U12>;
-
 pub struct QAdc {
     adc: nrf51_pac::ADC,
 }
@@ -16,7 +13,9 @@ static mut ADC_RESULT: u16 = 0;
 unsafe fn ADC() {
     let adc = nrf51_pac::Peripherals::steal().ADC;
     adc.events_end.reset();
-    ADC_RESULT = adc.result.read().result().bits();
+
+    // Battery voltage = (result*1.2*3/255*2) = RESULT*0.007058824
+    ADC_RESULT = adc.result.read().result().bits() * 7;
 }
 
 impl QAdc {
@@ -35,8 +34,6 @@ impl QAdc {
         adc.intenset.write(|w| w.end().set_bit());
         unsafe {
             nvic.set_priority(Interrupt::ADC, 3);
-        }
-        unsafe {
             NVIC::unmask(Interrupt::ADC);
         }
 
@@ -50,8 +47,9 @@ impl QAdc {
         }
     }
 
-    pub fn most_recent_voltage(&self) -> FU16 {
+    /// Voltage in 10^-2 volt
+    pub fn most_recent_voltage(&self) -> u16 {
         //Safety: Reading a u16 is atomic
-        FU16::from_bits(unsafe { ADC_RESULT })
+        unsafe { ADC_RESULT }
     }
 }
