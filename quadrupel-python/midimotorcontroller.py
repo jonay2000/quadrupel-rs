@@ -92,4 +92,6 @@ if __name__ == '__main__':
 
     master.after(10,mainloop_fun)
 
+    master.bind("<space>",lambda x: reset())
+
     mainloop()
