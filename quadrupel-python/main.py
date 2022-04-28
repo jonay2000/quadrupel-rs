@@ -18,6 +18,7 @@ class Serial:
             self.ser = None
 
     def send(self, msg: str):
+        print(f"sending {msg} ")
         if self.ser is not None:
             self.ser.write(create_message_for_drone(msg))
 
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     ser = Serial()
 
     multiprocessing.Process(target=ser.read).start()
-    # main(ser)
+    main(ser)
 
     # while True:
     #     diff = time.time() - start
