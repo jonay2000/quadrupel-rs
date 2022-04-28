@@ -1,5 +1,5 @@
 use quadrupel_shared::message::MessageToDrone;
-use crate::{FlightState, process_message, QUart};
+use crate::{QUart};
 
 pub enum UartProtocolState {
     WaitingForMessage,
@@ -18,7 +18,7 @@ impl UartProtocol {
             buffer: [0; 256],
         }
     }
-    pub fn update(&mut self, state: &mut FlightState) -> Option<MessageToDrone> {
+    pub fn update(&mut self) -> Option<MessageToDrone> {
         let uart = QUart::get();
         while let Some(byte) = uart.get_byte() {
             match &mut self.state {
@@ -35,7 +35,7 @@ impl UartProtocol {
                                 log::error!("{:?}", e)
                             },
                             Ok((msg, _)) => {
-                                process_message(msg, state)
+                                return Some(msg)
                             }
                         }
                     }

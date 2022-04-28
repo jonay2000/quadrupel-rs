@@ -9,6 +9,7 @@ use crate::control::modes::safe::SafeMode;
 pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
     // Always immediately handle panics
     if let MessageToDrone::ChangeState(Mode::Panic) = message {
+        log::error!("Panic: Received change state to panic");
         state.mode = Mode::Panic;
         return;
     }
