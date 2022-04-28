@@ -43,6 +43,9 @@ use crate::control::modes::safe::safe_mode;
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 const HEAP_SIZE: usize = 1024; // in bytes
 
+const HEARTBEAT_FREQ: usize = 100000;
+const HEARTBEAT_TIMEOUT_MULTIPLE: usize = 5;
+
 #[entry]
 fn main() -> ! {
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
@@ -64,6 +67,8 @@ fn main() -> ! {
     let mut expecting_message = None;
     let mut receive_buffer = [0u8; 256];
     let mut num_received = 0;
+
+    let mut last_message_time = Motors::get_time_us();
 
     loop {
         count += 1;
@@ -92,14 +97,22 @@ fn main() -> ! {
                 }
 
                 expecting_message = None;
+                last_message_time = Motors::get_time_us();
             }
         } else {
             if let Some(i) = uart.get_byte(){
                 if i != 0 {
                     expecting_message = Some(i as usize);
+                } else {
+                    last_message_time = Motors::get_time_us();
                 }
             }
             num_received = 0;
+        }
+
+        //Check heartbeat
+        if (Motors::get_time_us() - last_message_time) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
+            state.set_mode(Mode::Panic);
         }
 
         // do action corresponding to current mode
