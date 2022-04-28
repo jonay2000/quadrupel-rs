@@ -4,8 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-maturin = "*"
-quadrupel-python-bindings = {path = "./target/wheels/quadrupel_python_bindings-0.1.0-cp310-cp310-linux_x86_64.whl"}
+pyserial = "*"
 
 [dev-packages]
 

@@ -13,9 +13,8 @@ use crate::hardware::mpu6050::QMpu6050;
 use crate::hardware::uart::QUart;
 use crate::library::cs_cell::CSCell;
 use crate::Motors;
-use nrf51_hal::{Timer, Twi};
-use nrf51_pac::{TIMER0, TWI0, TWI1};
-use crate::hardware::ms5611::QMs5611;
+use nrf51_hal::Timer;
+use nrf51_pac::{TIMER0, TWI0};
 
 pub struct Hardware {
     pub leds: QLeds,

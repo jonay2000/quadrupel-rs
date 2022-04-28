@@ -5,7 +5,7 @@ use mpu6050_dmp::address::Address;
 use mpu6050_dmp::gyro::Gyro;
 use mpu6050_dmp::sensor::Mpu6050;
 use nrf51_hal::{Timer, Twi};
-use nrf51_pac::{TIMER0, TWI1};
+use nrf51_pac::TIMER0;
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz

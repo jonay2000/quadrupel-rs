@@ -1,6 +1,5 @@
 use embedded_hal::prelude::_embedded_hal_blocking_i2c_WriteRead;
-use nrf51_hal::{Timer, Twi};
-use nrf51_pac::TIMER0;
+use nrf51_hal::Twi;
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz

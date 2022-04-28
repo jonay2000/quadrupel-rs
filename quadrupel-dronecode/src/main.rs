@@ -17,22 +17,26 @@ mod control;
 extern crate alloc;
 extern crate cortex_m;
 
-use alloc::boxed::Box;
-use alloc::format;
-use alloc::vec::Vec;
 use alloc_cortex_m::CortexMHeap;
 use core::alloc::Layout;
 use core::panic::PanicInfo;
 use cortex_m::{asm, Peripherals};
+use core::fmt::Write;
 
 use crate::hardware::init_hardware;
 use crate::hardware::motors::Motors;
 use cortex_m_rt::entry;
+#[cfg(test)]
 use cortex_m_semihosting::hprintln;
-use embedded_hal::digital::v2::OutputPin;
 
 use crate::hardware::uart::QUart;
 use nrf51_hal::gpio::Level;
+use quadrupel_shared::state::Mode;
+use crate::control::flight_state::FlightState;
+use crate::control::message::{process_message, read_message};
+use crate::control::modes::individual_motor_control::individual_motor_control_mode;
+use crate::control::modes::panic::panic_mode;
+use crate::control::modes::safe::safe_mode;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -52,22 +56,46 @@ fn main() -> ! {
     let pn = nrf51_hal::pac::Peripherals::take().unwrap();
 
     let mut hardware = init_hardware(pc, pn);
-
-    let start_time = Motors::get_time_us();
-    let mut count = 0;
-
-
+    let mut state = FlightState::default();
+    // let start_time = Motors::get_time_us();
 
     loop {
-        count += 1;
-        hardware.leds.led_red.set_low().unwrap();
-        let ypr = hardware.mpu.block_read_mpu(&mut hardware.timer0);
-        hardware.leds.led_red.set_high().unwrap();
+        // should be at the start
+        state.check_panic();
 
-        //Uart echo server
-        while let Some(b) = QUart::get().get_byte() {
-            QUart::get().put_byte(b);
+        // check incoming messages
+        let uart = QUart::get();
+        if let Some(b) = uart.get_byte() {
+            // Safety: may not be called from an interrupt, which this is not
+            match unsafe {read_message(uart, b as usize)} {
+                Err(e) => log::info!("{:?}", e),
+                Ok(msg) => {
+                    process_message(msg, &mut state)
+                }
+            }
         }
+
+        // do action corresponding to current mode
+        match state.get_mode() {
+            Mode::Safe => safe_mode(&mut state),
+            Mode::Calibration => {}
+            Mode::Panic => panic_mode(&mut state),
+            Mode::FullControl => {}
+            Mode::IndividualMotorControl => individual_motor_control_mode(&mut state),
+        }
+
+        // update peripherals according to current state
+        // TODO
+
+        // count += 1;
+        // hardware.leds.led_red.set_low().unwrap();
+        // let ypr = hardware.mpu.block_read_mpu(&mut hardware.timer0);
+        // hardware.leds.led_red.set_high().unwrap();
+
+        // This could be a `while let`, but I deliberately changed it to
+        // `if let`. That means we only read one message per iteration, and
+        // give other things in the main loop time too. The main loop is fast
+        // enough to support this anyway.
 
         // let d_time = (Motors::get_time_us() - start_time) / count;
         // if count % 50 == 0 {
@@ -94,7 +122,7 @@ fn panic(info: &PanicInfo) -> ! {
     hprintln!("{}", info);
 
     #[cfg(not(test))]
-    QUart::get().put_bytes(format!("{}", info).as_bytes());
+    let _ = writeln!(QUart::get().writer(), "{}", info);
 
     loop {}
 }
