@@ -38,21 +38,5 @@ pub fn process_message(message: ReceiveMessage, state: &mut FlightState) {
     }
 }
 
-#[derive(Debug)]
-pub enum ReadMessageError {
-    TooShort,
-    Bincode(bincode::error::DecodeError),
-}
 
-// NEVER CALL CONCURRENTLY (FROM INTERRUPT)
-pub unsafe fn read_message(uart: &QUart, bytes: usize) -> Result<ReceiveMessage, ReadMessageError> {
-    // TODO: can also be the same buffer as used during serializing.
-    static mut DESERIALIZE_BUFFER: [u8; 256] = [0u8; 256];
-
-    for i in 0..bytes {
-        DESERIALIZE_BUFFER[i] = uart.get_byte().ok_or(ReadMessageError::TooShort)?;
-    }
-
-    Ok(ReceiveMessage::decode(&DESERIALIZE_BUFFER[..bytes]).map_err(ReadMessageError::Bincode)?.0)
-}
 

@@ -31,9 +31,10 @@ use cortex_m_semihosting::hprintln;
 
 use crate::hardware::uart::QUart;
 use nrf51_hal::gpio::Level;
+use quadrupel_shared::message::ReceiveMessage;
 use quadrupel_shared::state::Mode;
 use crate::control::flight_state::FlightState;
-use crate::control::message::{process_message, read_message};
+use crate::control::message::process_message;
 use crate::control::modes::individual_motor_control::individual_motor_control_mode;
 use crate::control::modes::panic::panic_mode;
 use crate::control::modes::safe::safe_mode;
@@ -58,21 +59,47 @@ fn main() -> ! {
     let mut hardware = init_hardware(pc, pn);
     let mut state = FlightState::default();
     // let start_time = Motors::get_time_us();
+    let mut count = 0;
+
+    let mut expecting_message = None;
+    let mut receive_buffer = [0u8; 256];
+    let mut num_received = 0;
 
     loop {
+        count += 1;
+
         // should be at the start
         state.check_panic();
 
         // check incoming messages
         let uart = QUart::get();
-        if let Some(b) = uart.get_byte() {
-            // Safety: may not be called from an interrupt, which this is not
-            match unsafe {read_message(uart, b as usize)} {
-                Err(e) => log::info!("{:?}", e),
-                Ok(msg) => {
-                    process_message(msg, &mut state)
+
+        // TODO: make fn
+        if let Some(b) = expecting_message {
+            if let Some(i) = uart.get_byte() {
+                receive_buffer[num_received] = i;
+                num_received += 1;
+            }
+
+            if num_received == b {
+                // Safety: may not be called from an interrupt, which this is not
+                match ReceiveMessage::decode(&receive_buffer[..num_received]) {
+                    Err(e) => log::info!("{:?}", e),
+                    Ok((msg, _)) => {
+                        // log::info!("{:?}", msg);
+                        process_message(msg, &mut state)
+                    }
+                }
+
+                expecting_message = None;
+            }
+        } else {
+            if let Some(i) = uart.get_byte(){
+                if i != 0 {
+                    expecting_message = Some(i as usize);
                 }
             }
+            num_received = 0;
         }
 
         // do action corresponding to current mode
@@ -84,8 +111,17 @@ fn main() -> ! {
             Mode::IndividualMotorControl => individual_motor_control_mode(&mut state),
         }
 
+        if count % 100000 == 0 {
+            log::info!("{:?}, state={:?}, recv={:?}, b={:?}", state.get_motors(), state.get_mode(), num_received, expecting_message);
+        }
+
         // update peripherals according to current state
-        // TODO
+        hardware.motors.update(|i| {
+            i.set_motor0(state.get_motors()[0]);
+            i.set_motor1(state.get_motors()[1]);
+            i.set_motor2(state.get_motors()[2]);
+            i.set_motor3(state.get_motors()[3]);
+        });
 
         // count += 1;
         // hardware.leds.led_red.set_low().unwrap();

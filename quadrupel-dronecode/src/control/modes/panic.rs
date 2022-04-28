@@ -1,4 +1,5 @@
 use quadrupel_shared::MotorValue;
+use quadrupel_shared::state::Mode;
 use crate::FlightState;
 
 static MINIMAL_HOVERING_MOTOR_VALUE: MotorValue = 400;
@@ -17,5 +18,9 @@ pub fn panic_mode(flight_state: &mut FlightState) {
         } else {
             *i = 0;
         }
+    }
+
+    if flight_state.get_motors().iter().all(|&i| i == 0) {
+        flight_state.set_mode(Mode::Safe);
     }
 }
