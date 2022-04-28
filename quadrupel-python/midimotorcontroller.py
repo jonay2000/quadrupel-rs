@@ -92,6 +92,6 @@ def main(ser):
 
     master.after(10,mainloop_fun)
 
+    master.bind("<space>",lambda x: reset())
+
     mainloop(ser)
-
-
