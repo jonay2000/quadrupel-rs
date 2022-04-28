@@ -2,7 +2,7 @@ import mpd24midi
 from tkinter import *
 
 
-def mainloop_fun():
+def mainloop_fun(ser):
     global cur_vals, authority
 
     new_vals = controller.getSliders()
@@ -49,9 +49,9 @@ def reset():
     authority = [0,0,0,0]
 
 
+def main(ser):
+    global controller, w1, w2, w3, w4, master
 
-
-if __name__ == '__main__':
     authority = [1, 1, 1, 1]
 
     controller = mpd24midi.Mpd24()
@@ -92,4 +92,6 @@ if __name__ == '__main__':
 
     master.after(10,mainloop_fun)
 
-    mainloop()
+    mainloop(ser)
+
+
