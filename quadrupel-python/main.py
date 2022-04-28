@@ -1,11 +1,14 @@
 # run `build_python_bindings.sh` to create this library
 # noinspection PyUnresolvedReferences
+import threading
+
 from quadrupel import parse_message_from_drone, create_message_for_drone
 
 import traceback
 import serial
 import multiprocessing
 from midimotorcontroller import main
+import msgs
 
 
 class Serial:
@@ -17,8 +20,17 @@ class Serial:
             print(traceback.format_exception())
             self.ser = None
 
+        threading.Timer(0.1, self.heartbeat).start()
+
+        self.do_heartbeat = True
+
+    def heartbeat(self):
+        self.send(msgs.heartbeat())
+
+        if not self.do_heartbeat:
+            threading.Timer(0.1, self.heartbeat).start()
+
     def send(self, msg: str):
-        print(f"sending {msg} ")
         if self.ser is not None:
             self.ser.write(create_message_for_drone(msg))
 

@@ -57,6 +57,9 @@ def reset(ser):
     cur_vals = [0,0,0,0]
     authority = [0,0,0,0]
 
+def stop_heartbeat(ser: Serial):
+    ser.do_heartbeat = False
+
 
 def main(ser):
     global controller, w1, w2, w3, w4, master, authority, cur_vals
@@ -107,5 +110,6 @@ def main(ser):
     master.bind("<space>",lambda x: reset(ser))
     master.bind("i",lambda x: ser.send(msgs.change_state("IndividualMotorControl")))
     master.bind("1",lambda x: ser.send(msgs.abort()))
+    master.bind("s",lambda x: stop_heartbeat(ser))
 
     mainloop()

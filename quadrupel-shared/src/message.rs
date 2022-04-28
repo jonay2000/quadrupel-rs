@@ -64,6 +64,7 @@ pub enum ReceiveMessage {
     TargetPitch(u32),
     TargetRoll(u32),
     TargetHeight(u32),
+    HeartBeat(u8),
     TunePID {/* TODO */},
 }
 

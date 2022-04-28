@@ -10,6 +10,12 @@ def change_state(state: str) -> str:
     }}
     """
 
+def heartbeat() -> str:
+    return f"""
+    {{
+        "HeartBeat": 1
+    }}
+    """
 
 def motor_message(motor: int, value: int) -> str:
     return f"""
