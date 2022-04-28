@@ -5,7 +5,7 @@ use quadrupel_shared::message::*;
 #[pyfunction]
 pub fn parse_message_from_drone(message: &[u8]) -> PyResult<(String, usize)> {
     let (msg, len) =
-        SendMessage::decode(message).map_err(|e| PyValueError::new_err(e.to_string()))?;
+        MessageToComputer::decode(message).map_err(|e| PyValueError::new_err(e.to_string()))?;
 
     Ok((
         serde_json::to_string(&msg).map_err(|e| PyValueError::new_err(e.to_string()))?,
@@ -15,7 +15,7 @@ pub fn parse_message_from_drone(message: &[u8]) -> PyResult<(String, usize)> {
 
 #[pyfunction]
 pub fn create_message_for_drone(json_str: &str) -> PyResult<Vec<u8>> {
-    let str: ReceiveMessage =
+    let str: MessageToDrone =
         serde_json::from_str(json_str).map_err(|e| PyValueError::new_err(e.to_string()))?;
 
     let v = str

@@ -17,13 +17,13 @@ pub enum OverSamplingRatio {
 }
 
 impl OverSamplingRatio {
-    fn get_delay(&self) -> u64 {
+    fn get_delay(&self) -> u32 {
         match *self {
-            OverSamplingRatio::Opt256 => 1,
-            OverSamplingRatio::Opt512 => 2,
-            OverSamplingRatio::Opt1024 => 3,
-            OverSamplingRatio::Opt2048 => 5,
-            OverSamplingRatio::Opt4096 => 10,
+            OverSamplingRatio::Opt256 => 1000,
+            OverSamplingRatio::Opt512 => 2000,
+            OverSamplingRatio::Opt1024 => 3000,
+            OverSamplingRatio::Opt2048 => 5000,
+            OverSamplingRatio::Opt4096 => 10000,
         }
     }
 
@@ -109,7 +109,7 @@ impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
             }
             QMs5611LoopState::ReadD1 { start_time } => {
                 //If the chip has not had enough time to process, return
-                if Motors::get_time_us() - start_time < 10000 { return; }
+                if Motors::get_time_us() - start_time < self.over_sampling_ratio.get_delay() { return; }
 
                 //Read D1
                 let mut buf = [0u8; 4];
@@ -124,7 +124,7 @@ impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
             }
             QMs5611LoopState::ReadD2 { start_time, d1 } => {
                 //If the chip has not had enough time to process, return
-                if Motors::get_time_us() - start_time < 10000 { return; }
+                if Motors::get_time_us() - start_time < self.over_sampling_ratio.get_delay() { return; }
 
                 //Read D2
                 let mut buf = [0u8; 4];

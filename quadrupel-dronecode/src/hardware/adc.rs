@@ -1,5 +1,4 @@
 use cortex_m::peripheral::NVIC;
-use fixed::{types, FixedU16};
 use nrf51_pac::interrupt;
 use nrf51_pac::Interrupt;
 

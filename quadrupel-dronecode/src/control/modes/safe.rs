@@ -1,9 +1,24 @@
+use quadrupel_shared::message::MessageToDrone;
+use quadrupel_shared::state::Mode;
+use crate::control::modes::ModeTrait;
 use crate::FlightState;
 
-/// Executed every event loop cycle when in safe mode
-#[inline]
-pub fn safe_mode(state: &mut FlightState) {
-    // while in safe mode, force the motors off
-    state.zero_motors();
+pub struct SafeMode;
 
+impl ModeTrait for SafeMode {
+    fn iteration(state: &mut FlightState) {
+        state.motor_values = [0; 4];
+    }
+
+    fn handle_message(state: &mut FlightState, message: MessageToDrone) {
+        match message {
+            MessageToDrone::ChangeState(Mode::IndividualMotorControl) => {
+                state.mode = Mode::IndividualMotorControl;
+            }
+            _ => {
+                // in safe mode we only react to requests to go to other states.
+                // To do anything else, change the state out of safe mode
+            }
+        }
+    }
 }

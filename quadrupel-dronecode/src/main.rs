@@ -21,24 +21,24 @@ use alloc_cortex_m::CortexMHeap;
 use core::alloc::Layout;
 use core::panic::PanicInfo;
 use cortex_m::{asm, Peripherals};
-use core::fmt::Write;
 
 use crate::hardware::init_hardware;
 use crate::hardware::motors::Motors;
 use cortex_m_rt::entry;
 #[cfg(test)]
 use cortex_m_semihosting::hprintln;
-use embedded_hal::digital::v2::OutputPin;
 
 use crate::hardware::uart::QUart;
 use nrf51_hal::gpio::Level;
-use quadrupel_shared::message::ReceiveMessage;
+use quadrupel_shared::message::MessageToDrone;
 use quadrupel_shared::state::Mode;
+use quadrupel_shared::state::Mode::Panic;
 use crate::control::flight_state::FlightState;
-use crate::control::message::process_message;
-use crate::control::modes::individual_motor_control::individual_motor_control_mode;
-use crate::control::modes::panic::panic_mode;
-use crate::control::modes::safe::safe_mode;
+use crate::control::process_message::process_message;
+use crate::control::modes::individual_motor_control::{IndividualMotorControlMode};
+use crate::control::modes::ModeTrait;
+use crate::control::modes::panic::PanicMode;
+use crate::control::modes::safe::SafeMode;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -74,9 +74,6 @@ fn main() -> ! {
     loop {
         count += 1;
 
-        // should be at the start
-        state.check_panic();
-
         // check incoming messages
         let uart = QUart::get();
 
@@ -89,7 +86,7 @@ fn main() -> ! {
 
             if num_received == b {
                 // Safety: may not be called from an interrupt, which this is not
-                match ReceiveMessage::decode(&receive_buffer[..num_received]) {
+                match MessageToDrone::decode(&receive_buffer[..num_received]) {
                     Err(e) => log::info!("{:?}", e),
                     Ok((msg, _)) => {
                         // log::info!("{:?}", msg);
@@ -112,32 +109,32 @@ fn main() -> ! {
         }
 
         //Check heartbeat
-        if state.get_mode() != Mode::Safe && (Motors::get_time_us() - last_message_time) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
+        if state.mode != Mode::Safe && (Motors::get_time_us() - last_message_time) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
             log::info!("{}", Motors::get_time_us() - last_message_time);
-            state.set_mode(Mode::Panic);
+            state.mode = Panic;
         }
 
         // do action corresponding to current mode
-        match state.get_mode() {
-            Mode::Safe => safe_mode(&mut state),
+        match state.mode {
+            Mode::Safe => SafeMode::iteration(&mut state),
             Mode::Calibration => {}
-            Mode::Panic => panic_mode(&mut state),
+            Mode::Panic => PanicMode::iteration(&mut state),
             Mode::FullControl => {}
-            Mode::IndividualMotorControl => individual_motor_control_mode(&mut state),
+            Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state),
         }
 
         if count % 100000 == 0 {
-            log::info!("{:?}, state={:?}, recv={:?}, b={:?}", state.get_motors(), state.get_mode(), num_received, expecting_message);
+            log::info!("{:?}, state={:?}, recv={:?}, b={:?}", state.motor_values, state.mode, num_received, expecting_message);
             hardware.adc.request_sample();
             log::info!("{}", hardware.adc.most_recent_voltage());
         }
 
         // update peripherals according to current state
         hardware.motors.update(|i| {
-            i.set_motor0(state.get_motors()[0]);
-            i.set_motor1(state.get_motors()[1]);
-            i.set_motor2(state.get_motors()[2]);
-            i.set_motor3(state.get_motors()[3]);
+            i.set_motor0(state.motor_values[0]);
+            i.set_motor1(state.motor_values[1]);
+            i.set_motor2(state.motor_values[2]);
+            i.set_motor3(state.motor_values[3]);
         });
 
         // count += 1;
@@ -175,7 +172,10 @@ fn panic(info: &PanicInfo) -> ! {
     hprintln!("{}", info);
 
     #[cfg(not(test))]
-    let _ = writeln!(QUart::get().writer(), "{}", info);
+    {
+        use core::fmt::Write;
+        let _ = writeln!(QUart::get().writer(), "{}", info);
+    }
 
     loop {}
 }

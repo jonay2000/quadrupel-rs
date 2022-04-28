@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Decode, Encode)]
-pub enum SendMessage {
+pub enum MessageToComputer {
     Log(String),
     CurrentState(Mode),
     Sensors {
@@ -27,7 +27,7 @@ pub enum SendMessage {
     Battery(u16),
 }
 
-impl SendMessage {
+impl MessageToComputer {
     // NEVER CALL CONCURRENTLY (FROM INTERRUPT)
     pub unsafe fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
         static mut ENCODING_SPACE: [u8; 256] = [0u8; 256];
@@ -56,7 +56,7 @@ pub enum Motor {
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Decode, Encode, Debug)]
-pub enum ReceiveMessage {
+pub enum MessageToDrone {
     ChangeState(Mode),
     MotorValue { motor: Motor, value: MotorValue },
     MotorValueRel { motor: Motor, value: MotorValueDelta },
@@ -68,7 +68,7 @@ pub enum ReceiveMessage {
     TunePID {/* TODO */},
 }
 
-impl ReceiveMessage {
+impl MessageToDrone {
     #[cfg(feature = "python")]
     pub fn encode_vec(&self) -> Result<Vec<u8>, EncodeError> {
         let mut res = bincode::encode_to_vec(self, standard())?;
