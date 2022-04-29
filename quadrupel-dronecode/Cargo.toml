@@ -14,7 +14,7 @@ fixed = "1.14.0"
 ringbuffer = {git = "https://github.com/NULLx76/ringbuffer/", branch = "const-fn", features = ["const-fn"], version = "0.8.5"}
 log = "0.4.16"
 embedded-hal = "0.2.7"
-mpu6050-dmp = "0.2.0"
+mpu6050-dmp = {path = "../mpu6050-dmp-rs"}
 nrf51-hal = "0.15.0"
 nrf51-pac = "0.11.0"
 cordic = "0.1.5"

@@ -1,7 +1,6 @@
 #![no_std]
 
 pub mod accel;
-pub mod address;
 pub mod clock_source;
 pub mod config;
 mod dmp_firmware;

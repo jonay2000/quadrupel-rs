@@ -242,16 +242,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpu6050-dmp"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7da5c32f7c71ff8b8bd096e64f6261f9264771a97c61d12b2ccdc1953b4a4725"
-dependencies = [
- "embedded-hal",
- "libm",
-]
-
-[[package]]
 name = "nb"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -417,7 +407,7 @@ dependencies = [
  "embedded-hal",
  "fixed",
  "log",
- "mpu6050-dmp 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mpu6050-dmp",
  "nrf51-hal",
  "nrf51-pac",
  "quadrupel-shared",

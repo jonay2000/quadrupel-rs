@@ -1,7 +1,6 @@
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
 use mpu6050_dmp::accel::Accel;
-use mpu6050_dmp::address::Address;
 use mpu6050_dmp::gyro::Gyro;
 use mpu6050_dmp::sensor::Mpu6050;
 use nrf51_hal::{Timer, Twi};
@@ -27,24 +26,24 @@ pub struct QMpu6050<T: nrf51_hal::twi::Instance> {
     mpu: Mpu6050<Twi<T>>,
 }
 impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
-    pub fn new(twi: Twi<T>, timer0: &mut Timer<TIMER0>) -> Self {
-        let mut mpu = Mpu6050::new(twi, Address::default()).unwrap();
-        mpu.initialize_dmp(timer0).unwrap();
-        mpu.set_sample_rate_divider(SAMPLE_RATE_DIVIDER).unwrap();
+    pub fn new(i2c: &mut Twi<T>, timer0: &mut Timer<TIMER0>) -> Self {
+        let mut mpu = Mpu6050::new(i2c).unwrap();
+        mpu.initialize_dmp(i2c, timer0).unwrap();
+        mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER).unwrap();
         QMpu6050 { mpu }
     }
 
-    pub fn disable_mpu(&mut self) {
-        self.mpu.disable_dmp().unwrap();
+    pub fn disable_mpu(&mut self, i2c: &mut Twi<T>, ) {
+        self.mpu.disable_dmp(i2c).unwrap();
     }
 
-    pub fn enable_mpu(&mut self) {
-        self.mpu.enable_dmp().unwrap();
+    pub fn enable_mpu(&mut self, i2c: &mut Twi<T>, ) {
+        self.mpu.enable_dmp(i2c).unwrap();
     }
 
-    pub fn read_mpu(&mut self) -> Option<YawPitchRoll> {
+    pub fn read_mpu(&mut self, i2c: &mut Twi<T>,) -> Option<YawPitchRoll> {
         // If there isn't a full packet ready, return none
-        let mut len = self.mpu.get_fifo_count().unwrap();
+        let mut len = self.mpu.get_fifo_count(i2c, ).unwrap();
         if len < 28 {
             return None;
         }
@@ -52,7 +51,7 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
         // Keep reading while there are more full packets
         let mut buf = [0; 28];
         while len >= 28 {
-            self.mpu.read_fifo(&mut buf).unwrap();
+            self.mpu.read_fifo(i2c, &mut buf).unwrap();
             len -= 28;
         }
 
@@ -62,9 +61,9 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
         Some(ypr)
     }
 
-    pub fn block_read_mpu(&mut self, timer0: &mut Timer<TIMER0>) -> YawPitchRoll {
+    pub fn block_read_mpu(&mut self, i2c: &mut Twi<T>, timer0: &mut Timer<TIMER0>) -> YawPitchRoll {
         loop {
-            match self.read_mpu() {
+            match self.read_mpu(i2c) {
                 None => {
                     //Try again after 100 us
                     timer0.delay_us(100u32);
@@ -74,9 +73,9 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
         }
     }
 
-    pub fn read_accel_gyro(&mut self) -> (Accel, Gyro) {
-        let acc = self.mpu.accel().unwrap();
-        let gyro = self.mpu.gyro().unwrap();
+    pub fn read_accel_gyro(&mut self, i2c: &mut Twi<T>) -> (Accel, Gyro) {
+        let acc = self.mpu.accel(i2c).unwrap();
+        let gyro = self.mpu.gyro(i2c).unwrap();
         (acc, gyro)
     }
 }

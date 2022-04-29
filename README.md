@@ -32,3 +32,4 @@ sudo python2 dfu_serial/serial_dfu.py target/thumbv6m-none-eabi/debug/quadrupel-
 ## Credit:
 - https://github.com/rust-embedded/cortex-m-quickstart
 - https://gitlab.tudelft.nl/embedded_systems_laboratory/fcb_software
+- https://github.com/barafael/mpu6050-dmp-rs
