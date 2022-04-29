@@ -1,0 +1,18 @@
+[package]
+name = "mpu6050-dmp"
+version = "0.2.0"
+authors = [
+    "Bob McWhirter <bmcwhirt@redhat.com>",
+    "Rafael Bachmann <rafael.bachmann.93@gmail.com",
+]
+edition = "2021"
+license = "Apache-2.0"
+description = "Platform-independent I2C driver for MPU6050. Supports DMP usage. Fork of drogue-mpu-6050 which uses only embedded-hal traits (no dependency on embedded-time or drogue-embedded-timer)."
+keywords = ["driver", "i2c", "motion", "dmp", "no_std"]
+categories = ["no-std", "embedded"]
+repository = "https://github.com/barafael/mpu6050-dmp-rs"
+readme = "README.md"
+
+[dependencies]
+embedded-hal = { version = "0.2.7", features = ["unproven"] }
+libm = "0.2.1"

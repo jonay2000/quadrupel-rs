@@ -90,7 +90,6 @@ fn main() -> ! {
         if count % 100000 == 0 {
             log::info!("{:?}, state={:?}", state.motor_values, state.mode);
             hardware.adc.request_sample();
-            log::info!("{}", hardware.adc.most_recent_voltage());
         }
 
         // update peripherals according to current state

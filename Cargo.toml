@@ -1,6 +1,6 @@
 [workspace]
-members = ["quadrupel-dronecode", "quadrupel-shared", "quadrupel_python_bindings"]
-default-members = ["quadrupel-dronecode", "quadrupel-shared"]
+members = ["quadrupel-dronecode", "quadrupel-shared", "quadrupel_python_bindings", "mpu6050-dmp-rs"]
+default-members = ["quadrupel-dronecode", "quadrupel-shared", "mpu6050-dmp-rs"]
 
 [profile.release]
 codegen-units = 1

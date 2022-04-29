@@ -44,9 +44,7 @@ enum QMs5611LoopState {
     ReadD2 { start_time: u32, d1: u32 },
 }
 
-pub struct QMs5611<T: nrf51_hal::twi::Instance> {
-    twi: Twi<T>,
-
+pub struct QMs5611 {
     /// From datasheet, C1.
     pressure_sensitivity: u16,
     /// From datasheet, C2.
@@ -74,8 +72,8 @@ pub struct QMs5611<T: nrf51_hal::twi::Instance> {
 
 }
 
-impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
-    pub fn new(mut twi: Twi<T>) -> Self {
+impl QMs5611 {
+    pub fn new<T: nrf51_hal::twi::Instance>(twi: &mut Twi<T>) -> Self {
         let mut prom = [0; 8];
         let mut data = [0u8; 2];
         for c in 0..8 {
@@ -84,7 +82,6 @@ impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
         }
 
         Self {
-            twi,
             pressure_sensitivity: prom[1],
             pressure_offset: prom[2],
             temp_coef_pressure_sensitivity: prom[3],
@@ -98,11 +95,11 @@ impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
         }
     }
 
-    pub fn update(&mut self) {
+    pub fn update<T: nrf51_hal::twi::Instance>(&mut self, twi: &mut Twi<T>) {
         match self.loop_state {
             QMs5611LoopState::Reset => {
                 //We let the chip know we want to read D1.
-                self.twi.write(MS5611_ADDR, &[REG_D1 + self.over_sampling_ratio.addr_modifier()]).unwrap();
+                twi.write(MS5611_ADDR, &[REG_D1 + self.over_sampling_ratio.addr_modifier()]).unwrap();
 
                 //Then set loop state for next iteration
                 self.loop_state = QMs5611LoopState::ReadD1 { start_time: Motors::get_time_us() };
@@ -113,11 +110,11 @@ impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
 
                 //Read D1
                 let mut buf = [0u8; 4];
-                self.twi.write_read(MS5611_ADDR, &[REG_READ], &mut buf[1..4]).unwrap();
+                twi.write_read(MS5611_ADDR, &[REG_READ], &mut buf[1..4]).unwrap();
                 let d1 = u32::from_be_bytes(buf);
 
                 //We let the chip know we want to read D2.
-                self.twi.write(MS5611_ADDR, &[REG_D2 + self.over_sampling_ratio.addr_modifier()]).unwrap();
+                twi.write(MS5611_ADDR, &[REG_D2 + self.over_sampling_ratio.addr_modifier()]).unwrap();
 
                 //Then set loop state for next iteration
                 self.loop_state = QMs5611LoopState::ReadD2 { start_time: Motors::get_time_us(), d1 };
@@ -128,7 +125,7 @@ impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
 
                 //Read D2
                 let mut buf = [0u8; 4];
-                self.twi.write_read(MS5611_ADDR, &[REG_READ], &mut buf[1..4]).unwrap();
+                twi.write_read(MS5611_ADDR, &[REG_READ], &mut buf[1..4]).unwrap();
                 let d2 = u32::from_be_bytes(buf);
 
                 //Use D1 and D2 to find the new pressure and temperature
@@ -136,7 +133,7 @@ impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
 
                 //Then set loop state for next iteration, and we can do the next iteration immediately
                 self.loop_state = QMs5611LoopState::Reset;
-                self.update();
+                self.update(twi);
             }
         }
     }
@@ -162,8 +159,8 @@ impl<T: nrf51_hal::twi::Instance> QMs5611<T> {
     }
 
     /// Returns pressure in 10^-5 bar
-    pub fn read_pressure(&mut self) -> u32 {
-        self.update();
+    pub fn read_pressure<T: nrf51_hal::twi::Instance>(&mut self, twi: &mut Twi<T>) -> u32 {
+        self.update(twi);
         self.most_recent_pressure
     }
 }
