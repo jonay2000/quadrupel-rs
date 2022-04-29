@@ -39,7 +39,7 @@ impl QAdc {
         QAdc { adc }
     }
 
-    pub fn request_sample(&mut self) {
+    fn request_sample(&mut self) {
         if !self.adc.busy.read().busy().bit() {
             //For some reason, there is no field inside this register, so we set it to 1 manually.
             self.adc.tasks_start.write(|w| unsafe { w.bits(1) });
@@ -47,7 +47,8 @@ impl QAdc {
     }
 
     /// Voltage in 10^-2 volt
-    pub fn most_recent_voltage(&self) -> u16 {
+    pub fn read(&mut self) -> u16 {
+        self.request_sample();
         //Safety: Reading a u16 is atomic
         unsafe { ADC_RESULT }
     }

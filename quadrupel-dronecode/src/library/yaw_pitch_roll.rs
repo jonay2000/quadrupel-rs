@@ -36,8 +36,11 @@ impl Quaternion {
 }
 
 pub struct YawPitchRoll {
+    /// psu
     pub yaw: FI32,
+    /// theta
     pub pitch: FI32,
+    /// phi
     pub roll: FI32,
 }
 

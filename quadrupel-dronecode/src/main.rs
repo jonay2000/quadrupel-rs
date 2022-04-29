@@ -87,17 +87,25 @@ fn main() -> ! {
             Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state),
         }
 
-        if count % 100000 == 0 {
-            log::info!("{:?}, state={:?}", state.motor_values, state.mode);
-            hardware.adc.request_sample();
+        // Print all info
+        let ypr = hardware.mpu.block_read_mpu(&mut hardware.i2c, &mut hardware.timer0);
+        let (_accel, gyro) = hardware.mpu.read_accel_gyro(&mut hardware.i2c);
+        let adc = hardware.adc.read();
+        let (pres, temp) = hardware.baro.read_both(&mut hardware.i2c);
+        let motors = Motors::get().update(|m| m.get_motors());
+        if count % 100 == 0 {
+            log::info!("{} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
+                Motors::get_time_us(),
+                motors,
+                ypr.roll, ypr.pitch, ypr.yaw,
+                gyro.x(), gyro.y(), gyro.z(),
+                adc, temp, pres
+            );
         }
 
         // update peripherals according to current state
         hardware.motors.update(|i| {
-            i.set_motor0(state.motor_values[0]);
-            i.set_motor1(state.motor_values[1]);
-            i.set_motor2(state.motor_values[2]);
-            i.set_motor3(state.motor_values[3]);
+            i.set_motors(state.motor_values)
         });
     }
 }

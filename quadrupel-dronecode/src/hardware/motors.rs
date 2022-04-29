@@ -214,17 +214,8 @@ impl Motors {
         self.motor_values
     }
 
-    pub fn set_motor0(&mut self, val: u16) {
-        self.motor_values[0] = val.clamp(MOTOR_MIN, MOTOR_MAX);
-    }
-    pub fn set_motor1(&mut self, val: u16) {
-        self.motor_values[1] = val.clamp(MOTOR_MIN, MOTOR_MAX);
-    }
-    pub fn set_motor2(&mut self, val: u16) {
-        self.motor_values[2] = val.clamp(MOTOR_MIN, MOTOR_MAX);
-    }
-    pub fn set_motor3(&mut self, val: u16) {
-        self.motor_values[3] = val.clamp(MOTOR_MIN, MOTOR_MAX);
+    pub fn set_motors(&mut self, val: [u16; 4]) {
+        self.motor_values = val.map(|v| v.clamp(MOTOR_MIN, MOTOR_MAX));
     }
 }
 

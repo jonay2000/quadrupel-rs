@@ -1,3 +1,4 @@
+use core::marker::PhantomData;
 use embedded_hal::prelude::_embedded_hal_blocking_i2c_WriteRead;
 use nrf51_hal::{Twi};
 use crate::Motors;
@@ -44,7 +45,9 @@ enum QMs5611LoopState {
     ReadD2 { start_time: u32, d1: u32 },
 }
 
-pub struct QMs5611 {
+pub struct QMs5611<I2c: nrf51_hal::twi::Instance> {
+    _p: PhantomData<I2c>,
+
     /// From datasheet, C1.
     pressure_sensitivity: u16,
     /// From datasheet, C2.
@@ -72,8 +75,8 @@ pub struct QMs5611 {
 
 }
 
-impl QMs5611 {
-    pub fn new<T: nrf51_hal::twi::Instance>(twi: &mut Twi<T>) -> Self {
+impl<I2c: nrf51_hal::twi::Instance> QMs5611<I2c> {
+    pub fn new(twi: &mut Twi<I2c>) -> Self {
         let mut prom = [0; 8];
         let mut data = [0u8; 2];
         for c in 0..8 {
@@ -82,6 +85,7 @@ impl QMs5611 {
         }
 
         Self {
+            _p: PhantomData::default(),
             pressure_sensitivity: prom[1],
             pressure_offset: prom[2],
             temp_coef_pressure_sensitivity: prom[3],
@@ -95,7 +99,7 @@ impl QMs5611 {
         }
     }
 
-    pub fn update<T: nrf51_hal::twi::Instance>(&mut self, twi: &mut Twi<T>) {
+    pub fn update(&mut self, twi: &mut Twi<I2c>) {
         match self.loop_state {
             QMs5611LoopState::Reset => {
                 //We let the chip know we want to read D1.
@@ -159,8 +163,20 @@ impl QMs5611 {
     }
 
     /// Returns pressure in 10^-5 bar
-    pub fn read_pressure<T: nrf51_hal::twi::Instance>(&mut self, twi: &mut Twi<T>) -> u32 {
+    pub fn read_pressure(&mut self, twi: &mut Twi<I2c>) -> u32 {
         self.update(twi);
         self.most_recent_pressure
+    }
+
+    /// Returns temperature in 10^-2 celcius
+    pub fn read_temperature(&mut self, twi: &mut Twi<I2c>) -> u32 {
+        self.update(twi);
+        self.most_recent_temp
+    }
+
+    /// (pressure, temperature)
+    pub fn read_both(&mut self, twi: &mut Twi<I2c>) -> (u32, u32) {
+        self.update(twi);
+        (self.most_recent_pressure, self.most_recent_temp)
     }
 }
