@@ -22,13 +22,12 @@ use core::alloc::Layout;
 use core::panic::PanicInfo;
 use cortex_m::{asm, Peripherals};
 
-use crate::hardware::init_hardware;
+use crate::hardware::*;
 use crate::hardware::motors::Motors;
 use cortex_m_rt::entry;
 #[cfg(test)]
 use cortex_m_semihosting::hprintln;
 
-use crate::hardware::uart::QUart;
 use nrf51_hal::gpio::Level;
 use quadrupel_shared::state::Mode;
 use crate::control::flight_state::FlightState;
@@ -59,9 +58,11 @@ fn main() -> ! {
     let pc = Peripherals::take().unwrap();
     let pn = nrf51_hal::pac::Peripherals::take().unwrap();
 
-    let mut hardware = init_hardware(pc, pn);
+    init_hardware(pc, pn);
     let mut uart_protocol = UartProtocol::new();
     let mut state = FlightState::default();
+
+    let start_time = Motors::get_time_us();
     let mut count = 0;
 
     loop {
@@ -88,14 +89,14 @@ fn main() -> ! {
         }
 
         // Print all info
-        let ypr = hardware.mpu.block_read_mpu(&mut hardware.i2c, &mut hardware.timer0);
-        let (_accel, gyro) = hardware.mpu.read_accel_gyro(&mut hardware.i2c);
-        let adc = hardware.adc.read();
-        let (pres, temp) = hardware.baro.read_both(&mut hardware.i2c);
-        let motors = Motors::get().update(|m| m.get_motors());
-        if count % 100 == 0 {
+        let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref(), TIMER0.as_mut_ref());
+        let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
+        let adc = ADC.update_main(|adc| adc.read());
+        let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
+        let motors = MOTORS.update_main(|motors| motors.get_motors());
+        if count % 10 == 0 {
             log::info!("{} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
-                Motors::get_time_us(),
+                (Motors::get_time_us() - start_time) / count,
                 motors,
                 ypr.roll, ypr.pitch, ypr.yaw,
                 gyro.x(), gyro.y(), gyro.z(),
@@ -104,7 +105,7 @@ fn main() -> ! {
         }
 
         // update peripherals according to current state
-        hardware.motors.update(|i| {
+        MOTORS.update_main(|i| {
             i.set_motors(state.motor_values)
         });
     }
@@ -122,10 +123,7 @@ fn panic(info: &PanicInfo) -> ! {
     hprintln!("{}", info);
 
     #[cfg(not(test))]
-    {
-        use core::fmt::Write;
-        let _ = writeln!(QUart::get().writer(), "{}", info);
-    }
+    log::error!("{}", info);
 
     loop {}
 }

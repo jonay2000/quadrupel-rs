@@ -1,20 +1,21 @@
 use cortex_m::peripheral::NVIC;
-use nrf51_pac::interrupt;
+use nrf51_pac::{interrupt};
 use nrf51_pac::Interrupt;
+use crate::hardware;
+use crate::hardware::HWCell;
 
 pub struct QAdc {
     adc: nrf51_pac::ADC,
+    last_result: u16,
 }
 
-static mut ADC_RESULT: u16 = 0;
-
 #[interrupt]
-unsafe fn ADC() {
-    let adc = nrf51_pac::Peripherals::steal().ADC;
-    adc.events_end.reset();
-
-    // Battery voltage = (result*1.2*3/255*2) = RESULT*0.007058824
-    ADC_RESULT = adc.result.read().result().bits() * 7;
+fn ADC() {
+    hardware::ADC.update_interrupt(|adc| {
+        adc.adc.events_end.reset();
+        // Battery voltage = (result*1.2*3/255*2) = RESULT*0.007058824
+        adc.last_result = adc.adc.result.read().result().bits() * 7;
+    });
 }
 
 impl QAdc {
@@ -33,10 +34,13 @@ impl QAdc {
         adc.intenset.write(|w| w.end().set_bit());
         unsafe {
             nvic.set_priority(Interrupt::ADC, 3);
-            NVIC::unmask(Interrupt::ADC);
         }
 
-        QAdc { adc }
+        QAdc { adc, last_result: 0 }
+    }
+
+    pub fn enable(&mut self) {
+        unsafe { NVIC::unmask(Interrupt::ADC); }
     }
 
     fn request_sample(&mut self) {
@@ -49,7 +53,6 @@ impl QAdc {
     /// Voltage in 10^-2 volt
     pub fn read(&mut self) -> u16 {
         self.request_sample();
-        //Safety: Reading a u16 is atomic
-        unsafe { ADC_RESULT }
+        self.last_result
     }
 }

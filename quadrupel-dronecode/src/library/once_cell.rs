@@ -1,5 +1,6 @@
 use core::cell::UnsafeCell;
 use core::mem::MaybeUninit;
+use core::ops::Deref;
 use core::sync::atomic::{AtomicBool, Ordering};
 
 pub struct OnceCell<T> {
@@ -25,19 +26,21 @@ impl<T> OnceCell<T> {
     }
 
     /// panics on second invocation.
-    pub fn initialize(&self, v: T) -> &T {
+    pub fn initialize(&self, v: T) {
         if self.is_set.load(Ordering::SeqCst) {
             panic!("contents already initialized");
         } else {
             unsafe { *self.value.get() = MaybeUninit::new(v) };
 
             self.is_set.store(true, Ordering::SeqCst);
-
-            self.get()
         }
     }
+}
 
-    pub fn get(&self) -> &T {
+impl<T> Deref for OnceCell<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
         if self.is_set.load(Ordering::SeqCst) {
             unsafe { (&*self.value.get()).assume_init_ref() }
         } else {

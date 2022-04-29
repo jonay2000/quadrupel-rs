@@ -1,6 +1,4 @@
-use crate::library::cs_cell::CSCell;
 use crate::library::logger::UartLogger;
-use crate::library::once_cell::OnceCell;
 use crate::Level;
 use bincode::enc::write::Writer;
 use bincode::error::EncodeError;
@@ -11,8 +9,13 @@ use nrf51_hal::gpio::Disconnected;
 use nrf51_pac::interrupt;
 use nrf51_pac::Interrupt;
 use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
+use crate::hardware::UART;
 
-pub struct InnerUart {
+
+/// Can be used for interfacing with the UART.
+/// It uses an interrupt to send bytes, when they're ready to send.
+pub struct QUart {
+    uart: nrf51_pac::UART0,
     rx_queue: ConstGenericRingBuffer<u8, 256>,
     tx_queue: ConstGenericRingBuffer<u8, 256>,
 
@@ -23,30 +26,15 @@ pub struct InnerUart {
     tx_data_available: bool,
 }
 
-/// Can be used for interfacing with the UART.
-/// It uses an interrupt to send bytes, when they're ready to send.
-pub struct QUart {
-    uart: nrf51_pac::UART0,
-    inner: CSCell<InnerUart>,
-}
-
-// only set once with QuadrupelUART.initialize() which can
-// only be called once.
-static QUADRUPEL_UART: OnceCell<QUart> = OnceCell::new();
-
 impl QUart {
-    pub fn get() -> &'static Self {
-        QUADRUPEL_UART.get()
-    }
-
     /// Create a new instance of the UART controller. This function
     /// can only be called once cince UART0 only exists once.
-    pub fn initialize(
+    pub fn new(
         uart: nrf51_pac::UART0,
         tx_pin: P0_14<Disconnected>,
         rx_pin: P0_16<Disconnected>,
         nvic: &mut NVIC,
-    ) -> &'static Self {
+    ) -> Self {
         let _tx_pin = tx_pin.into_push_pull_output(Level::Low);
         let _rx_pin = rx_pin.into_floating_input();
 
@@ -73,19 +61,21 @@ impl QUart {
         uart.intenset
             .write(|w| w.rxdrdy().set_bit().txdrdy().set_bit().error().set_bit());
 
-        //Init global state
-        let init = QUADRUPEL_UART.initialize(QUart {
-            uart,
-            inner: CSCell::new(InnerUart {
-                rx_queue: ConstGenericRingBuffer::new_const(),
-                tx_queue: ConstGenericRingBuffer::new_const(),
-                tx_data_available: true,
-            }),
-        });
-
-        //Start interrupt
+        //Configure interrupt
         NVIC::unpend(Interrupt::UART0);
         unsafe { nvic.set_priority(Interrupt::UART0, 3) };
+
+        //Init global state
+        QUart {
+            uart,
+            rx_queue: ConstGenericRingBuffer::new_const(),
+            tx_queue: ConstGenericRingBuffer::new_const(),
+            tx_data_available: true,
+        }
+    }
+
+    pub fn enable(&mut self) {
+        //Start interrupt
         unsafe {
             NVIC::unmask(Interrupt::UART0);
         }
@@ -95,72 +85,62 @@ impl QUart {
 
         log::info!("UART init.");
 
-        init
     }
 
     /// Pushes a single byte over uart
-    pub fn put_byte(&self, byte: u8) {
-        self.inner.update(|i| {
-            if i.tx_data_available {
-                i.tx_data_available = false;
-                self.uart.txd.write(|w| unsafe { w.txd().bits(byte) });
-            } else {
-                i.tx_queue.push(byte);
-            }
-        });
+    pub fn put_byte(&mut self, byte: u8) {
+        if self.tx_data_available {
+            self.tx_data_available = false;
+            self.uart.txd.write(|w| unsafe { w.txd().bits(byte) });
+        } else {
+            self.tx_queue.push(byte);
+        }
     }
 
     /// Pushes multiple bytes over uart
-    pub fn put_bytes(&self, bytes: &[u8]) {
+    pub fn put_bytes(&mut self, bytes: &[u8]) {
         for byte in bytes {
             self.put_byte(*byte);
         }
     }
 
-    pub fn get_byte(&self) -> Option<u8> {
-        self.inner.update(|i| i.rx_queue.dequeue())
-    }
-
-    pub fn writer(&self) -> QuadrupelUartWriter {
-        QuadrupelUartWriter(self)
+    pub fn get_byte(&mut self) -> Option<u8> {
+        self.rx_queue.dequeue()
     }
 }
 
-pub struct QuadrupelUartWriter<'a>(&'a QUart);
-
-impl<'a> Write for QuadrupelUartWriter<'a> {
+impl Write for QUart {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        self.0.put_bytes(s.as_bytes());
+        self.put_bytes(s.as_bytes());
         Ok(())
     }
 }
 
-impl<'a> Writer for QuadrupelUartWriter<'a> {
+impl Writer for QUart {
     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
-        self.0.put_bytes(bytes);
+        self.put_bytes(bytes);
         Ok(())
     }
 }
 
 #[interrupt]
 unsafe fn UART0() {
-    //We are the only thing running, so we can access the uart safely
-    let uart = QUart::get();
+    let uart = UART.as_mut_ref();
 
     //Ready to read a bit
     if uart.uart.events_rxdrdy.read().bits() != 0 {
         uart.uart.events_rxdrdy.reset();
         let byte = uart.uart.rxd.read().rxd().bits();
 
-        uart.inner.update_unchecked(|i| i.rx_queue.push(byte));
+        uart.rx_queue.push(byte);
     }
 
     //Ready to write a bit
     if uart.uart.events_txdrdy.read().bits() != 0 {
         uart.uart.events_txdrdy.reset();
-        match uart.inner.update_unchecked(|i| i.tx_queue.dequeue()) {
+        match uart.tx_queue.dequeue() {
             Some(byte) => uart.uart.txd.write(|w| w.txd().bits(byte)),
-            None => uart.inner.update_unchecked(|i| i.tx_data_available = true),
+            None => uart.tx_data_available = true,
         }
     }
 
