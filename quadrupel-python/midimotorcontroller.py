@@ -76,7 +76,7 @@ def main(ser):
     print("Init")
 
     while not all(x == 1000 for x in controller.getSliders()[:4]):
-        print(controller.getSliders())
+        # print(controller.getSliders())
         pass
 
     while not all(x == 0 for x in controller.getSliders()[:4]):

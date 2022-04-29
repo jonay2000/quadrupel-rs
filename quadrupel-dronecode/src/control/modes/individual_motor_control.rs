@@ -1,6 +1,6 @@
 use quadrupel_shared::message::MessageToDrone;
+use crate::control::flight_state::FlightState;
 use crate::control::modes::ModeTrait;
-use crate::FlightState;
 
 pub struct IndividualMotorControlMode;
 

@@ -1,7 +1,7 @@
 use quadrupel_shared::message::MessageToDrone;
 use quadrupel_shared::state::Mode;
+use crate::control::flight_state::FlightState;
 use crate::control::modes::ModeTrait;
-use crate::FlightState;
 
 // static MINIMAL_HOVERING_MOTOR_VALUE: MotorValue = 400;
 // static PANIC_MOTOR_REDUCTION_SPEED: u16 = 5;

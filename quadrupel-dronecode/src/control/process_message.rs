@@ -1,6 +1,7 @@
 use quadrupel_shared::message::MessageToDrone;
 use quadrupel_shared::state::Mode;
-use crate::{FlightState, Motors};
+use crate::{Motors};
+use crate::control::flight_state::FlightState;
 use crate::control::modes::individual_motor_control::IndividualMotorControlMode;
 use crate::control::modes::ModeTrait;
 use crate::control::modes::panic::PanicMode;

@@ -1,5 +1,5 @@
 use quadrupel_shared::message::MessageToDrone;
-use crate::FlightState;
+use crate::control::flight_state::FlightState;
 
 pub mod panic;
 pub mod safe;
