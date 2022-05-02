@@ -122,7 +122,7 @@ impl<T> HWCell<T> for HWCellType1<T> {
 
 /// Will be accessed by both main thread + interrupts, needs no sync (internal state is safe)
 /// # SAFETY: Only use on single-threaded machines
-/// # SAFETY: Only use when internal mutual exclusion is done
+/// # SAFETY: Only use when no internal sync is needed
 pub struct HWCellType2<T> {
     cell: UnsafeCell<T>,
 }

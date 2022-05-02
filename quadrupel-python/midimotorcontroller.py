@@ -75,13 +75,12 @@ def main(ser):
 
     print("Init")
 
-    if controller.working:
-        while not all(x == 1000 for x in controller.getSliders()[:4]):
-            # print(controller.getSliders())
-            pass
+    while not all(x == 1000 for x in controller.getSliders()[:4]):
+        # print(controller.getSliders())
+        pass
 
-        while not all(x == 0 for x in controller.getSliders()[:4]):
-            pass
+    while not all(x == 0 for x in controller.getSliders()[:4]):
+        pass
 
     print("Armed!")
 

@@ -81,11 +81,11 @@ pub fn start_loop() -> ! {
         };
         //green yellow red
         let (g,y,r) = match state.mode {
-            Mode::Safe => (true,false,false),
+            Mode::Safe => (false,true,false),
             Mode::Calibration => (false,false,false),
             Mode::Panic => (true,true,true),
-            Mode::FullControl => (false,true,false),
-            Mode::IndividualMotorControl => (false,true,false),
+            Mode::FullControl => (true,true,false),
+            Mode::IndividualMotorControl => (true,true,false),
         };
         leds.led_green.set_state(PinState::from(!g)).unwrap();
         leds.led_yellow.set_state(PinState::from(!y)).unwrap();
@@ -107,7 +107,6 @@ pub fn start_loop() -> ! {
             battery: adc,
             dt
         };
-        UART.as_mut_ref().send_message(msg);
         //TODO send msg
     }
 }

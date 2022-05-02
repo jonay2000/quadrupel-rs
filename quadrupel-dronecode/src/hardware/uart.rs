@@ -9,7 +9,6 @@ use nrf51_hal::gpio::Disconnected;
 use nrf51_pac::interrupt;
 use nrf51_pac::Interrupt;
 use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
-use quadrupel_shared::message::MessageToComputer;
 use crate::hardware::UART;
 
 
@@ -107,10 +106,6 @@ impl QUart {
 
     pub fn get_byte(&mut self) -> Option<u8> {
         self.rx_queue.dequeue()
-    }
-
-    pub fn send_message(&mut self, msg: MessageToComputer) {
-        msg.encode(self).expect("encoding error");
     }
 }
 
