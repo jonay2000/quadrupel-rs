@@ -21,11 +21,11 @@ impl PID {
 
     pub fn step(&mut self, dt : FI32, state: FI32, goal:FI32) -> FI32 {
         let p_term = (goal-state)*self.kp;
-        let d_term = (self.last_pos - state) * self.kd /dt;
-        self.last_pos = state;
+        let d_term = (self.last_state - state) * self.kd /dt;
+        self.last_state = state;
         self.buildup += (goal-state)*dt;
         self.buildup = self.buildup.clamp(FI32::from_num(-10), FI32::from_num(10));
-        i_term = self.buildup*self.ki;
+        let i_term = self.buildup*self.ki;
         p_term+d_term+i_term
     }
 }
