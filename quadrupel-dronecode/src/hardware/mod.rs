@@ -16,6 +16,7 @@ use nrf51_pac::{TWI0};
 use crate::hardware::mpu6050::QMpu6050;
 use crate::hardware::ms5611::QMs5611;
 use crate::library::once_cell::OnceCell;
+use crate::i2c::I2C;
 
 pub static LEDS: OnceCell<HWCellType2<QLeds>> = OnceCell::new();
 pub static UART: OnceCell<HWCellType2<QUart>> = OnceCell::new();
@@ -53,20 +54,20 @@ pub fn init_hardware(
     )});
     UART.update_main(|uart| uart.enable());
 
-    // I2C.initialize(HWCellType3{ cell: UnsafeCell::new(
-    //     I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)
-    // )});
-    // MPU.initialize(HWCellType3{ cell: UnsafeCell::new(
-    //     QMpu6050::new(I2C.as_mut_ref())
-    // )});
-    // BARO.initialize(HWCellType3{ cell: UnsafeCell::new(
-    //     QMs5611::new(I2C.as_mut_ref())
-    // )});
-    //
-    // ADC.initialize(HWCellType1 { cell: UnsafeCell::new(
-    //     QAdc::new(pn.ADC, &mut pc.NVIC)
-    // )});
-    // ADC.update_main(|adc| adc.enable());
+    I2C.initialize(HWCellType3{ cell: UnsafeCell::new(
+        I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)
+    )});
+    MPU.initialize(HWCellType3{ cell: UnsafeCell::new(
+        QMpu6050::new(I2C.as_mut_ref())
+    )});
+    BARO.initialize(HWCellType3{ cell: UnsafeCell::new(
+        QMs5611::new(I2C.as_mut_ref())
+    )});
+
+    ADC.initialize(HWCellType1 { cell: UnsafeCell::new(
+        QAdc::new(pn.ADC, &mut pc.NVIC)
+    )});
+    ADC.update_main(|adc| adc.enable());
 }
 
 pub trait HWCell<T> {
@@ -101,13 +102,9 @@ pub struct HWCellType1<T> {
 impl<T> HWCell<T> for HWCellType1<T> {
     fn update_main<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {
         // When accessing from main thread, we need to turn of interrupts to have sync
-        // cortex_m::interrupt::free(|_| unsafe {
-        //     f(&mut *self.cell.get())
-        // })
-        //TODO temp
-        unsafe {
+        cortex_m::interrupt::free(|_| unsafe {
             f(&mut *self.cell.get())
-        }
+        })
     }
 
     fn update_interrupt<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {

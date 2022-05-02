@@ -1,14 +1,13 @@
 use core::marker::PhantomData;
+use crate::accel::{Accel, AccelFullScale};
+use crate::clock_source::ClockSource;
+use crate::config::DigitalLowPassFilter;
+use crate::error::Error;
+use crate::fifo::Fifo;
+use crate::gyro::{Gyro, GyroFullScale};
+use crate::registers::Register;
 use embedded_hal::blocking::delay;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
-use log::info;
-use crate::mpu6050::accel::{Accel, AccelFullScale};
-use crate::mpu6050::clock_source::ClockSource;
-use crate::mpu6050::config::DigitalLowPassFilter;
-use crate::mpu6050::error::Error;
-use crate::mpu6050::fifo::Fifo;
-use crate::mpu6050::gyro::{Gyro, GyroFullScale};
-use crate::mpu6050::registers::Register;
 
 const MPU6050_ADDRESS: u8 = 0x68;
 
@@ -30,12 +29,10 @@ where
 {
     /// Construct a new i2c driver for the MPU-6050
     pub fn new(i2c: &mut I2c) -> Result<Self, Error<I2c>> {
-        info!("New start");
         let mut sensor = Self { _p: PhantomData::default(), };
 
-        info!("New 1");
         sensor.disable_sleep(i2c, )?;
-        info!("New end");
+
         Ok(sensor)
     }
 
@@ -101,7 +98,7 @@ where
     // ------------------------------------------------------------------------
 
     /// Perform power reset of the MPU
-    pub fn reset(&mut self, i2c: &mut I2c, clock: &mut impl delay::DelayMs<u32>) -> Result<(), Error<I2c>> {
+    pub fn reset(&mut self, i2c: &mut I2c,clock: &mut impl delay::DelayMs<u32>) -> Result<(), Error<I2c>> {
         let mut value = self.read_register(i2c, Register::PwrMgmt1)?;
         value |= 1 << 7;
         self.write_register(i2c, Register::PwrMgmt1, value)?;

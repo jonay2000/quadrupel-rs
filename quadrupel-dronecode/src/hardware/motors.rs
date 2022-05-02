@@ -1,6 +1,5 @@
-use core::fmt::Write;
 use core::sync::atomic::{AtomicU32, Ordering};
-use crate::{Level, UART};
+use crate::{Level};
 use cortex_m::peripheral::NVIC;
 use embedded_hal::blocking::delay::{DelayMs, DelayUs};
 use embedded_hal::digital::v2::OutputPin;
@@ -216,12 +215,11 @@ impl Motors {
 
 #[interrupt]
 unsafe fn TIMER2() {
-    // UART.as_mut_ref().write_char('x').unwrap();
     MOTORS.update_interrupt(|motors| {
         if motors.timer2.events_compare[3].read().bits() != 0 {
             motors.timer2.events_compare[3].reset();
             GLOBAL_TIME.store(GLOBAL_TIME.load(Ordering::SeqCst) + 312, Ordering::SeqCst);
-            // GLOBAL_TIME += 312; //2500 * 0.125
+            //2500 * 0.125
             motors.timer2.tasks_capture[2].write(|w| w.bits(1));
 
             //TODO is this ever false?
@@ -231,12 +229,10 @@ unsafe fn TIMER2() {
             }
         }
     });
-    // UART.as_mut_ref().write_char('y').unwrap();
 }
 
 #[interrupt]
 unsafe fn TIMER1() {
-    // UART.as_mut_ref().write_char('w').unwrap();
     MOTORS.update_interrupt(|motors| {
         if motors.timer1.events_compare[3].read().bits() != 0 {
             motors.timer1.events_compare[3].reset();
@@ -250,7 +246,6 @@ unsafe fn TIMER1() {
             }
         }
     });
-    // UART.as_mut_ref().write_char('z').unwrap();
 }
 
 pub struct GlobalTime();
@@ -269,13 +264,11 @@ impl DelayMs<u32> for GlobalTime {
 
 impl DelayUs<u32> for GlobalTime {
     fn delay_us(&mut self, us: u32) {
-        log::info!("Enter delay");
         let end = self.get_time_us() + us;
 
         loop {
             let read = self.get_time_us();
             if read >= end {
-                log::info!("Exit delay");
                 return;
             }
         }

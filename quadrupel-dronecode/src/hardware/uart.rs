@@ -17,7 +17,7 @@ use crate::hardware::UART;
 pub struct QUart {
     uart: nrf51_pac::UART0,
     rx_queue: ConstGenericRingBuffer<u8, 256>,
-    tx_queue: ConstGenericRingBuffer<u8, 4096>,
+    tx_queue: ConstGenericRingBuffer<u8, 256>,
 
     /// True if the uart system is not busy, marking we can immediately
     /// write the first byte to the UART register. Subsequent bytes are put in a queue
@@ -89,37 +89,41 @@ impl QUart {
 
     /// Pushes a single byte over uart
     pub fn put_byte(&mut self, byte: u8) {
+        cortex_m::interrupt::free(|_| {
             if self.tx_data_available {
                 self.tx_data_available = false;
                 self.uart.txd.write(|w| unsafe { w.txd().bits(byte) });
             } else {
                 self.tx_queue.push(byte);
             }
+        })
     }
 
     /// Pushes multiple bytes over uart
     pub fn put_bytes(&mut self, bytes: &[u8]) {
-            for byte in bytes {
-                self.put_byte(*byte);
-            }
+        for byte in bytes {
+            self.put_byte(*byte);
+        }
     }
 
     pub fn get_byte(&mut self) -> Option<u8> {
+        cortex_m::interrupt::free(|_| {
             self.rx_queue.dequeue()
+        })
     }
 }
 
 impl Write for QUart {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-            self.put_bytes(s.as_bytes());
-            Ok(())
+        self.put_bytes(s.as_bytes());
+        Ok(())
     }
 }
 
 impl Writer for QUart {
     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
-            self.put_bytes(bytes);
-            Ok(())
+        self.put_bytes(bytes);
+        Ok(())
     }
 }
 

@@ -1,21 +1,10 @@
-pub mod accel;
-pub mod clock_source;
-pub mod config;
-pub mod dmp_firmware;
-pub mod error;
-pub mod fifo;
-pub mod firmware_loader;
-pub mod gyro;
-pub mod registers;
-pub mod sensor;
-
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
 use nrf51_hal::{Twi};
+use mpu6050_dmp::accel::Accel;
+use mpu6050_dmp::gyro::Gyro;
+use mpu6050_dmp::sensor::Mpu6050;
 use crate::motors::GlobalTime;
-use crate::mpu6050::accel::Accel;
-use crate::mpu6050::gyro::Gyro;
-use crate::mpu6050::sensor::Mpu6050;
 
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE

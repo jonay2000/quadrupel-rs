@@ -35,9 +35,6 @@ pub fn start_loop() -> ! {
         while let Some(msg) = uart_protocol.update() {
             process_message(msg, &mut state)
         }
-        // while let Some(byte) = UART.as_mut_ref().get_byte() {
-        //     log::info!("{}", byte);
-        // }
 
         //Check heartbeat
         if state.mode != Mode::Safe && (GlobalTime().get_time_us() - state.last_heartbeat) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
@@ -55,24 +52,20 @@ pub fn start_loop() -> ! {
         }
 
         // Print all info
-        // let dt = (GlobalTime().get_time_us() - start_time) / count;
-        // let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
-        // let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        // let adc = ADC.update_main(|adc| adc.read());
-        // let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
-        // let motors = MOTORS.update_main(|motors| motors.get_motors());
-        // if count % 100 == 0 {
-        //     log::info!("{} {} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
-        //         GlobalTime().get_time_us(),
-        //         dt,
-        //         motors,
-        //         ypr.roll, ypr.pitch, ypr.yaw,
-        //         gyro.x(), gyro.y(), gyro.z(),
-        //         adc, temp, pres
-        //     );
-        // }
-        if count % 10000 == 0 {
-            log::info!("{}", GlobalTime().get_time_us(),)
+        let dt = (GlobalTime().get_time_us() - start_time) / count;
+        let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
+        let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
+        let adc = ADC.update_main(|adc| adc.read());
+        let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
+        let motors = MOTORS.update_main(|motors| motors.get_motors());
+        if count % 100 == 0 {
+            log::info!("{} {} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
+                GlobalTime().get_time_us(), dt,
+                motors,
+                ypr.roll, ypr.pitch, ypr.yaw,
+                gyro.x(), gyro.y(), gyro.z(),
+                adc, temp, pres
+            );
         }
 
         //Update LEDS
@@ -106,18 +99,16 @@ pub fn start_loop() -> ! {
             i.set_motors(state.motor_values)
         });
 
-        GlobalTime().delay_ms(100);
-
         //Send state information
-        // let msg = MessageToComputer::StateInformation {
-        //     state: state.mode,
-        //     height: pres,
-        //     roll: ypr.roll.to_bits(),
-        //     pitch: ypr.pitch.to_bits(),
-        //     yaw: ypr.yaw.to_bits(),
-        //     battery: adc,
-        //     dt
-        // };
-        // //TODO send msg
+        let msg = MessageToComputer::StateInformation {
+            state: state.mode,
+            height: pres,
+            roll: ypr.roll.to_bits(),
+            pitch: ypr.pitch.to_bits(),
+            yaw: ypr.yaw.to_bits(),
+            battery: adc,
+            dt
+        };
+        //TODO send msg
     }
 }
