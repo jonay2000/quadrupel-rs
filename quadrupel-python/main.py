@@ -1,8 +1,16 @@
 import threading
+import platform
 
-# run `build_python_bindings.sh` to create this library
-# noinspection PyUnresolvedReferences
-from quadrupel import parse_message_from_drone, create_message_for_drone
+if platform.system() == "win32":
+    # run `build_python_bindings.sh` to create this library
+    # noinspection PyUnresolvedReferences
+    from quadrupel import parse_message_from_drone, create_message_for_drone
+else:
+    def parse_message_from_drone(msg):
+        return bytearray()
+
+    def create_message_for_drone(bytes):
+        return ""
 
 import traceback
 import serial
