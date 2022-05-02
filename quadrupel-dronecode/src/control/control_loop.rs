@@ -33,6 +33,9 @@ pub fn start_loop() -> ! {
         while let Some(msg) = uart_protocol.update() {
             process_message(msg, &mut state)
         }
+        // while let Some(byte) = UART.as_mut_ref().get_byte() {
+        //     log::info!("{}", byte);
+        // }
 
         //Check heartbeat
         if state.mode != Mode::Safe && (Motors::get_time_us() - state.last_heartbeat) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {

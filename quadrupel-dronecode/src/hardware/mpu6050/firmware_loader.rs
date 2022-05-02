@@ -1,8 +1,8 @@
-use crate::dmp_firmware::FIRMWARE;
-use crate::error::Error;
-use crate::registers::Register;
-use crate::sensor::Mpu6050;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
+use crate::mpu6050::dmp_firmware::FIRMWARE;
+use crate::mpu6050::error::Error;
+use crate::mpu6050::registers::Register;
+use crate::mpu6050::sensor::Mpu6050;
 
 const BANK_SIZE: usize = 256;
 const CHUNK_SIZE: usize = 16;

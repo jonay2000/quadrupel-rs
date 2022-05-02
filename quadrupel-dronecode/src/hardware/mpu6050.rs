@@ -1,10 +1,22 @@
+mod accel;
+mod clock_source;
+mod config;
+mod dmp_firmware;
+mod error;
+mod fifo;
+mod firmware_loader;
+mod gyro;
+mod registers;
+mod sensor;
+
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
-use mpu6050_dmp::accel::Accel;
-use mpu6050_dmp::gyro::Gyro;
-use mpu6050_dmp::sensor::Mpu6050;
 use nrf51_hal::{Timer, Twi};
 use nrf51_pac::TIMER0;
+use crate::mpu6050::accel::Accel;
+use crate::mpu6050::gyro::Gyro;
+use crate::mpu6050::sensor::Mpu6050;
+
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz
