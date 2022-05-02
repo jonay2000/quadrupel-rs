@@ -5,11 +5,18 @@ midi.init()
 
 class Mpd24:
     def __init__(self):
-        self.sliders = [0 for _ in range(6)]
-        print(midi.get_default_input_id())
-        self.i = midi.Input(midi.get_default_input_id())
+        try:
+            self.sliders = [0 for _ in range(6)]
+            print(midi.get_default_input_id())
+            self.i = midi.Input(midi.get_default_input_id())
+            self.working = 1
+        except:
+            self.working = 0
+            print("NO MIDI")
 
     def getSliders(self):
+        if not self.working:
+            return [0,0,0,0,0,0]
 
         while (self.i.poll()):
 

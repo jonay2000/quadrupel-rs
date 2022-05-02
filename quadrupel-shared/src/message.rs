@@ -6,7 +6,6 @@ use bincode::enc::write::Writer;
 use bincode::error::{DecodeError, EncodeError};
 use bincode::{Decode, Encode};
 
-#[cfg(feature = "python")]
 use alloc::vec::Vec;
 
 #[cfg(feature = "python")]
@@ -15,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Decode, Encode, Debug)]
 pub enum MessageToComputer {
-    Log(String),
+    Log(Vec<u8>),
     StateInformation {
         state: Mode,
         height: u32,
@@ -28,14 +27,13 @@ pub enum MessageToComputer {
 }
 
 impl MessageToComputer {
-    // NEVER CALL CONCURRENTLY (FROM INTERRUPT)
-    pub unsafe fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
-        static mut ENCODING_SPACE: [u8; 256] = [0u8; 256];
-        let bytes = bincode::encode_into_slice(self, &mut ENCODING_SPACE, standard())?;
+    pub fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
+        let mut encoding_space: [u8; 256] = [0u8; 256];
+        let bytes = bincode::encode_into_slice(self, &mut encoding_space, standard())?;
         assert!(bytes < 256);
 
         w.write(&[bytes as u8])?;
-        w.write(&ENCODING_SPACE)?;
+        w.write(&encoding_space)?;
         Ok(())
     }
 
@@ -60,10 +58,12 @@ pub enum MessageToDrone {
     ChangeState(Mode),
     MotorValue { motor: Motor, value: MotorValue },
     MotorValueRel { motor: Motor, value: MotorValueDelta },
-    TargetYaw(u32),
-    TargetPitch(u32),
-    TargetRoll(u32),
-    TargetHeight(u32),
+    TargetAttitude {
+        yaw: u32,
+        pitch: u32,
+        roll: u32,
+        lift: u32,
+    },
     HeartBeat(u8),
     TunePID {/* TODO */},
 }
