@@ -33,7 +33,7 @@ impl MessageToComputer {
         assert!(bytes < 256);
 
         w.write(&[bytes as u8])?;
-        w.write(&encoding_space)?;
+        w.write(&encoding_space[..bytes])?;
         Ok(())
     }
 
