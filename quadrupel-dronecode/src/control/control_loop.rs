@@ -107,6 +107,7 @@ pub fn start_loop() -> ! {
             battery: adc,
             dt
         };
+        UART.as_mut_ref().send_message(msg);
         //TODO send msg
     }
 }
