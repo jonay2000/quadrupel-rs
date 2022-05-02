@@ -1,7 +1,7 @@
 use quadrupel_shared::message::Motor;
 use quadrupel_shared::{MotorValue, MotorValueDelta};
 use quadrupel_shared::state::Mode;
-use crate::Motors;
+use crate::motors::GlobalTime;
 
 pub struct FlightState {
     pub mode: Mode,
@@ -21,7 +21,7 @@ impl Default for FlightState {
         Self {
             mode: Mode::Safe,
             motor_values: [0; 4],
-            last_heartbeat: Motors::get_time_us(),
+            last_heartbeat: GlobalTime().get_time_us(),
         }
     }
 }

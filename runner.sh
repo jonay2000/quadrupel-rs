@@ -31,6 +31,10 @@ then
   then
     python2 "$SCRIPT_DIR/dfu_serial/serial_dfu.py" -p "$PORT" "$BINARY.bin"
   fi
+
+#  cd pc_terminal
+#  make run
+
   cd quadrupel-python
   python3 main.py
 fi

@@ -1,10 +1,11 @@
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
+use nrf51_hal::{Twi};
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
 use mpu6050_dmp::sensor::Mpu6050;
-use nrf51_hal::{Timer, Twi};
-use nrf51_pac::TIMER0;
+use crate::motors::GlobalTime;
+
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz
@@ -26,9 +27,9 @@ pub struct QMpu6050<T: nrf51_hal::twi::Instance> {
     mpu: Mpu6050<Twi<T>>,
 }
 impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
-    pub fn new(i2c: &mut Twi<T>, timer0: &mut Timer<TIMER0>) -> Self {
+    pub fn new(i2c: &mut Twi<T>) -> Self {
         let mut mpu = Mpu6050::new(i2c).unwrap();
-        mpu.initialize_dmp(i2c, timer0).unwrap();
+        mpu.initialize_dmp(i2c, &mut GlobalTime()).unwrap();
         mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER).unwrap();
         QMpu6050 { mpu }
     }
@@ -61,12 +62,12 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
         Some(ypr)
     }
 
-    pub fn block_read_mpu(&mut self, i2c: &mut Twi<T>, timer0: &mut Timer<TIMER0>) -> YawPitchRoll {
+    pub fn block_read_mpu(&mut self, i2c: &mut Twi<T>) -> YawPitchRoll {
         loop {
             match self.read_mpu(i2c) {
                 None => {
                     //Try again after 100 us
-                    timer0.delay_us(100u32);
+                    GlobalTime().delay_us(100u32);
                 }
                 Some(ypr) => return ypr,
             }
