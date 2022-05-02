@@ -1,6 +1,7 @@
 use core::marker::PhantomData;
 use embedded_hal::blocking::delay;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
+use log::info;
 use crate::mpu6050::accel::{Accel, AccelFullScale};
 use crate::mpu6050::clock_source::ClockSource;
 use crate::mpu6050::config::DigitalLowPassFilter;
@@ -29,10 +30,12 @@ where
 {
     /// Construct a new i2c driver for the MPU-6050
     pub fn new(i2c: &mut I2c) -> Result<Self, Error<I2c>> {
+        info!("New start");
         let mut sensor = Self { _p: PhantomData::default(), };
 
+        info!("New 1");
         sensor.disable_sleep(i2c, )?;
-
+        info!("New end");
         Ok(sensor)
     }
 

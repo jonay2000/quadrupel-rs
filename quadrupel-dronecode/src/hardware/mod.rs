@@ -8,17 +8,15 @@ pub mod uart;
 
 use core::cell::{UnsafeCell};
 use crate::hardware::adc::QAdc;
-use crate::hardware::i2c::I2C;
 use crate::hardware::leds::QLeds;
 use crate::hardware::uart::QUart;
 use crate::Motors;
-use nrf51_hal::{Timer, Twi};
-use nrf51_pac::{TIMER0, TWI0};
+use nrf51_hal::{Twi};
+use nrf51_pac::{TWI0};
 use crate::hardware::mpu6050::QMpu6050;
 use crate::hardware::ms5611::QMs5611;
 use crate::library::once_cell::OnceCell;
 
-pub static TIMER0: OnceCell<HWCellType3<Timer<TIMER0>>> = OnceCell::new();
 pub static LEDS: OnceCell<HWCellType2<QLeds>> = OnceCell::new();
 pub static UART: OnceCell<HWCellType2<QUart>> = OnceCell::new();
 pub static I2C: OnceCell<HWCellType3<Twi<TWI0>>> = OnceCell::new();
@@ -33,34 +31,7 @@ pub fn init_hardware(
 ) {
     let gpio = nrf51_hal::gpio::p0::Parts::new(pn.GPIO);
 
-    TIMER0.initialize(HWCellType3{ cell: UnsafeCell::new(
-        Timer::new(pn.TIMER0)
-    )});
-
-    LEDS.initialize(HWCellType2{ cell: UnsafeCell::new(
-        QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)
-    )});
-
-    UART.initialize(HWCellType2{ cell: UnsafeCell::new(
-        QUart::new(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC)
-    )});
-    UART.update_main(|uart| uart.enable());
-
-    I2C.initialize(HWCellType3{ cell: UnsafeCell::new(
-        I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)
-    )});
-    MPU.initialize(HWCellType3{ cell: UnsafeCell::new(
-        QMpu6050::new(I2C.as_mut_ref(), TIMER0.as_mut_ref())
-    )});
-    BARO.initialize(HWCellType3{ cell: UnsafeCell::new(
-        QMs5611::new(I2C.as_mut_ref())
-    )});
-
-    ADC.initialize(HWCellType1 { cell: UnsafeCell::new(
-        QAdc::new(pn.ADC, &mut pc.NVIC)
-    )});
-    ADC.update_main(|adc| adc.enable());
-
+    //Motors first so we can use the timer
     MOTORS.initialize(HWCellType1 { cell: UnsafeCell::new(
         Motors::new(
             pn.TIMER1,
@@ -72,6 +43,30 @@ pub fn init_hardware(
         )
     )});
     MOTORS.update_main(|motors| motors.enable());
+
+    LEDS.initialize(HWCellType2{ cell: UnsafeCell::new(
+        QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)
+    )});
+
+    UART.initialize(HWCellType2{ cell: UnsafeCell::new(
+        QUart::new(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC)
+    )});
+    UART.update_main(|uart| uart.enable());
+
+    // I2C.initialize(HWCellType3{ cell: UnsafeCell::new(
+    //     I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)
+    // )});
+    // MPU.initialize(HWCellType3{ cell: UnsafeCell::new(
+    //     QMpu6050::new(I2C.as_mut_ref())
+    // )});
+    // BARO.initialize(HWCellType3{ cell: UnsafeCell::new(
+    //     QMs5611::new(I2C.as_mut_ref())
+    // )});
+    //
+    // ADC.initialize(HWCellType1 { cell: UnsafeCell::new(
+    //     QAdc::new(pn.ADC, &mut pc.NVIC)
+    // )});
+    // ADC.update_main(|adc| adc.enable());
 }
 
 pub trait HWCell<T> {
@@ -106,9 +101,13 @@ pub struct HWCellType1<T> {
 impl<T> HWCell<T> for HWCellType1<T> {
     fn update_main<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {
         // When accessing from main thread, we need to turn of interrupts to have sync
-        cortex_m::interrupt::free(|_| unsafe {
+        // cortex_m::interrupt::free(|_| unsafe {
+        //     f(&mut *self.cell.get())
+        // })
+        //TODO temp
+        unsafe {
             f(&mut *self.cell.get())
-        })
+        }
     }
 
     fn update_interrupt<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {

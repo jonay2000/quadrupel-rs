@@ -36,7 +36,6 @@ impl UartProtocol {
                                 self.state = UartProtocolState::WaitingForMessage;
                             },
                             Ok((msg, _)) => {
-                                log::info!("ok {msg:?}");
                                 self.state = UartProtocolState::WaitingForMessage;
                                 return Some(msg)
                             }
