@@ -1,4 +1,6 @@
 use embedded_hal::digital::v2::{OutputPin, PinState};
+use log::info;
+use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
 use crate::*;
 use crate::control::flight_state::FlightState;
@@ -49,6 +51,7 @@ pub fn start_loop() -> ! {
         }
 
         // Print all info
+        let dt = (Motors::get_time_us() - start_time) / count;
         let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref(), TIMER0.as_mut_ref());
         let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
         let adc = ADC.update_main(|adc| adc.read());
@@ -56,7 +59,7 @@ pub fn start_loop() -> ! {
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         if count % 100 == 0 {
             log::info!("{} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
-                (Motors::get_time_us() - start_time) / count,
+                dt,
                 motors,
                 ypr.roll, ypr.pitch, ypr.yaw,
                 gyro.x(), gyro.y(), gyro.z(),
@@ -77,12 +80,10 @@ pub fn start_loop() -> ! {
             },
             s => s
         };
-        // green = on if ok
-        // yellow = on if active
-        // red = on if panic
+        //green yellow red
         let (g,y,r) = match state.mode {
-            Mode::Safe => (true,true,false),
-            Mode::Calibration => (true,true,false),
+            Mode::Safe => (false,true,false),
+            Mode::Calibration => (false,false,false),
             Mode::Panic => (true,true,true),
             Mode::FullControl => (true,true,false),
             Mode::IndividualMotorControl => (true,true,false),
@@ -96,5 +97,17 @@ pub fn start_loop() -> ! {
         MOTORS.update_main(|i| {
             i.set_motors(state.motor_values)
         });
+
+        //Send state information
+        let msg = MessageToComputer::StateInformation {
+            state: state.mode,
+            height: pres,
+            roll: ypr.roll.to_bits(),
+            pitch: ypr.pitch.to_bits(),
+            yaw: ypr.yaw.to_bits(),
+            battery: adc,
+            dt
+        };
+        //TODO send msg
     }
 }

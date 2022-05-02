@@ -13,18 +13,18 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
-#[derive(Decode, Encode)]
+#[derive(Decode, Encode, Debug)]
 pub enum MessageToComputer {
     Log(String),
-    CurrentState(Mode),
-    Sensors {
+    StateInformation {
+        state: Mode,
         height: u32,
-        roll: u32,
-        pitch: u32,
-        yaw: u32,
-    },
-    MotorPidParams {/* TODO */},
-    Battery(u16),
+        roll: i32,
+        pitch: i32,
+        yaw: i32,
+        battery: u16,
+        dt: u32,
+    }
 }
 
 impl MessageToComputer {
