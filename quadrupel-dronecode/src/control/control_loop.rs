@@ -82,11 +82,11 @@ pub fn start_loop() -> ! {
         };
         //green yellow red
         let (g,y,r) = match state.mode {
-            Mode::Safe => (false,true,false),
+            Mode::Safe => (true,false,false),
             Mode::Calibration => (false,false,false),
             Mode::Panic => (true,true,true),
-            Mode::FullControl => (true,true,false),
-            Mode::IndividualMotorControl => (true,true,false),
+            Mode::FullControl => (false,true,false),
+            Mode::IndividualMotorControl => (false,true,false),
         };
         leds.led_green.set_state(PinState::from(!g)).unwrap();
         leds.led_yellow.set_state(PinState::from(!y)).unwrap();
