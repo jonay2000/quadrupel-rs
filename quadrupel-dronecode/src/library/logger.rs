@@ -1,3 +1,4 @@
+use alloc::format;
 use core::fmt::Write;
 use log::{set_logger_racy, set_max_level, LevelFilter, Log, Metadata, Record};
 use crate::hardware::UART;
@@ -31,8 +32,9 @@ impl Log for UartLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
+            let f = format!("[{}] {}", record.level().as_str(), record.args());
             let uart = UART.as_mut_ref();
-            writeln!(uart, "[{}] {}", record.level().as_str(), record.args()).unwrap();
+
         }
     }
 
