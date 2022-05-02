@@ -33,7 +33,7 @@ impl Log for UartLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            let x = format!("[{}] {}", record.level().as_str(), record.args());
+            let x = format!("[{}] {}\n", record.level().as_str(), record.args());
             let mut f = x.as_bytes();
             let mut uart = UART.as_mut_ref();
 

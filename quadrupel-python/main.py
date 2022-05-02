@@ -4,11 +4,11 @@ import threading
 import platform
 from collections import deque
 
-if platform.system() == "win32":
+try:
     # run `build_python_bindings.sh` to create this library
     # noinspection PyUnresolvedReferences
     from quadrupel import parse_message_from_drone, create_message_for_drone
-else:
+except ImportError:
     def parse_message_from_drone(msg):
         return bytearray()
 
@@ -45,7 +45,8 @@ class Serial:
 
     def send(self, msg: str):
         if self.ser is not None:
-            self.ser.write(create_message_for_drone(msg.encode("utf-8")))
+            r = create_message_for_drone(msg)
+            self.ser.write(r)
 
     def get_latest_message(self) -> dict | None:
         try:
@@ -76,15 +77,16 @@ class Serial:
                 if receiving and len(buf) == target_length:
                     receiving = False
                     try:
-                        msg = parse_message_from_drone(buf).decode("utf-8")
-                        decoded_msg = json.loads(msg)
+                        if len(buf) != 0:
+                            msg, num = parse_message_from_drone(bytes(buf))
+                            decoded_msg = json.loads(msg)
 
-                        if (v := decoded_msg.get("Log")) is not None:
-                            print(v, end="")
-                        else:
-                            q.put(decoded_msg)
+                            if (v := decoded_msg.get("Log")) is not None:
+                                print(bytes(v).decode("utf-8"), end="")
+                            else:
+                                q.put(decoded_msg)
                     except Exception as e:
-                        print(traceback.format_exception(type(e), e, e.__traceback__))
+                        print(e)
                     buf = []
                     continue
 
@@ -98,5 +100,4 @@ class Serial:
 
 if __name__ == '__main__':
     ser = Serial()
-
     main(ser)
