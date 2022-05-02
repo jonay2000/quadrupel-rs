@@ -32,7 +32,10 @@ class Serial:
 
     def send(self, msg: str):
         if self.ser is not None:
-            self.ser.write(create_message_for_drone(msg))
+
+            msg_enc = create_message_for_drone(msg)
+            print(f"Sending: {msg} = {msg_enc}")
+            self.ser.write(msg_enc)
 
     def read(self):
         if self.ser is not None:

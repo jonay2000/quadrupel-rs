@@ -56,15 +56,15 @@ pub fn start_loop() -> ! {
         let adc = ADC.update_main(|adc| adc.read());
         let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
-        if count % 100 == 0 {
-            log::info!("{} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
-                dt,
-                motors,
-                ypr.roll, ypr.pitch, ypr.yaw,
-                gyro.x(), gyro.y(), gyro.z(),
-                adc, temp, pres
-            );
-        }
+        // if count % 100 == 0 {
+        //     log::info!("{} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
+        //         dt,
+        //         motors,
+        //         ypr.roll, ypr.pitch, ypr.yaw,
+        //         gyro.x(), gyro.y(), gyro.z(),
+        //         adc, temp, pres
+        //     );
+        // }
 
         //Update LEDS
         let leds = LEDS.as_mut_ref();
