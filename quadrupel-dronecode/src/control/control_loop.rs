@@ -1,5 +1,4 @@
 use embedded_hal::digital::v2::{OutputPin, PinState};
-use log::info;
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
 use crate::*;
