@@ -1,7 +1,7 @@
 use core::marker::PhantomData;
 use embedded_hal::prelude::_embedded_hal_blocking_i2c_WriteRead;
 use nrf51_hal::{Twi};
-use crate::Motors;
+use crate::motors::GlobalTime;
 
 const MS5611_ADDR: u8 = 0b01110111;
 const REG_READ: u8 = 0x0;
@@ -106,11 +106,11 @@ impl<I2c: nrf51_hal::twi::Instance> QMs5611<I2c> {
                 twi.write(MS5611_ADDR, &[REG_D1 + self.over_sampling_ratio.addr_modifier()]).unwrap();
 
                 //Then set loop state for next iteration
-                self.loop_state = QMs5611LoopState::ReadD1 { start_time: Motors::get_time_us() };
+                self.loop_state = QMs5611LoopState::ReadD1 { start_time: GlobalTime().get_time_us() };
             }
             QMs5611LoopState::ReadD1 { start_time } => {
                 //If the chip has not had enough time to process, return
-                if Motors::get_time_us() - start_time < self.over_sampling_ratio.get_delay() { return; }
+                if GlobalTime().get_time_us() - start_time < self.over_sampling_ratio.get_delay() { return; }
 
                 //Read D1
                 let mut buf = [0u8; 4];
@@ -121,11 +121,11 @@ impl<I2c: nrf51_hal::twi::Instance> QMs5611<I2c> {
                 twi.write(MS5611_ADDR, &[REG_D2 + self.over_sampling_ratio.addr_modifier()]).unwrap();
 
                 //Then set loop state for next iteration
-                self.loop_state = QMs5611LoopState::ReadD2 { start_time: Motors::get_time_us(), d1 };
+                self.loop_state = QMs5611LoopState::ReadD2 { start_time: GlobalTime().get_time_us(), d1 };
             }
             QMs5611LoopState::ReadD2 { start_time, d1 } => {
                 //If the chip has not had enough time to process, return
-                if Motors::get_time_us() - start_time < self.over_sampling_ratio.get_delay() { return; }
+                if GlobalTime().get_time_us() - start_time < self.over_sampling_ratio.get_delay() { return; }
 
                 //Read D2
                 let mut buf = [0u8; 4];

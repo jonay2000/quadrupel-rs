@@ -89,12 +89,14 @@ impl QUart {
 
     /// Pushes a single byte over uart
     pub fn put_byte(&mut self, byte: u8) {
-        if self.tx_data_available {
-            self.tx_data_available = false;
-            self.uart.txd.write(|w| unsafe { w.txd().bits(byte) });
-        } else {
-            self.tx_queue.push(byte);
-        }
+        cortex_m::interrupt::free(|_| {
+            if self.tx_data_available {
+                self.tx_data_available = false;
+                self.uart.txd.write(|w| unsafe { w.txd().bits(byte) });
+            } else {
+                self.tx_queue.push(byte);
+            }
+        })
     }
 
     /// Pushes multiple bytes over uart
@@ -105,7 +107,9 @@ impl QUart {
     }
 
     pub fn get_byte(&mut self) -> Option<u8> {
-        self.rx_queue.dequeue()
+        cortex_m::interrupt::free(|_| {
+            self.rx_queue.dequeue()
+        })
     }
 }
 

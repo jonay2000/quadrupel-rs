@@ -28,14 +28,13 @@ pub enum MessageToComputer {
 }
 
 impl MessageToComputer {
-    // NEVER CALL CONCURRENTLY (FROM INTERRUPT)
     pub unsafe fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
-        static mut ENCODING_SPACE: [u8; 256] = [0u8; 256];
-        let bytes = bincode::encode_into_slice(self, &mut ENCODING_SPACE, standard())?;
+        let mut encoding_space: [u8; 256] = [0u8; 256];
+        let bytes = bincode::encode_into_slice(self, &mut encoding_space, standard())?;
         assert!(bytes < 256);
 
         w.write(&[bytes as u8])?;
-        w.write(&ENCODING_SPACE)?;
+        w.write(&encoding_space)?;
         Ok(())
     }
 

@@ -32,9 +32,11 @@ impl UartProtocol {
                     if received_count == len {
                         match MessageToDrone::decode(&self.buffer[..*len as usize]) {
                             Err(e) => {
-                                log::error!("{:?}", e)
+                                log::error!("{:?} from decoding {:?}", e, &self.buffer[..*len as usize]);
+                                self.state = UartProtocolState::WaitingForMessage;
                             },
                             Ok((msg, _)) => {
+                                self.state = UartProtocolState::WaitingForMessage;
                                 return Some(msg)
                             }
                         }

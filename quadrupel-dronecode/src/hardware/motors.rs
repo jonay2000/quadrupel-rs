@@ -1,5 +1,7 @@
+use core::sync::atomic::{AtomicU32, Ordering};
 use crate::{Level};
 use cortex_m::peripheral::NVIC;
+use embedded_hal::blocking::delay::{DelayMs, DelayUs};
 use embedded_hal::digital::v2::OutputPin;
 use nrf51_hal::gpio::p0::P0_20;
 use nrf51_hal::gpio::{Disconnected, Output, PushPull};
@@ -13,7 +15,7 @@ pub struct Motors {
     pin20: P0_20<Output<PushPull>>,
 }
 
-static mut GLOBAL_TIME: u32 = 0;
+static GLOBAL_TIME: AtomicU32 = AtomicU32::new(0);
 
 const MOTOR_0_PIN: u8 = 21;
 const MOTOR_1_PIN: u8 = 23;
@@ -202,10 +204,6 @@ impl Motors {
         }
     }
 
-    pub fn get_time_us() -> u32 {
-        unsafe { GLOBAL_TIME }
-    }
-
     pub fn get_motors(&self) -> [u16; 4] {
         self.motor_values
     }
@@ -220,7 +218,8 @@ unsafe fn TIMER2() {
     MOTORS.update_interrupt(|motors| {
         if motors.timer2.events_compare[3].read().bits() != 0 {
             motors.timer2.events_compare[3].reset();
-            GLOBAL_TIME += 312; //2500 * 0.125
+            GLOBAL_TIME.store(GLOBAL_TIME.load(Ordering::SeqCst) + 312, Ordering::SeqCst);
+            //2500 * 0.125
             motors.timer2.tasks_capture[2].write(|w| w.bits(1));
 
             //TODO is this ever false?
@@ -247,4 +246,31 @@ unsafe fn TIMER1() {
             }
         }
     });
+}
+
+pub struct GlobalTime();
+
+impl GlobalTime {
+    pub fn get_time_us(&mut self) -> u32 {
+        GLOBAL_TIME.load(Ordering::SeqCst)
+    }
+}
+
+impl DelayMs<u32> for GlobalTime {
+    fn delay_ms(&mut self, ms: u32) {
+        self.delay_us(1000 * ms);
+    }
+}
+
+impl DelayUs<u32> for GlobalTime {
+    fn delay_us(&mut self, us: u32) {
+        let end = self.get_time_us() + us;
+
+        loop {
+            let read = self.get_time_us();
+            if read >= end {
+                return;
+            }
+        }
+    }
 }
