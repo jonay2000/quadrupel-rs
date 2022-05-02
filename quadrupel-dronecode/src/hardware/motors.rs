@@ -15,7 +15,7 @@ pub struct Motors {
     pin20: P0_20<Output<PushPull>>,
 }
 
-static mut GLOBAL_TIME: AtomicU32 = AtomicU32::new(0);
+static GLOBAL_TIME: AtomicU32 = AtomicU32::new(0);
 
 const MOTOR_0_PIN: u8 = 21;
 const MOTOR_1_PIN: u8 = 23;
@@ -252,7 +252,7 @@ pub struct GlobalTime();
 
 impl GlobalTime {
     pub fn get_time_us(&mut self) -> u32 {
-        unsafe { GLOBAL_TIME.load(Ordering::SeqCst) }
+        GLOBAL_TIME.load(Ordering::SeqCst)
     }
 }
 
