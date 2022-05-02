@@ -1,7 +1,7 @@
 import threading
 import platform
 
-if platform.system() == "2in32":
+if platform.system() == "win32":
     # run `build_python_bindings.sh` to create this library
     # noinspection PyUnresolvedReferences
     from quadrupel import parse_message_from_drone, create_message_for_drone
