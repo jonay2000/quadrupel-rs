@@ -6,7 +6,6 @@ use bincode::enc::write::Writer;
 use bincode::error::{DecodeError, EncodeError};
 use bincode::{Decode, Encode};
 
-#[cfg(feature = "python")]
 use alloc::vec::Vec;
 
 #[cfg(feature = "python")]
@@ -14,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Decode, Encode, Debug)]
-pub enum MessageToComputer<'a> {
-    Log(&'a [u8]),
+pub enum MessageToComputer {
+    Log(Vec<u8>),
     StateInformation {
         state: Mode,
         height: u32,
@@ -27,7 +26,7 @@ pub enum MessageToComputer<'a> {
     }
 }
 
-impl MessageToComputer<'_> {
+impl MessageToComputer {
     pub fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
         let mut encoding_space: [u8; 256] = [0u8; 256];
         let bytes = bincode::encode_into_slice(self, &mut encoding_space, standard())?;

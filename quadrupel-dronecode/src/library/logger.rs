@@ -33,14 +33,15 @@ impl Log for UartLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            let mut f = format!("[{}] {}", record.level().as_str(), record.args()).as_bytes();
+            let x = format!("[{}] {}", record.level().as_str(), record.args());
+            let mut f = x.as_bytes();
             let mut uart = UART.as_mut_ref();
 
             while f.len() > 200 {
-                uart.send_message(MessageToComputer::Log(&f[..200]));
+                uart.send_message(MessageToComputer::Log(f[..200].to_vec()));
                 f = &f[200..];
             }
-            uart.send_message(MessageToComputer::Log(f));
+            uart.send_message(MessageToComputer::Log(f.to_vec()));
         }
     }
 
