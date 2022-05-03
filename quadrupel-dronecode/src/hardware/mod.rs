@@ -32,7 +32,15 @@ pub fn init_hardware(
 ) {
     let gpio = nrf51_hal::gpio::p0::Parts::new(pn.GPIO);
 
-    //Motors first so we can use the timer
+    UART.initialize(HWCellType2{ cell: UnsafeCell::new(
+        QUart::new(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC)
+    )});
+    UART.update_main(|uart| uart.enable());
+
+    LEDS.initialize(HWCellType2{ cell: UnsafeCell::new(
+        QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)
+    )});
+
     MOTORS.initialize(HWCellType1 { cell: UnsafeCell::new(
         Motors::new(
             pn.TIMER1,
@@ -44,15 +52,6 @@ pub fn init_hardware(
         )
     )});
     MOTORS.update_main(|motors| motors.enable());
-
-    LEDS.initialize(HWCellType2{ cell: UnsafeCell::new(
-        QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)
-    )});
-
-    UART.initialize(HWCellType2{ cell: UnsafeCell::new(
-        QUart::new(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC)
-    )});
-    UART.update_main(|uart| uart.enable());
 
     I2C.initialize(HWCellType3{ cell: UnsafeCell::new(
         I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)
