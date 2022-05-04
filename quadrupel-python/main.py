@@ -1,7 +1,6 @@
 import json
 import queue
 import threading
-import platform
 import time
 from collections import deque
 
@@ -51,6 +50,8 @@ class Serial:
     def start_heartbeat(self):
         self.do_heartbeat = True
         threading.Timer(0.1, self.heartbeat).start()
+        self.q = multiprocessing.Queue()
+        multiprocessing.Process(target=self.read, args=(self.q,)).start()
 
     def heartbeat(self):
         self.send(msgs.heartbeat())
