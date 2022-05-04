@@ -19,10 +19,10 @@ impl ModeTrait for ManualControl {
         let roll = FixedI32::from_num(10) * state.target_attitude.roll;   // [-8,8]
 
         let motors = [
-            lift + yaw + pitch,
-            lift - yaw + roll,
-            lift + yaw - pitch,
-            lift - yaw - roll,
+            lift - yaw + pitch,
+            lift + yaw + roll,
+            lift - yaw - pitch,
+            lift + yaw - roll,
         ];
 
         state.motor_values = motors.map(|fi32| {
