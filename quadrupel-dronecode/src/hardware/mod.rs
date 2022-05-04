@@ -7,6 +7,7 @@ pub mod ms5611;
 pub mod uart;
 
 use core::cell::{UnsafeCell};
+use cortex_m::asm;
 use crate::hardware::adc::QAdc;
 use crate::hardware::leds::QLeds;
 use crate::hardware::uart::QUart;
@@ -37,9 +38,14 @@ pub fn init_hardware(
     )});
     UART.update_main(|uart| uart.enable());
 
+    log::info!("UART init OK");
+    asm::delay(100_000);
+
     LEDS.initialize(HWCellType2{ cell: UnsafeCell::new(
         QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)
     )});
+    log::info!("LEDS init OK");
+    asm::delay(100_000);
 
     MOTORS.initialize(HWCellType1 { cell: UnsafeCell::new(
         Motors::new(
@@ -52,21 +58,38 @@ pub fn init_hardware(
         )
     )});
     MOTORS.update_main(|motors| motors.enable());
+    log::info!("MOTORS init OK");
+    asm::delay(100_000);
 
     I2C.initialize(HWCellType3{ cell: UnsafeCell::new(
         I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)
     )});
+
+    log::info!("I2C init OK");
+    asm::delay(100_000);
+
     MPU.initialize(HWCellType3{ cell: UnsafeCell::new(
         QMpu6050::new(I2C.as_mut_ref())
     )});
+
+    log::info!("MPU init OK");
+    asm::delay(100_000);
+
     BARO.initialize(HWCellType3{ cell: UnsafeCell::new(
         QMs5611::new(I2C.as_mut_ref())
     )});
+
+
+    log::info!("BARO");
+    asm::delay(100_000);
 
     ADC.initialize(HWCellType1 { cell: UnsafeCell::new(
         QAdc::new(pn.ADC, &mut pc.NVIC)
     )});
     ADC.update_main(|adc| adc.enable());
+
+    log::info!("ADC");
+    asm::delay(100_000);
 }
 
 pub trait HWCell<T> {

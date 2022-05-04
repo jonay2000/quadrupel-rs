@@ -1,4 +1,5 @@
 use core::marker::PhantomData;
+use cortex_m::asm;
 use crate::accel::{Accel, AccelFullScale};
 use crate::clock_source::ClockSource;
 use crate::config::DigitalLowPassFilter;
@@ -43,8 +44,20 @@ where
         delay: &mut impl delay::DelayMs<u32>,
     ) -> Result<(), Error<I2c>> {
         self.reset(i2c, delay)?;
+
+        log::info!("a");
+        asm::delay(100_000);
+
         self.disable_sleep(i2c, )?;
+
+        log::info!("b");
+        asm::delay(100_000);
+
         self.reset_signal_path(i2c, delay)?;
+
+        log::info!("c");
+        asm::delay(100_000);
+
         self.disable_dmp(i2c, )?;
         self.set_clock_source(i2c, ClockSource::Xgyro)?;
         self.disable_interrupts(i2c, )?;
@@ -294,7 +307,8 @@ where
     pub fn disable_sleep(&mut self, i2c: &mut I2c,) -> Result<(), Error<I2c>> {
         let mut value = self.read_register(i2c, Register::PwrMgmt1)?;
         value &= !(1 << 6);
-        self.write_register(i2c, Register::PwrMgmt1, value)
+        let res = self.write_register(i2c, Register::PwrMgmt1, value);
+        res
     }
 
     pub fn accel(&mut self, i2c: &mut I2c,) -> Result<Accel, Error<I2c>> {
