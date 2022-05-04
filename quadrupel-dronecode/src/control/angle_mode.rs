@@ -13,7 +13,7 @@ pub struct AngleMode {
 }
 
 impl AngleMode {
-    pub fn step(&mut self,dt:FI32, thrust: FI32, yaw_state: FI32, pitch_state:FI32,roll_state:FI32, yaw_goal: FI32,pitch_goal:FI32,roll_goal:FI32) -> [FI32; 4] {
+    pub fn step(&mut self, dt:FI32, lift: FI32, yaw_state: FI32, pitch_state:FI32, roll_state:FI32, yaw_goal: FI32, pitch_goal:FI32, roll_goal:FI32) -> [FI32; 4] {
 
 
         let yaw_off = if ENABLE_YAW {
@@ -36,10 +36,10 @@ impl AngleMode {
 
 
         return [
-            thrust + yaw_off + pitch_off,
-            thrust - yaw_off + roll_off,
-            thrust + yaw_off - pitch_off,
-            thrust - yaw_off - roll_off
+            lift + yaw_off + pitch_off,
+            lift - yaw_off + roll_off,
+            lift + yaw_off - pitch_off,
+            lift - yaw_off - roll_off
         ]
     }
 }

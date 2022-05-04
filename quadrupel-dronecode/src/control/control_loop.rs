@@ -5,6 +5,7 @@ use quadrupel_shared::state::Mode;
 use crate::*;
 use crate::control::flight_state::FlightState;
 use crate::control::modes::individual_motor_control::IndividualMotorControlMode;
+use crate::control::modes::manual_control::ManualControl;
 use crate::control::modes::ModeTrait;
 use crate::control::modes::panic::PanicMode;
 use crate::control::modes::safe::SafeMode;
@@ -61,7 +62,7 @@ pub fn start_loop() -> ! {
             Mode::Panic => PanicMode::iteration(&mut state),
             Mode::FullControl => {}
             Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state),
-            Mode::Manual => {}
+            Mode::Manual => ManualControl::iteration(&mut state),
         }
 
         // Print all info
