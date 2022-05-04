@@ -42,6 +42,14 @@ pub fn start_loop() -> ! {
             state.mode = Mode::Panic;
         }
 
+        //Check adc
+        let adc = ADC.update_main(|adc| adc.read());
+        if adc < 1050 {
+            log::error!("Panic: Battery low");
+            state.mode = Mode::Panic;
+        }
+
+
         // Do action corresponding to current mode
         match state.mode {
             Mode::Safe => SafeMode::iteration(&mut state),
@@ -55,7 +63,6 @@ pub fn start_loop() -> ! {
         let dt = (GlobalTime().get_time_us() - start_time) / count;
         let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
         let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let adc = ADC.update_main(|adc| adc.read());
         let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         if count % 100 == 0 {

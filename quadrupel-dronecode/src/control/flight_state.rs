@@ -9,13 +9,6 @@ pub struct FlightState {
     pub last_heartbeat: u32,
 }
 
-impl FlightState {
-    pub fn update_motor(&mut self, motor: Motor, delta: MotorValueDelta) {
-        let current = self.motor_values[motor as usize] as i32;
-        self.motor_values[motor as usize] = (current + delta).max(0) as MotorValue;
-    }
-}
-
 impl Default for FlightState {
     fn default() -> Self {
         Self {
