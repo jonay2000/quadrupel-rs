@@ -356,10 +356,19 @@ class JoystickHandler:
     def send_data(self, ser):
         threading.Timer(1 / message_frequency, self.send_data, args=(ser, )).start()
         if self.new_joystick_input:
-            message_joystick["TargetAttitude"]["roll"] = round((-1 * self.joystick.get_axis(0)) * pow(2,19)) + keyboard_offsets["roll"]
-            message_joystick["TargetAttitude"]["pitch"] = round((self.joystick.get_axis(1)) * pow(2,19)) + keyboard_offsets["pitch"]
-            message_joystick["TargetAttitude"]["yaw"] = round((self.joystick.get_axis(2)) * pow(2,19)) + keyboard_offsets["yaw"]
-            message_joystick["TargetAttitude"]["lift"] = round((-1 * self.joystick.get_axis(3) + 1) * pow(2,19)) + keyboard_offsets["lift"]
+            if -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) + keyboard_offsets["roll"] <= 20000 \
+                    and -20000 <= ((self.joystick.get_axis(1)) * pow(2, 19)) + keyboard_offsets["pitch"] <= 20000 \
+                    and -20000 <= ((self.joystick.get_axis(2)) * pow(2, 19)) + keyboard_offsets["yaw"] <= 20000 \
+                    and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets["lift"] <= 50000:
+                message_joystick["TargetAttitude"]["roll"] = 0 + keyboard_offsets["roll"]
+                message_joystick["TargetAttitude"]["pitch"] = 0 + keyboard_offsets["pitch"]
+                message_joystick["TargetAttitude"]["yaw"] = 0 + keyboard_offsets["yaw"]
+                message_joystick["TargetAttitude"]["lift"] = 0 + keyboard_offsets["lift"]
+            else:
+                message_joystick["TargetAttitude"]["roll"] = round((-1 * self.joystick.get_axis(0)) * pow(2,19)) + keyboard_offsets["roll"]
+                message_joystick["TargetAttitude"]["pitch"] = round((self.joystick.get_axis(1)) * pow(2,19)) + keyboard_offsets["pitch"]
+                message_joystick["TargetAttitude"]["yaw"] = round((self.joystick.get_axis(2)) * pow(2,19)) + keyboard_offsets["yaw"]
+                message_joystick["TargetAttitude"]["lift"] = round((-1 * self.joystick.get_axis(3) + 1) * pow(2,19)) + keyboard_offsets["lift"]
             ser.send(json.dumps(message_joystick))
             self.new_joystick_input = False
         elif self.slider0.getValue() != self.previous_motor0:
