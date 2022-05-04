@@ -2,9 +2,9 @@ use quadrupel_shared::message::MessageToDrone;
 use crate::control::flight_state::FlightState;
 use crate::control::modes::ModeTrait;
 
-pub struct IndividualMotorControlMode;
+pub struct ManualControl;
 
-impl ModeTrait for IndividualMotorControlMode {
+impl ModeTrait for ManualControl {
     fn iteration(_state: &mut FlightState) {
 
     }
