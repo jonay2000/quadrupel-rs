@@ -48,8 +48,8 @@ pub fn start_loop() -> ! {
         if adc > 600 && adc < 1050 {
             log::error!("Panic: Battery low {adc} 10^-2 V");
             state.mode = Mode::Panic;
-        } else if adc_warning && adc <= 600 {
-            log::warn!("Warning: Battery is < 6V, continuing assuming that this is not a drone.");
+        } else if adc != 0 && adc_warning && adc <= 600 {
+            log::warn!("Warning: Battery is < 6V ({adc}), continuing assuming that this is not a drone.");
             adc_warning = false;
         }
 
@@ -71,12 +71,12 @@ pub fn start_loop() -> ! {
         let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         if count % 100 == 0 {
-            log::info!("{:?} {} {} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
+            log::info!("{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
                 state.mode,
                 GlobalTime().get_time_us(), dt,
                 motors,
                 ypr.roll, ypr.pitch, ypr.yaw,
-                gyro.x(), gyro.y(), gyro.z(),
+                state.target_attitude.roll, state.target_attitude.pitch, state.target_attitude.yaw, state.target_attitude.lift,
                 adc, temp, pres
             );
         }
