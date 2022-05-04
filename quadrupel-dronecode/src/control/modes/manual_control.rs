@@ -7,7 +7,7 @@ use crate::library::yaw_pitch_roll::FI32;
 pub struct ManualControl;
 
 impl ModeTrait for ManualControl {
-    fn iteration(state: &mut FlightState) {
+    fn iteration(state: &mut FlightState, _dt: u32) {
         let lift = FixedI32::from_num(25) * state.target_attitude.lift;   // [0,16]
         if lift <= 0.1 {
             state.motor_values = [0,0,0,0];

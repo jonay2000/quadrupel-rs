@@ -5,7 +5,7 @@ use crate::control::modes::ModeTrait;
 pub struct IndividualMotorControlMode;
 
 impl ModeTrait for IndividualMotorControlMode {
-    fn iteration(_state: &mut FlightState) {
+    fn iteration(_state: &mut FlightState, _dt: u32) {
 
     }
 }

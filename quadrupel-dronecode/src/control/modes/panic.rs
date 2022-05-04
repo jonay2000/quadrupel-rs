@@ -9,7 +9,7 @@ use crate::control::modes::ModeTrait;
 pub struct PanicMode;
 
 impl ModeTrait for PanicMode {
-    fn iteration(state: &mut FlightState) {
+    fn iteration(state: &mut FlightState, dt: u32) {
         state.motor_values = [0; 4];
         // for i in flight_state.get_motors_mut() {
         //     // if the speed of a motor is larger than MINIMAL_HOVER_VALUE,

@@ -44,8 +44,15 @@ pub fn start_loop() -> ! {
             state.mode = Mode::Panic;
         }
 
-        //Check adc
+        //Read hardware
+        let dt = (GlobalTime().get_time_us() - start_time) / count;
+        let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
+        let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
+        let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
+        let motors = MOTORS.update_main(|motors| motors.get_motors());
         let adc = ADC.update_main(|adc| adc.read());
+
+        //Check adc
         if adc > 600 && adc < 1050 {
             log::error!("Panic: Battery low {adc} 10^-2 V");
             state.mode = Mode::Panic;
@@ -57,20 +64,15 @@ pub fn start_loop() -> ! {
 
         // Do action corresponding to current mode
         match state.mode {
-            Mode::Safe => SafeMode::iteration(&mut state),
+            Mode::Safe => SafeMode::iteration(&mut state, dt),
             Mode::Calibration => {}
-            Mode::Panic => PanicMode::iteration(&mut state),
+            Mode::Panic => PanicMode::iteration(&mut state, dt),
             Mode::FullControl => {}
-            Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state),
-            Mode::Manual => ManualControl::iteration(&mut state),
+            Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state, dt),
+            Mode::Manual => ManualControl::iteration(&mut state, dt),
         }
 
         // Print all info
-        let dt = (GlobalTime().get_time_us() - start_time) / count;
-        let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
-        let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
-        let motors = MOTORS.update_main(|motors| motors.get_motors());
         if count % 100 == 0 {
             log::info!("{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
                 state.mode,

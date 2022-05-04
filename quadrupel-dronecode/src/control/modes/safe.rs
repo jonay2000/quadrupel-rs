@@ -6,7 +6,7 @@ use crate::control::modes::ModeTrait;
 pub struct SafeMode;
 
 impl ModeTrait for SafeMode {
-    fn iteration(state: &mut FlightState) {
+    fn iteration(state: &mut FlightState, _dt: u32) {
         state.motor_values = [0; 4];
     }
 }
