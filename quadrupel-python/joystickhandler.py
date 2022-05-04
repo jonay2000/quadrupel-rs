@@ -5,6 +5,11 @@ from pygame_widgets.textbox import TextBox
 import json
 import sys
 import threading
+import typing
+if typing.TYPE_CHECKING:
+    from main import Serial
+
+
 
 # Roll: Axis 0
 # Pitch: Axis 1
@@ -187,7 +192,7 @@ class JoystickHandler:
 
         self.current_state = state_dictionary["Safe"]
 
-    def run(self):
+    def run(self, ser: Serial):
         running = True  # This is the main "loop running" variable -- set to false to exit the loop
 
         if print_debug: print("axis:", joystick.get_numaxes(), "button:", joystick.get_numbuttons(), "hat:", joystick.get_numhats(), "ball:", joystick.get_numballs())
@@ -198,6 +203,10 @@ class JoystickHandler:
             self.output2.setText(self.slider2.getValue())
             self.output3.setText(self.slider3.getValue())
             events = pygame.event.get()
+
+            input_dict = ser.get_latest_message()
+            print(input_dict)
+
 
             for event in events:  # Get all of the events from the queue
                 if event.type == pygame.JOYAXISMOTION:  # Main axis movement
@@ -211,7 +220,7 @@ class JoystickHandler:
                     if event.button == 0:
                         if print_debug:  print("Abort/Exit")
                         message_state_change["ChangeState"] = state_dictionary_reversed[1]
-                        print(json.dumps(message_state_change))
+                        ser.send(json.dumps(message_state_change))
 
                 elif event.type == pygame.JOYBUTTONUP:  # Buttons released
                     self.joyButtons[event.button] = False
@@ -231,7 +240,7 @@ class JoystickHandler:
                     if event.key == 27:
                         if print_debug:  print("Abort/Exit")
                         message_state_change["ChangeState"] = state_dictionary_reversed[1]
-                        print(json.dumps(message_state_change))
+                        ser.send(json.dumps(message_state_change))
 
                     if event.key == ord('a'):
                         if print_debug: print("lift offset up")
@@ -272,78 +281,78 @@ class JoystickHandler:
                     if event.key == ord('u'):
                         if print_debug: print("yaw control P offset up")
                         message_control_parameters["TunePID"]["yaw_P"] += keyboard_offsets_step["yaw_P"]
-                        print(json.dumps(message_control_parameters))
+                        ser.send(json.dumps(message_control_parameters))
                     if event.key == ord('j'):
                         if print_debug: print("yaw control P offset down")
                         message_control_parameters["TunePID"]["yaw_P"] -= keyboard_offsets_step["yaw_P"]
-                        print(json.dumps(message_control_parameters))
+                        ser.send(json.dumps(message_control_parameters))
 
                     if event.key == ord('i'):
                         if print_debug: print("roll/pitch P1 offset up")
                         message_control_parameters["TunePID"]["roll_pitch_P1"] += keyboard_offsets_step["roll_pitch_P1"]
-                        print(json.dumps(message_control_parameters))
+                        ser.send(json.dumps(message_control_parameters))
                     if event.key == ord('k'):
                         if print_debug: print("roll/pitch P1 offset down")
                         message_control_parameters["TunePID"]["roll_pitch_P1"] -= keyboard_offsets_step["roll_pitch_P1"]
-                        print(json.dumps(message_control_parameters))
+                        ser.send(json.dumps(message_control_parameters))
 
                     if event.key == ord('o'):
                         if print_debug: print("roll/pitch P2 offset up")
                         message_control_parameters["TunePID"]["roll_pitch_P2"] += keyboard_offsets_step["roll_pitch_P2"]
-                        print(json.dumps(message_control_parameters))
+                        ser.send(json.dumps(message_control_parameters))
                     if event.key == ord('l'):
                         if print_debug: print("roll/pitch P2 offset down")
                         message_control_parameters["TunePID"]["roll_pitch_P2"] -= keyboard_offsets_step["roll_pitch_P2"]
-                        print(json.dumps(message_control_parameters))
+                        ser.send(json.dumps(message_control_parameters))
 
                     if event.key == ord('y'):
                         if print_debug: print("M0 offset up")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 0
                         message_individual_relative_control["MotorValueRel"]["value"] = 1
-                        print(json.dumps(message_individual_relative_control))
+                        ser.send(json.dumps(message_individual_relative_control))
                     if event.key == ord('t'):
                         if print_debug: print("M0 offset down")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 0
                         message_individual_relative_control["MotorValueRel"]["value"] = -1
-                        print(json.dumps(message_individual_relative_control))
+                        ser.send(json.dumps(message_individual_relative_control))
 
                     if event.key == ord('h'):
                         if print_debug: print("M1 offset up")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 1
                         message_individual_relative_control["MotorValueRel"]["value"] = 1
-                        print(json.dumps(message_individual_relative_control))
+                        ser.send(json.dumps(message_individual_relative_control))
                     if event.key == ord('g'):
                         if print_debug: print("M1 offset down")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 1
                         message_individual_relative_control["MotorValueRel"]["value"] = -1
-                        print(json.dumps(message_individual_relative_control))
+                        ser.send(json.dumps(message_individual_relative_control))
 
                     if event.key == ord('b'):
                         if print_debug: print("M2 offset up")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 2
                         message_individual_relative_control["MotorValueRel"]["value"] = 1
-                        print(json.dumps(message_individual_relative_control))
+                        ser.send(json.dumps(message_individual_relative_control))
                     if event.key == ord('v'):
                         if print_debug: print("M2 offset down")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 2
                         message_individual_relative_control["MotorValueRel"]["value"] = -1
-                        print(json.dumps(message_individual_relative_control))
+                        ser.send(json.dumps(message_individual_relative_control))
 
                     if event.key == ord('f'):
                         if print_debug: print("M3 offset up")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 3
                         message_individual_relative_control["MotorValueRel"]["value"] = 1
-                        print(json.dumps(message_individual_relative_control))
+                        ser.send(json.dumps(message_individual_relative_control))
                     if event.key == ord('d'):
                         if print_debug: print("M3 offset down")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 3
                         message_individual_relative_control["MotorValueRel"]["value"] = -1
-                        print(json.dumps(message_individual_relative_control))
+                        ser.send(json.dumps(message_individual_relative_control))
 
                     if ord('0') <= event.key <= ord('8'):
                         if print_debug:  print("Change to state", state_dictionary_reversed[int(chr(event.key))])
                         message_state_change["ChangeState"] = state_dictionary_reversed[int(chr(event.key))]
-                        print(json.dumps(message_state_change))
+                        ser.send(json.dumps(message_state_change))
 
             self.screen.fill((0, 0, 0))
             self.output0.setText("M0: " + str(self.slider0.getValue()))
@@ -361,53 +370,53 @@ class JoystickHandler:
             message_joystick["TargetAttitude"]["pitch"] = ((self.joystick.get_axis(1) + 1) * 50) + keyboard_offsets["pitch"]
             message_joystick["TargetAttitude"]["yaw"] = ((self.joystick.get_axis(2) + 1) * 50) + keyboard_offsets["yaw"]
             message_joystick["TargetAttitude"]["lift"] = ((-1 * self.joystick.get_axis(3) + 1) * 50) + keyboard_offsets["lift"]
-            print(json.dumps(message_joystick))
+            ser.send(json.dumps(message_joystick))
             self.new_joystick_input = False;
         elif self.slider0.getValue() != self.previous_motor0:
             message_individual_control["MotorValue"]["motor"] = 0
             message_individual_control["MotorValue"]["value"] = self.slider0.getValue()
             self.previous_motor0 = self.slider0.getValue()
-            print(json.dumps(message_individual_control))
+            ser.send(json.dumps(message_individual_control))
         elif self.slider1.getValue() != self.previous_motor1:
             message_individual_control["MotorValue"]["motor"] = 1
             message_individual_control["MotorValue"]["value"] = self.slider1.getValue()
             self.previous_motor1 = self.slider1.getValue()
-            print(json.dumps(message_individual_control))
+            ser.send(json.dumps(message_individual_control))
         elif self.slider2.getValue() != self.previous_motor2:
             message_individual_control["MotorValue"]["motor"] = 2
             message_individual_control["MotorValue"]["value"] = self.slider2.getValue()
             self.previous_motor2 = self.slider2.getValue()
-            print(json.dumps(message_individual_control))
+            ser.send(json.dumps(message_individual_control))
         elif self.slider3.getValue() != self.previous_motor3:
             message_individual_control["MotorValue"]["motor"] = 3
             message_individual_control["MotorValue"]["value"] = self.slider3.getValue()
             self.previous_motor3 = self.slider3.getValue()
-            print(json.dumps(message_individual_control))
+            ser.send(json.dumps(message_individual_control))
         else:
-            print(json.dumps(message_heartbeat))
+            ser.send(json.dumps(message_heartbeat))
 
-
-# Setup the joysticks
-pygame.joystick.init()
-stickCount = pygame.joystick.get_count()  # How many joysticks are connected?
-for index in range(stickCount):  # Print the name of each joystick
+def main(ser):
+    # Setup the joysticks
+    pygame.joystick.init()
+    stickCount = pygame.joystick.get_count()  # How many joysticks are connected?
+    for index in range(stickCount):  # Print the name of each joystick
+        joystick = pygame.joystick.Joystick(index)
+        print("{0}) {1}".format(index, joystick.get_name()))
+    # Get the user's selection, and exit if they just press enter
+    selected = input("Enter a joystick number or just Enter to exit:")
+    if selected == "": exit()
+    # Convert the selection into an integer
+    index = int(selected)
+    # Initialize the selected joystick
     joystick = pygame.joystick.Joystick(index)
-    print("{0}) {1}".format(index, joystick.get_name()))
-# Get the user's selection, and exit if they just press enter
-selected = input("Enter a joystick number or just Enter to exit:")
-if selected == "": sys.exit
-# Convert the selection into an integer
-index = int(selected)
-# Initialize the selected joystick
-joystick = pygame.joystick.Joystick(index)
-joystick.init()
+    joystick.init()
 
-pygame.init()
-screen = pygame.display.set_mode((1000, 1000))
-pygame.display.set_caption("Joystick tester")
-# # Initialize the display class
-window = JoystickHandler(screen, joystick)
+    pygame.init()
+    screen = pygame.display.set_mode((1000, 1000))
+    pygame.display.set_caption("Joystick tester")
+    # # Initialize the display class
+    window = JoystickHandler(screen, joystick)
 
-# Start the main loop
-window.send_data()
-window.run()
+    # Start the main loop
+    window.send_data()
+    window.run(ser)

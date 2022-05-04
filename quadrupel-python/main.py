@@ -66,7 +66,7 @@ class Serial:
 
     def get_latest_message(self) -> dict | None:
         try:
-            return self.q.get(timeout=0.1)
+            return self.q.get(timeout=0.01)
         except queue.Empty:
             return None
 
