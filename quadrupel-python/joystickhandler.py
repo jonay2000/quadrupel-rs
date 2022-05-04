@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import pygame
 import pygame_widgets
 from pygame_widgets.slider import Slider
 from pygame_widgets.textbox import TextBox
 import json
-import sys
 import threading
 import typing
 if typing.TYPE_CHECKING:

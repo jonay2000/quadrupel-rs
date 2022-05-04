@@ -18,7 +18,7 @@ except ImportError:
 import traceback
 import serial
 import multiprocessing
-from midimotorcontroller import main
+from joystickhandler import main
 import msgs
 
 
