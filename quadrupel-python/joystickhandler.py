@@ -209,7 +209,9 @@ class JoystickHandler:
                     self.joyButtons[event.button] = True
                     if print_debug: print("Button", event.button + 1, "pressed down")
                     if event.button == 0:
-                        print("Abort/Exit")
+                        if print_debug:  print("Abort/Exit")
+                        message_state_change["ChangeState"] = state_dictionary_reversed[1]
+                        print(json.dumps(message_state_change))
 
                 elif event.type == pygame.JOYBUTTONUP:  # Buttons released
                     self.joyButtons[event.button] = False
@@ -227,7 +229,9 @@ class JoystickHandler:
                     # if event.key == ord('1'):
                     #     print("Move to panic state")
                     if event.key == 27:
-                        print("Abort/Exit")
+                        if print_debug:  print("Abort/Exit")
+                        message_state_change["ChangeState"] = state_dictionary_reversed[1]
+                        print(json.dumps(message_state_change))
 
                     if event.key == ord('a'):
                         if print_debug: print("lift offset up")
