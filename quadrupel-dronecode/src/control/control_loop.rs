@@ -27,6 +27,7 @@ pub fn start_loop() -> ! {
     let mut count = 0;
 
     let mut blue_led_status = BlueLedStatus::OFF { at: start_time };
+    let mut adc_warning = true;
 
     loop {
         count += 1;
@@ -44,9 +45,12 @@ pub fn start_loop() -> ! {
 
         //Check adc
         let adc = ADC.update_main(|adc| adc.read());
-        if adc < 1050 {
-            log::error!("Panic: Battery low");
+        if adc > 600 && adc < 1050 {
+            log::error!("Panic: Battery low {adc} 10^-2 V");
             state.mode = Mode::Panic;
+        } else if adc_warning && adc <= 600 {
+            log::warn!("Warning: Battery is < 6V, continuing assuming that this is not a drone.");
+            adc_warning = false;
         }
 
 
