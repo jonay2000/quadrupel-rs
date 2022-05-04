@@ -7,9 +7,9 @@ const ENABLE_ROLL: bool = false;
 
 
 pub struct AngleMode {
-    yaw_pid: PID,
-    pitch_pid: PID,
-    roll_pid: PID,
+    pub yaw_pid: PID,
+    pub pitch_pid: PID,
+    pub roll_pid: PID,
 }
 
 impl AngleMode {
