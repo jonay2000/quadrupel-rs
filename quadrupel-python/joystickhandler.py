@@ -167,7 +167,6 @@ class JoystickHandler:
         self.previous_motor2 = 0
         self.previous_motor3 = 0
 
-
         self.output0.disable()
         self.output1.disable()
         self.output2.disable()
@@ -193,7 +192,6 @@ class JoystickHandler:
             input_dict = ser.get_latest_message()
             if input_dict is not None:
                 print(input_dict)
-
 
             for event in events:  # Get all of the events from the queue
                 if event.type == pygame.JOYAXISMOTION:  # Main axis movement
@@ -224,7 +222,7 @@ class JoystickHandler:
                     # # elif (event.key-48) == 1:
                     # if event.key == ord('1'):
                     #     print("Move to panic state")
-                    if event.key == 27:
+                    if event.key == 27 or event.key == ord('1'):
                         if print_debug:  print("Abort/Exit")
                         message_state_change["ChangeState"] = state_dictionary_reversed[1]
                         ser.send(json.dumps(message_state_change))
@@ -341,6 +339,15 @@ class JoystickHandler:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
                         message_state_change["ChangeState"] = state_dictionary_reversed[int(chr(event.key))]
                         ser.send(json.dumps(message_state_change))
+
+                        if print_debug:
+                            print("Change to state", state_dictionary_reversed[int(chr(event.key))])
+                        if ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) + keyboard_offsets["roll"] <= 20000 \
+                                and ((self.joystick.get_axis(1)) * pow(2, 19)) + keyboard_offsets["pitch"] <= 20000 \
+                                and ((self.joystick.get_axis(2)) * pow(2, 19)) + keyboard_offsets["yaw"] <= 2000 \
+                                and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets["lift"] <= 50000:
+                            message_state_change["ChangeState"] = state_dictionary_reversed[int(chr(event.key))]
+                            print(json.dumps(message_state_change))
 
             self.screen.fill((0, 0, 0))
             self.output0.setText("M0: " + str(self.slider0.getValue()))
