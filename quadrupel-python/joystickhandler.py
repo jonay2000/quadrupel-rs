@@ -9,8 +9,7 @@ import threading
 import typing
 if typing.TYPE_CHECKING:
     from main import Serial
-
-
+from msgs import motor_message, heartbeat
 
 # Roll: Axis 0
 # Pitch: Axis 1
@@ -23,7 +22,7 @@ if typing.TYPE_CHECKING:
 # df: Motor 3 relative up/down
 
 print_debug = False
-message_frequency = 5  # In hertz
+message_frequency = 100  # In hertz
 
 # TODO: Tune the offset step
 # Increase/Decrease to be applied to the keyboard offset per key press
@@ -44,25 +43,27 @@ keyboard_offsets_step = {
 state_dictionary = {
     "Safe": 0,
     "Panic": 1,
-    "manual": 2,
+    "Manual": 2,
     "Calibration": 3,
     "yaw_control": 4,
     "FullControl": 5,
     "raw": 6,
     "height_control": 7,
-    "wireless": 8
+    "wireless": 8,
+    "IndividualMotorControl": 9,
 }
 
 state_dictionary_reversed = {
     0: "Safe",
     1: "Panic",
-    2: "manual",
+    2: "Manual",
     3: "Calibration",
     4: "yaw_control",
     5: "FullControl",
     6: "raw",
     7: "height_control",
-    8: "wireless"
+    8: "wireless",
+    9: "IndividualMotorControl",
 }
 
 # Offsets to be added to the joystick input
@@ -82,7 +83,7 @@ allowed_state_transition = {
     "Safe": [
         state_dictionary["Safe"],
         state_dictionary["Panic"],
-        state_dictionary["manual"],
+        state_dictionary["Manual"],
         state_dictionary["Calibration"]
     ],
     "Panic": [
@@ -120,10 +121,6 @@ message_joystick = {
     }
 }
 
-message_heartbeat = {
-    "HeartBeat": 0
-}
-
 message_control_parameters = {
     "TunePID": {
         "yaw_P": 0,
@@ -134,13 +131,6 @@ message_control_parameters = {
 
 message_state_change = {
     "ChangeState": "Safe"
-}
-
-message_individual_control = {
-    "MotorValue": {
-        "motor": 0,
-        "value": 0
-    }
 }
 
 message_individual_relative_control = {
@@ -184,19 +174,14 @@ class JoystickHandler:
         self.output3.disable()
 
         # Get the number of each type of input from the joystick
-        try:
-            self.joyButtons = dict()
-            for i in range(self.buttonCount):
-                self.joyButtons[i] = False
-        except:
-            pass
-
+        self.joyButtons = dict()
         self.current_state = state_dictionary["Safe"]
 
     def run(self, ser: Serial):
         running = True  # This is the main "loop running" variable -- set to false to exit the loop
 
-        if print_debug: print("axis:", self.joystick.get_numaxes(), "button:", self.joystick.get_numbuttons(), "hat:", self.joystick.get_numhats(), "ball:", self.joystick.get_numballs())
+        if print_debug:
+            print("axis:", self.joystick.get_numaxes(), "button:", self.joystick.get_numbuttons(), "hat:", self.joystick.get_numhats(), "ball:", self.joystick.get_numballs())
 
         while running:  # Loop until "running" becomes false
             self.output0.setText(self.slider0.getValue())
@@ -206,7 +191,8 @@ class JoystickHandler:
             events = pygame.event.get()
 
             input_dict = ser.get_latest_message()
-            print(input_dict)
+            if input_dict is not None:
+                print(input_dict)
 
 
             for event in events:  # Get all of the events from the queue
@@ -350,8 +336,9 @@ class JoystickHandler:
                         message_individual_relative_control["MotorValueRel"]["value"] = -1
                         ser.send(json.dumps(message_individual_relative_control))
 
-                    if ord('0') <= event.key <= ord('8'):
-                        if print_debug:  print("Change to state", state_dictionary_reversed[int(chr(event.key))])
+                    if ord('0') <= event.key <= ord('9'):
+                        if print_debug:
+                            print("Change to state", state_dictionary_reversed[int(chr(event.key))])
                         message_state_change["ChangeState"] = state_dictionary_reversed[int(chr(event.key))]
                         ser.send(json.dumps(message_state_change))
 
@@ -364,47 +351,43 @@ class JoystickHandler:
             pygame.display.update()
 
     # Send the data to the drone periodically based on joystick changes
-    def send_data(self):
-        threading.Timer(1 / message_frequency, self.send_data).start()
+    def send_data(self, ser):
+        threading.Timer(1 / message_frequency, self.send_data, args=(ser, )).start()
         if self.new_joystick_input:
             message_joystick["TargetAttitude"]["roll"] = round((-1 * self.joystick.get_axis(0)) * pow(2,19)) + keyboard_offsets["roll"]
             message_joystick["TargetAttitude"]["pitch"] = round((self.joystick.get_axis(1)) * pow(2,19)) + keyboard_offsets["pitch"]
             message_joystick["TargetAttitude"]["yaw"] = round((self.joystick.get_axis(2)) * pow(2,19)) + keyboard_offsets["yaw"]
             message_joystick["TargetAttitude"]["lift"] = round((-1 * self.joystick.get_axis(3) + 1) * pow(2,19)) + keyboard_offsets["lift"]
             ser.send(json.dumps(message_joystick))
-            self.new_joystick_input = False;
+            self.new_joystick_input = False
         elif self.slider0.getValue() != self.previous_motor0:
-            message_individual_control["MotorValue"]["motor"] = 0
-            message_individual_control["MotorValue"]["value"] = self.slider0.getValue()
+            ser.send(motor_message(0, self.slider0.getValue()))
             self.previous_motor0 = self.slider0.getValue()
-            ser.send(json.dumps(message_individual_control))
         elif self.slider1.getValue() != self.previous_motor1:
-            message_individual_control["MotorValue"]["motor"] = 1
-            message_individual_control["MotorValue"]["value"] = self.slider1.getValue()
+            ser.send(motor_message(1, self.slider1.getValue()))
             self.previous_motor1 = self.slider1.getValue()
-            ser.send(json.dumps(message_individual_control))
         elif self.slider2.getValue() != self.previous_motor2:
-            message_individual_control["MotorValue"]["motor"] = 2
-            message_individual_control["MotorValue"]["value"] = self.slider2.getValue()
+
+            ser.send(motor_message(2, self.slider2.getValue()))
             self.previous_motor2 = self.slider2.getValue()
-            ser.send(json.dumps(message_individual_control))
+
         elif self.slider3.getValue() != self.previous_motor3:
-            message_individual_control["MotorValue"]["motor"] = 3
-            message_individual_control["MotorValue"]["value"] = self.slider3.getValue()
+            ser.send(motor_message(3, self.slider3.getValue()))
             self.previous_motor3 = self.slider3.getValue()
-            ser.send(json.dumps(message_individual_control))
         else:
-            ser.send(json.dumps(message_heartbeat))
+            ser.send(heartbeat())
 
 def main(ser):
     # Setup the joysticks
+    pygame.init()
     pygame.joystick.init()
     stickCount = pygame.joystick.get_count()  # How many joysticks are connected?
     for index in range(stickCount):  # Print the name of each joystick
         joystick = pygame.joystick.Joystick(index)
         print("{0}) {1}".format(index, joystick.get_name()))
     # Get the user's selection, and exit if they just press enter
-    selected = input("Enter a joystick number or just Enter to exit:")
+    # selected = input("Enter a joystick number or just Enter to exit:")
+    selected = 0
     if selected == "": exit()
     # Convert the selection into an integer
     index = int(selected)
@@ -419,5 +402,5 @@ def main(ser):
     window = JoystickHandler(screen, joystick)
 
     # Start the main loop
-    window.send_data()
+    window.send_data(ser)
     window.run(ser)

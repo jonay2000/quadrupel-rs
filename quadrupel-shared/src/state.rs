@@ -11,4 +11,5 @@ pub enum Mode {
     Panic,
     FullControl,
     IndividualMotorControl,
+    Manual,
 }

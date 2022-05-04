@@ -61,6 +61,7 @@ pub fn start_loop() -> ! {
             Mode::Panic => PanicMode::iteration(&mut state),
             Mode::FullControl => {}
             Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state),
+            Mode::Manual => {}
         }
 
         // Print all info
@@ -70,7 +71,8 @@ pub fn start_loop() -> ! {
         let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         if count % 100 == 0 {
-            log::info!("{} {} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
+            log::info!("{:?} {} {} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
+                state.mode,
                 GlobalTime().get_time_us(), dt,
                 motors,
                 ypr.roll, ypr.pitch, ypr.yaw,
@@ -99,6 +101,7 @@ pub fn start_loop() -> ! {
             Mode::Panic => (true,true,true),
             Mode::FullControl => (false,true,false),
             Mode::IndividualMotorControl => (false,true,false),
+            Mode::Manual => (true, false, true),
         };
         leds.led_green.set_state(PinState::from(!g)).unwrap();
         leds.led_yellow.set_state(PinState::from(!y)).unwrap();

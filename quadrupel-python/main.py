@@ -3,6 +3,7 @@ import queue
 import threading
 import time
 from collections import deque
+import os
 
 try:
     # run `build_python_bindings.sh` to create this library
@@ -11,6 +12,7 @@ try:
 except ImportError:
     def parse_message_from_drone(msg):
         return bytearray()
+
 
     def create_message_for_drone(bytes):
         return ""
@@ -60,9 +62,14 @@ class Serial:
             threading.Timer(0.1, self.heartbeat).start()
 
     def send(self, msg: str):
-        if self.ser is not None:
-            r = create_message_for_drone(msg)
-            self.ser.write(r)
+        try:
+            if self.ser is not None:
+                r = create_message_for_drone(msg)
+                self.ser.write(r)
+        except:
+            print(msg)
+            os._exit(1)
+
 
     def get_latest_message(self) -> dict | None:
         try:
@@ -112,7 +119,6 @@ class Serial:
                         receiving = True
                     else:
                         buf.append(b)
-
 
 if __name__ == '__main__':
     ser = Serial()
