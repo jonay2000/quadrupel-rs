@@ -7,6 +7,7 @@ pub mod ms5611;
 pub mod uart;
 
 use core::cell::{UnsafeCell};
+use cortex_m::asm;
 use crate::hardware::adc::QAdc;
 use crate::hardware::leds::QLeds;
 use crate::hardware::uart::QUart;
@@ -32,7 +33,20 @@ pub fn init_hardware(
 ) {
     let gpio = nrf51_hal::gpio::p0::Parts::new(pn.GPIO);
 
-    //Motors first so we can use the timer
+    UART.initialize(HWCellType2{ cell: UnsafeCell::new(
+        QUart::new(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC)
+    )});
+    UART.update_main(|uart| uart.enable());
+
+    log::info!("UART init OK");
+    asm::delay(100_000);
+
+    LEDS.initialize(HWCellType2{ cell: UnsafeCell::new(
+        QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)
+    )});
+    log::info!("LEDS init OK");
+    asm::delay(100_000);
+
     MOTORS.initialize(HWCellType1 { cell: UnsafeCell::new(
         Motors::new(
             pn.TIMER1,
@@ -44,30 +58,38 @@ pub fn init_hardware(
         )
     )});
     MOTORS.update_main(|motors| motors.enable());
-
-    LEDS.initialize(HWCellType2{ cell: UnsafeCell::new(
-        QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)
-    )});
-
-    UART.initialize(HWCellType2{ cell: UnsafeCell::new(
-        QUart::new(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC)
-    )});
-    UART.update_main(|uart| uart.enable());
+    log::info!("MOTORS init OK");
+    asm::delay(100_000);
 
     I2C.initialize(HWCellType3{ cell: UnsafeCell::new(
         I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)
     )});
+
+    log::info!("I2C init OK");
+    asm::delay(100_000);
+
     MPU.initialize(HWCellType3{ cell: UnsafeCell::new(
         QMpu6050::new(I2C.as_mut_ref())
     )});
+
+    log::info!("MPU init OK");
+    asm::delay(100_000);
+
     BARO.initialize(HWCellType3{ cell: UnsafeCell::new(
         QMs5611::new(I2C.as_mut_ref())
     )});
+
+
+    log::info!("BARO");
+    asm::delay(100_000);
 
     ADC.initialize(HWCellType1 { cell: UnsafeCell::new(
         QAdc::new(pn.ADC, &mut pc.NVIC)
     )});
     ADC.update_main(|adc| adc.enable());
+
+    log::info!("ADC");
+    asm::delay(100_000);
 }
 
 pub trait HWCell<T> {
@@ -118,7 +140,7 @@ impl<T> HWCell<T> for HWCellType1<T> {
 
 /// Will be accessed by both main thread + interrupts, needs no sync (internal state is safe)
 /// # SAFETY: Only use on single-threaded machines
-/// # SAFETY: Only use when no internal sync is needed
+/// # SAFETY: Only use when internal mutual exclusion is done
 pub struct HWCellType2<T> {
     cell: UnsafeCell<T>,
 }

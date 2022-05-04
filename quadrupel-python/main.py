@@ -1,7 +1,7 @@
 import json
 import queue
 import threading
-import platform
+import time
 from collections import deque
 
 try:
@@ -31,11 +31,27 @@ class Serial:
             print(traceback.format_exception(type(e), e, e.__traceback__))
             self.ser = None
 
-        threading.Timer(0.1, self.heartbeat).start()
         self.q = multiprocessing.Queue()
         multiprocessing.Process(target=self.read, args=(self.q,)).start()
 
+        self.do_heartbeat = False
+
+        threading.Thread(target=self.try_heartbeat).start()
+
+    def try_heartbeat(self):
+        while self.q.empty():
+            time.sleep(0.1)
+        print("start heartbeat")
+        self.start_heartbeat()
+
+    def stop_heartbeat(self):
+        self.do_heartbeat = False
+
+    def start_heartbeat(self):
         self.do_heartbeat = True
+        threading.Timer(0.1, self.heartbeat).start()
+        self.q = multiprocessing.Queue()
+        multiprocessing.Process(target=self.read, args=(self.q,)).start()
 
     def heartbeat(self):
         self.send(msgs.heartbeat())

@@ -16,3 +16,5 @@ readme = "README.md"
 [dependencies]
 embedded-hal = { version = "0.2.7", features = ["unproven"] }
 libm = "0.2.1"
+log = "0.4.17"
+cortex-m = "0.7.4"

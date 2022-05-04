@@ -16,7 +16,8 @@ then
      -M microbit \
      -semihosting-config enable=on,target=native \
      -kernel "$BINARY.bin" \
-     -nographic # -S -s
+     -nographic
+#     -S -s \
 fi
 
 if [ ! -z "$HARDWARE" ]
@@ -31,9 +32,9 @@ then
     python2 "$SCRIPT_DIR/dfu_serial/serial_dfu.py" -p "$PORT" "$BINARY.bin"
   fi
 
-  cd pc_terminal
-  make run
+#  cd pc_terminal
+#  make run
 
-#  cd quadrupel-python
-#  python3 main.py
+  cd quadrupel-python
+  python3 main.py
 fi
