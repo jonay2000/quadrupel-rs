@@ -29,19 +29,9 @@ pub struct QMpu6050<T: nrf51_hal::twi::Instance> {
 }
 impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
     pub fn new(i2c: &mut Twi<T>) -> Self {
-        log::info!("starting MPU init");
-        asm::delay(100_000);
         let mut mpu = Mpu6050::new(i2c).unwrap();
 
-        log::info!("starting DMP init");
-        asm::delay(100_000);
-
         mpu.initialize_dmp(i2c, &mut GlobalTime()).unwrap();
-
-
-        log::info!("set sample divider");
-        asm::delay(100_000);
-
         mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER).unwrap();
         QMpu6050 { mpu }
     }

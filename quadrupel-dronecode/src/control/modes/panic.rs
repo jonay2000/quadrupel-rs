@@ -27,8 +27,4 @@ impl ModeTrait for PanicMode {
             state.mode = Mode::Safe;
         }
     }
-
-    fn handle_message(_state: &mut FlightState, _message: MessageToDrone) {
-        // In panic mode, ignore all messages
-    }
 }

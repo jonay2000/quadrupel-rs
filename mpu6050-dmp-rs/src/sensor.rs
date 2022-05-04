@@ -44,20 +44,8 @@ where
         delay: &mut impl delay::DelayMs<u32>,
     ) -> Result<(), Error<I2c>> {
         self.reset(i2c, delay)?;
-
-        log::info!("a");
-        asm::delay(100_000);
-
         self.disable_sleep(i2c, )?;
-
-        log::info!("b");
-        asm::delay(100_000);
-
         self.reset_signal_path(i2c, delay)?;
-
-        log::info!("c");
-        asm::delay(100_000);
-
         self.disable_dmp(i2c, )?;
         self.set_clock_source(i2c, ClockSource::Xgyro)?;
         self.disable_interrupts(i2c, )?;

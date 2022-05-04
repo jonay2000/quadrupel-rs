@@ -61,7 +61,7 @@ def stop_heartbeat(ser: Serial):
     ser.do_heartbeat = False
 
 
-def main(ser):
+def main_not(ser):
     global controller, w1, w2, w3, w4, master, authority, cur_vals
 
     pygame.init()

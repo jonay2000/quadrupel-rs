@@ -27,6 +27,7 @@ pub fn start_loop() -> ! {
     let mut count = 0;
 
     let mut blue_led_status = BlueLedStatus::OFF { at: start_time };
+    let mut adc_warning = true;
 
     loop {
         count += 1;
@@ -42,6 +43,17 @@ pub fn start_loop() -> ! {
             state.mode = Mode::Panic;
         }
 
+        //Check adc
+        let adc = ADC.update_main(|adc| adc.read());
+        if adc > 600 && adc < 1050 {
+            log::error!("Panic: Battery low {adc} 10^-2 V");
+            state.mode = Mode::Panic;
+        } else if adc != 0 && adc_warning && adc <= 600 {
+            log::warn!("Warning: Battery is < 6V ({adc}), continuing assuming that this is not a drone.");
+            adc_warning = false;
+        }
+
+
         // Do action corresponding to current mode
         match state.mode {
             Mode::Safe => SafeMode::iteration(&mut state),
@@ -49,21 +61,22 @@ pub fn start_loop() -> ! {
             Mode::Panic => PanicMode::iteration(&mut state),
             Mode::FullControl => {}
             Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state),
+            Mode::Manual => {}
         }
 
         // Print all info
         let dt = (GlobalTime().get_time_us() - start_time) / count;
         let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
         let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let adc = ADC.update_main(|adc| adc.read());
         let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         if count % 100 == 0 {
-            log::info!("{} {} | {:?} | {} {} {} | {} {} {} | {} | {} | {}",
+            log::info!("{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
+                state.mode,
                 GlobalTime().get_time_us(), dt,
                 motors,
                 ypr.roll, ypr.pitch, ypr.yaw,
-                gyro.x(), gyro.y(), gyro.z(),
+                state.target_attitude.roll, state.target_attitude.pitch, state.target_attitude.yaw, state.target_attitude.lift,
                 adc, temp, pres
             );
         }
@@ -88,6 +101,7 @@ pub fn start_loop() -> ! {
             Mode::Panic => (true,true,true),
             Mode::FullControl => (false,true,false),
             Mode::IndividualMotorControl => (false,true,false),
+            Mode::Manual => (true, false, true),
         };
         leds.led_green.set_state(PinState::from(!g)).unwrap();
         leds.led_yellow.set_state(PinState::from(!y)).unwrap();
