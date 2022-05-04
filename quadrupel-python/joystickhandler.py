@@ -337,17 +337,12 @@ class JoystickHandler:
                     if ord('0') <= event.key <= ord('9'):
                         if print_debug:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
-                        message_state_change["ChangeState"] = state_dictionary_reversed[int(chr(event.key))]
-                        ser.send(json.dumps(message_state_change))
-
-                        if print_debug:
-                            print("Change to state", state_dictionary_reversed[int(chr(event.key))])
                         if ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) + keyboard_offsets["roll"] <= 20000 \
                                 and ((self.joystick.get_axis(1)) * pow(2, 19)) + keyboard_offsets["pitch"] <= 20000 \
-                                and ((self.joystick.get_axis(2)) * pow(2, 19)) + keyboard_offsets["yaw"] <= 2000 \
+                                and ((self.joystick.get_axis(2)) * pow(2, 19)) + keyboard_offsets["yaw"] <= 20000 \
                                 and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets["lift"] <= 50000:
                             message_state_change["ChangeState"] = state_dictionary_reversed[int(chr(event.key))]
-                            print(json.dumps(message_state_change))
+                            ser.send(json.dumps(message_state_change))
 
             self.screen.fill((0, 0, 0))
             self.output0.setText("M0: " + str(self.slider0.getValue()))
