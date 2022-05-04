@@ -195,7 +195,7 @@ class JoystickHandler:
     def run(self, ser: Serial):
         running = True  # This is the main "loop running" variable -- set to false to exit the loop
 
-        if print_debug: print("axis:", joystick.get_numaxes(), "button:", joystick.get_numbuttons(), "hat:", joystick.get_numhats(), "ball:", joystick.get_numballs())
+        if print_debug: print("axis:", self.joystick.get_numaxes(), "button:", self.joystick.get_numbuttons(), "hat:", self.joystick.get_numhats(), "ball:", self.joystick.get_numballs())
 
         while running:  # Loop until "running" becomes false
             self.output0.setText(self.slider0.getValue())
@@ -366,10 +366,10 @@ class JoystickHandler:
     def send_data(self):
         threading.Timer(1 / message_frequency, self.send_data).start()
         if self.new_joystick_input:
-            message_joystick["TargetAttitude"]["roll"] = ((-1 * self.joystick.get_axis(0) + 1) * 50) + keyboard_offsets["roll"]
-            message_joystick["TargetAttitude"]["pitch"] = ((self.joystick.get_axis(1) + 1) * 50) + keyboard_offsets["pitch"]
-            message_joystick["TargetAttitude"]["yaw"] = ((self.joystick.get_axis(2) + 1) * 50) + keyboard_offsets["yaw"]
-            message_joystick["TargetAttitude"]["lift"] = ((-1 * self.joystick.get_axis(3) + 1) * 50) + keyboard_offsets["lift"]
+            message_joystick["TargetAttitude"]["roll"] = round((-1 * self.joystick.get_axis(0)) * pow(2,19)) + keyboard_offsets["roll"]
+            message_joystick["TargetAttitude"]["pitch"] = round((self.joystick.get_axis(1)) * pow(2,19)) + keyboard_offsets["pitch"]
+            message_joystick["TargetAttitude"]["yaw"] = round((self.joystick.get_axis(2)) * pow(2,19)) + keyboard_offsets["yaw"]
+            message_joystick["TargetAttitude"]["lift"] = round((-1 * self.joystick.get_axis(3) + 1) * pow(2,19)) + keyboard_offsets["lift"]
             ser.send(json.dumps(message_joystick))
             self.new_joystick_input = False;
         elif self.slider0.getValue() != self.previous_motor0:
