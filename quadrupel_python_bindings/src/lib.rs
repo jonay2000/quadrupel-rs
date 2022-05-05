@@ -16,9 +16,7 @@ pub fn parse_message_from_drone(message: &[u8]) -> PyResult<(String, usize)> {
 #[pyfunction]
 pub fn create_message_for_drone(json_str: &str) -> PyResult<Vec<u8>> {
     let str: MessageToDrone =
-        serde_json::from_str(json_str).map_err(|e| {
-            PyValueError::new_err(e.to_string())
-        })?;
+        serde_json::from_str(json_str).map_err(|e| PyValueError::new_err(e.to_string()))?;
 
     let v = str
         .encode_vec()

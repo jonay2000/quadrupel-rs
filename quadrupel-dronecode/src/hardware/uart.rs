@@ -1,3 +1,4 @@
+use crate::hardware::UART;
 use crate::library::logger::UartLogger;
 use crate::Level;
 use bincode::enc::write::Writer;
@@ -8,10 +9,8 @@ use nrf51_hal::gpio::p0::{P0_14, P0_16};
 use nrf51_hal::gpio::Disconnected;
 use nrf51_pac::interrupt;
 use nrf51_pac::Interrupt;
-use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
 use quadrupel_shared::message::MessageToComputer;
-use crate::hardware::UART;
-
+use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
 
 /// Can be used for interfacing with the UART.
 /// It uses an interrupt to send bytes, when they're ready to send.
@@ -85,7 +84,6 @@ impl QUart {
         UartLogger::initialize();
 
         log::info!("UART init.");
-
     }
 
     /// Pushes a single byte over uart
@@ -108,9 +106,7 @@ impl QUart {
     }
 
     pub fn get_byte(&mut self) -> Option<u8> {
-        cortex_m::interrupt::free(|_| {
-            self.rx_queue.dequeue()
-        })
+        cortex_m::interrupt::free(|_| self.rx_queue.dequeue())
     }
 
     pub fn send_message(&mut self, msg: MessageToComputer) {

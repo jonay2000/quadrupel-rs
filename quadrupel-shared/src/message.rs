@@ -1,6 +1,5 @@
 use crate::state::Mode;
 use crate::{MotorValue, MotorValueDelta};
-use alloc::string::String;
 use bincode::config::standard;
 use bincode::enc::write::Writer;
 use bincode::error::{DecodeError, EncodeError};
@@ -23,7 +22,7 @@ pub enum MessageToComputer {
         yaw: i32,
         battery: u16,
         dt: u32,
-    }
+    },
 }
 
 impl MessageToComputer {
@@ -56,8 +55,14 @@ pub enum Motor {
 #[derive(Decode, Encode, Debug)]
 pub enum MessageToDrone {
     ChangeState(Mode),
-    MotorValue { motor: Motor, value: MotorValue },
-    MotorValueRel { motor: Motor, value: MotorValueDelta },
+    MotorValue {
+        motor: Motor,
+        value: MotorValue,
+    },
+    MotorValueRel {
+        motor: Motor,
+        value: MotorValueDelta,
+    },
     TargetAttitude {
         yaw: i32,
         pitch: i32,

@@ -1,8 +1,8 @@
-use cortex_m::peripheral::NVIC;
-use nrf51_pac::{interrupt};
-use nrf51_pac::Interrupt;
 use crate::hardware;
 use crate::hardware::HWCell;
+use cortex_m::peripheral::NVIC;
+use nrf51_pac::interrupt;
+use nrf51_pac::Interrupt;
 
 pub struct QAdc {
     adc: nrf51_pac::ADC,
@@ -22,7 +22,12 @@ impl QAdc {
     pub fn new(adc: nrf51_pac::ADC, nvic: &mut NVIC) -> Self {
         //We want to use Analog Input 4 as an input.
         //We want to use an analog input with two thirds prescaling
-        adc.config.write(|w| w.psel().analog_input4().inpsel().analog_input_two_thirds_prescaling());
+        adc.config.write(|w| {
+            w.psel()
+                .analog_input4()
+                .inpsel()
+                .analog_input_two_thirds_prescaling()
+        });
 
         //We want to enable ADC now
         adc.enable.write(|w| w.enable().enabled());
@@ -33,11 +38,16 @@ impl QAdc {
             nvic.set_priority(Interrupt::ADC, 3);
         }
 
-        QAdc { adc, last_result: 0 }
+        QAdc {
+            adc,
+            last_result: 0,
+        }
     }
 
     pub fn enable(&mut self) {
-        unsafe { NVIC::unmask(Interrupt::ADC); }
+        unsafe {
+            NVIC::unmask(Interrupt::ADC);
+        }
     }
 
     fn request_sample(&mut self) {

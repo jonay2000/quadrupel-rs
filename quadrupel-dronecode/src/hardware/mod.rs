@@ -6,18 +6,18 @@ pub mod mpu6050;
 pub mod ms5611;
 pub mod uart;
 
-use core::cell::{UnsafeCell};
-use cortex_m::asm;
 use crate::hardware::adc::QAdc;
 use crate::hardware::leds::QLeds;
-use crate::hardware::uart::QUart;
-use crate::Motors;
-use nrf51_hal::{Twi};
-use nrf51_pac::{TWI0};
 use crate::hardware::mpu6050::QMpu6050;
 use crate::hardware::ms5611::QMs5611;
-use crate::library::once_cell::OnceCell;
+use crate::hardware::uart::QUart;
 use crate::i2c::I2C;
+use crate::library::once_cell::OnceCell;
+use crate::Motors;
+use core::cell::UnsafeCell;
+use cortex_m::asm;
+use nrf51_hal::Twi;
+use nrf51_pac::TWI0;
 
 pub static LEDS: OnceCell<HWCellType2<QLeds>> = OnceCell::new();
 pub static UART: OnceCell<HWCellType2<QUart>> = OnceCell::new();
@@ -27,60 +27,57 @@ pub static BARO: OnceCell<HWCellType3<QMs5611<TWI0>>> = OnceCell::new();
 pub static ADC: OnceCell<HWCellType1<QAdc>> = OnceCell::new();
 pub static MOTORS: OnceCell<HWCellType1<Motors>> = OnceCell::new();
 
-pub fn init_hardware(
-    mut pc: cortex_m::Peripherals,
-    mut pn: nrf51_hal::pac::Peripherals,
-) {
+pub fn init_hardware(mut pc: cortex_m::Peripherals, mut pn: nrf51_hal::pac::Peripherals) {
     let gpio = nrf51_hal::gpio::p0::Parts::new(pn.GPIO);
 
-    UART.initialize(HWCellType2{ cell: UnsafeCell::new(
-        QUart::new(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC)
-    )});
+    UART.initialize(HWCellType2 {
+        cell: UnsafeCell::new(QUart::new(pn.UART0, gpio.p0_14, gpio.p0_16, &mut pc.NVIC)),
+    });
     UART.update_main(|uart| uart.enable());
     log::info!("UART OK");
     asm::delay(100_000);
 
-    LEDS.initialize(HWCellType2{ cell: UnsafeCell::new(
-        QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)
-    )});
+    LEDS.initialize(HWCellType2 {
+        cell: UnsafeCell::new(QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)),
+    });
     log::info!("LEDS OK");
     asm::delay(100_000);
 
-    MOTORS.initialize(HWCellType1 { cell: UnsafeCell::new(
-        Motors::new(
+    MOTORS.initialize(HWCellType1 {
+        cell: UnsafeCell::new(Motors::new(
             pn.TIMER1,
             pn.TIMER2,
             &mut pc.NVIC,
             &mut pn.PPI,
             &mut pn.GPIOTE,
             gpio.p0_20,
-        )
-    )});
+        )),
+    });
     MOTORS.update_main(|motors| motors.enable());
     log::info!("MOTORS OK");
     asm::delay(100_000);
 
-    I2C.initialize(HWCellType3{ cell: UnsafeCell::new(
-        I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)
-    )});
+    I2C.initialize(HWCellType3 {
+        cell: UnsafeCell::new(I2C::new(pn.TWI0, gpio.p0_04, gpio.p0_02)),
+    });
     log::info!("I2C OK");
     asm::delay(100_000);
 
-    MPU.initialize(HWCellType3{ cell: UnsafeCell::new(
-        QMpu6050::new(I2C.as_mut_ref())
-    )});
+    MPU.initialize(HWCellType3 {
+        cell: UnsafeCell::new(QMpu6050::new(I2C.as_mut_ref())),
+    });
     log::info!("MPU OK");
     asm::delay(100_000);
 
-    BARO.initialize(HWCellType3{ cell: UnsafeCell::new(
-        QMs5611::new(I2C.as_mut_ref())
-    )});
+    BARO.initialize(HWCellType3 {
+        cell: UnsafeCell::new(QMs5611::new(I2C.as_mut_ref())),
+    });
     log::info!("BARO OK");
     asm::delay(100_000);
 
-    ADC.initialize(HWCellType1 { cell: UnsafeCell::new(
-        QAdc::new(pn.ADC, &mut pc.NVIC)
-    )});
+    ADC.initialize(HWCellType1 {
+        cell: UnsafeCell::new(QAdc::new(pn.ADC, &mut pc.NVIC)),
+    });
     ADC.update_main(|adc| adc.enable());
     log::info!("ADC OK");
     asm::delay(100_000);
@@ -103,7 +100,10 @@ pub trait HWCell<T> {
 
     /// Read the content of the cell from the main thread, returns a copy.
     /// # SAFETY: This should not be called from an interrupt
-    fn get(&self) -> T where T: Copy {
+    fn get(&self) -> T
+    where
+        T: Copy,
+    {
         self.update_main(|t| *t)
     }
 
@@ -118,9 +118,7 @@ pub struct HWCellType1<T> {
 impl<T> HWCell<T> for HWCellType1<T> {
     fn update_main<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {
         // When accessing from main thread, we need to turn of interrupts to have sync
-        cortex_m::interrupt::free(|_| unsafe {
-            f(&mut *self.cell.get())
-        })
+        cortex_m::interrupt::free(|_| unsafe { f(&mut *self.cell.get()) })
     }
 
     fn update_interrupt<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {

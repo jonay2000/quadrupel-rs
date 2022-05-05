@@ -1,10 +1,9 @@
-use quadrupel_shared::message::Motor;
-use quadrupel_shared::{MotorValue, MotorValueDelta};
-use quadrupel_shared::state::Mode;
 use crate::control::angle_mode::AngleMode;
 use crate::library::pid::PID;
 use crate::library::yaw_pitch_roll::FI32;
 use crate::motors::GlobalTime;
+use quadrupel_shared::state::Mode;
+use quadrupel_shared::MotorValue;
 
 pub struct FlightState {
     pub mode: Mode,
@@ -40,8 +39,8 @@ impl Default for FlightState {
             angle_mode: AngleMode {
                 yaw_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0)),
                 pitch_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0)),
-                roll_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0))
-            }
+                roll_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0)),
+            },
         }
     }
 }

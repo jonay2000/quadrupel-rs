@@ -5,7 +5,6 @@ const ENABLE_YAW: bool = true;
 const ENABLE_PITCH: bool = false;
 const ENABLE_ROLL: bool = false;
 
-
 pub struct AngleMode {
     pub yaw_pid: PID,
     pub pitch_pid: PID,
@@ -13,7 +12,17 @@ pub struct AngleMode {
 }
 
 impl AngleMode {
-    pub fn step(&mut self, dt: FI32, lift: FI32, yaw_state: FI32, pitch_state: FI32, roll_state: FI32, yaw_goal: FI32, pitch_goal: FI32, roll_goal: FI32) -> [FI32; 4] {
+    pub fn step(
+        &mut self,
+        dt: FI32,
+        lift: FI32,
+        yaw_state: FI32,
+        pitch_state: FI32,
+        roll_state: FI32,
+        yaw_goal: FI32,
+        pitch_goal: FI32,
+        roll_goal: FI32,
+    ) -> [FI32; 4] {
         let yaw_off = if ENABLE_YAW && lift > 0 {
             self.yaw_pid.step(dt, yaw_state, yaw_goal)
         } else {
@@ -32,12 +41,11 @@ impl AngleMode {
             FI32::from_num(0)
         };
 
-
         return [
             (lift + yaw_off + pitch_off).max(FI32::from_num(0)),
             (lift - yaw_off + roll_off).max(FI32::from_num(0)),
             (lift + yaw_off - pitch_off).max(FI32::from_num(0)),
-            (lift - yaw_off - roll_off).max(FI32::from_num(0))
+            (lift - yaw_off - roll_off).max(FI32::from_num(0)),
         ];
     }
 }

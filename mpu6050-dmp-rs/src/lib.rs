@@ -10,4 +10,3 @@ mod firmware_loader;
 pub mod gyro;
 pub mod registers;
 pub mod sensor;
-

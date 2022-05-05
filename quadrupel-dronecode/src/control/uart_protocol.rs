@@ -1,5 +1,5 @@
+use crate::hardware;
 use quadrupel_shared::message::MessageToDrone;
-use crate::{hardware};
 
 pub enum UartProtocolState {
     WaitingForMessage,
@@ -24,20 +24,30 @@ impl UartProtocol {
             match &mut self.state {
                 UartProtocolState::WaitingForMessage => {
                     assert!(byte > 0);
-                    self.state = UartProtocolState::ReceivingMessage { len: byte, received_count: 0 }
+                    self.state = UartProtocolState::ReceivingMessage {
+                        len: byte,
+                        received_count: 0,
+                    }
                 }
-                UartProtocolState::ReceivingMessage { len, received_count } => {
+                UartProtocolState::ReceivingMessage {
+                    len,
+                    received_count,
+                } => {
                     self.buffer[*received_count as usize] = byte;
                     *received_count += 1;
                     if received_count == len {
                         match MessageToDrone::decode(&self.buffer[..*len as usize]) {
                             Err(e) => {
-                                log::error!("{:?} from decoding {:?}", e, &self.buffer[..*len as usize]);
+                                log::error!(
+                                    "{:?} from decoding {:?}",
+                                    e,
+                                    &self.buffer[..*len as usize]
+                                );
                                 self.state = UartProtocolState::WaitingForMessage;
-                            },
+                            }
                             Ok((msg, _)) => {
                                 self.state = UartProtocolState::WaitingForMessage;
-                                return Some(msg)
+                                return Some(msg);
                             }
                         }
                     }

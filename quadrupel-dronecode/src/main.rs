@@ -22,15 +22,15 @@ use core::alloc::Layout;
 use core::panic::PanicInfo;
 use cortex_m::{asm, Peripherals};
 
-use crate::hardware::*;
 use crate::hardware::motors::Motors;
+use crate::hardware::*;
 use cortex_m_rt::entry;
 #[cfg(test)]
 use cortex_m_semihosting::hprintln;
 
-use nrf51_hal::gpio::Level;
 use crate::control::control_loop;
 use crate::control::uart_protocol::UartProtocol;
+use nrf51_hal::gpio::Level;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();

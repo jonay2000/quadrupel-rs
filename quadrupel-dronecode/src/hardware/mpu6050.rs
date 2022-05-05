@@ -1,12 +1,10 @@
-use cortex_m::asm;
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
+use crate::motors::GlobalTime;
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
-use nrf51_hal::{Twi};
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
 use mpu6050_dmp::sensor::Mpu6050;
-use crate::motors::GlobalTime;
-
+use nrf51_hal::Twi;
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
 // Vanilla sample takes 2500 us -> 400 Hz
@@ -32,21 +30,22 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
         let mut mpu = Mpu6050::new(i2c).unwrap();
 
         mpu.initialize_dmp(i2c, &mut GlobalTime()).unwrap();
-        mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER).unwrap();
+        mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER)
+            .unwrap();
         QMpu6050 { mpu }
     }
 
-    pub fn disable_mpu(&mut self, i2c: &mut Twi<T>, ) {
+    pub fn disable_mpu(&mut self, i2c: &mut Twi<T>) {
         self.mpu.disable_dmp(i2c).unwrap();
     }
 
-    pub fn enable_mpu(&mut self, i2c: &mut Twi<T>, ) {
+    pub fn enable_mpu(&mut self, i2c: &mut Twi<T>) {
         self.mpu.enable_dmp(i2c).unwrap();
     }
 
-    pub fn read_mpu(&mut self, i2c: &mut Twi<T>,) -> Option<YawPitchRoll> {
+    pub fn read_mpu(&mut self, i2c: &mut Twi<T>) -> Option<YawPitchRoll> {
         // If there isn't a full packet ready, return none
-        let mut len = self.mpu.get_fifo_count(i2c, ).unwrap();
+        let mut len = self.mpu.get_fifo_count(i2c).unwrap();
         if len < 28 {
             return None;
         }
