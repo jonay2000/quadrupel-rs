@@ -21,11 +21,8 @@ fn ADC() {
 impl QAdc {
     pub fn new(adc: nrf51_pac::ADC, nvic: &mut NVIC) -> Self {
         //We want to use Analog Input 4 as an input.
-        adc.config.write(|w| w.psel().analog_input4());
-
         //We want to use an analog input with two thirds prescaling
-        adc.config
-            .write(|w| w.inpsel().analog_input_two_thirds_prescaling());
+        adc.config.write(|w| w.psel().analog_input4().inpsel().analog_input_two_thirds_prescaling());
 
         //We want to enable ADC now
         adc.enable.write(|w| w.enable().enabled());

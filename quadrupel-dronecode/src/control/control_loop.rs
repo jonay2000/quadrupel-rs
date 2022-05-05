@@ -53,10 +53,10 @@ pub fn start_loop() -> ! {
         let adc = ADC.update_main(|adc| adc.read());
 
         //Check adc
-        if adc > 600 && adc < 1050 {
+        if adc > 650 && adc < 1050 {
             log::error!("Panic: Battery low {adc} 10^-2 V");
             state.mode = Mode::Panic;
-        } else if adc != 0 && adc_warning && adc <= 600 {
+        } else if adc != 0 && adc_warning && adc <= 650 {
             log::warn!("Warning: Battery is < 6V ({adc}), continuing assuming that this is not a drone.");
             adc_warning = false;
         }
@@ -73,7 +73,7 @@ pub fn start_loop() -> ! {
         }
 
         // Print all info
-        if count % 100 == 0 {
+        if count % 30 == 0 {
             log::info!("{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
                 state.mode,
                 GlobalTime().get_time_us(), dt,
