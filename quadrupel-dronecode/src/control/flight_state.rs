@@ -44,9 +44,24 @@ impl Default for FlightState {
                 lift: FI32::from_num(0),
             },
             angle_mode: AngleMode {
-                yaw_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0), true),
-                pitch_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0), true),
-                roll_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0), true),
+                yaw_pid: PID::new(
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    true,
+                ),
+                pitch_pid: PID::new(
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    true,
+                ),
+                roll_pid: PID::new(
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    true,
+                ),
             },
         }
     }
