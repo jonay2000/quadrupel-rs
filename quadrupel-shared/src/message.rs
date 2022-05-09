@@ -28,11 +28,11 @@ pub enum MessageToComputer {
 impl MessageToComputer {
     pub fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
         let mut encoding_space: [u8; 256] = [0u8; 256];
-        let bytes = bincode::encode_into_slice(self, &mut encoding_space, standard())?;
-        assert!(bytes < 256);
+        let count = bincode::encode_into_slice(self, &mut encoding_space, standard())?;
+        assert!(count < 256);
 
-        w.write(&[bytes as u8])?;
-        w.write(&encoding_space[..bytes])?;
+        w.write(&[count as u8])?;
+        w.write(&encoding_space[..count])?;
         Ok(())
     }
 

@@ -78,29 +78,6 @@ pub fn start_loop() -> ! {
             Mode::Manual => ManualControl::iteration(&mut state, dt),
         }
 
-        // Print all info
-        time_since_last_print += dt;
-        if time_since_last_print > 1000000 {
-            time_since_last_print = 0;
-            log::info!(
-                "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
-                state.mode,
-                GlobalTime().get_time_us(),
-                dt,
-                motors,
-                ypr.roll,
-                ypr.pitch,
-                ypr.yaw,
-                state.target_attitude.roll,
-                state.target_attitude.pitch,
-                state.target_attitude.yaw,
-                state.target_attitude.lift,
-                adc,
-                temp,
-                pres
-            );
-        }
-
         //Update LEDS
         let leds = LEDS.as_mut_ref();
         blue_led_status = match blue_led_status {
@@ -131,16 +108,37 @@ pub fn start_loop() -> ! {
         MOTORS.update_main(|i| i.set_motors(state.motor_values));
 
         //Send state information
-        let _msg = MessageToComputer::StateInformation {
-            state: state.mode,
-            height: pres,
-            roll: ypr.roll.to_bits(),
-            pitch: ypr.pitch.to_bits(),
-            yaw: ypr.yaw.to_bits(),
-            battery: adc,
-            dt,
-        };
-        // UART.as_mut_ref().send_message(msg);
-        //TODO send msg
+        time_since_last_print += dt;
+        if time_since_last_print > 1000000 {
+            time_since_last_print = 0;
+            log::info!(
+                "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
+                state.mode,
+                GlobalTime().get_time_us(),
+                dt,
+                motors,
+                ypr.roll,
+                ypr.pitch,
+                ypr.yaw,
+                state.target_attitude.roll,
+                state.target_attitude.pitch,
+                state.target_attitude.yaw,
+                state.target_attitude.lift,
+                adc,
+                temp,
+                pres
+            );
+
+            let msg = MessageToComputer::StateInformation {
+                state: state.mode,
+                height: pres,
+                roll: ypr.roll.to_bits(),
+                pitch: ypr.pitch.to_bits(),
+                yaw: ypr.yaw.to_bits(),
+                battery: adc,
+                dt,
+            };
+            UART.as_mut_ref().send_message(msg);
+        }
     }
 }
