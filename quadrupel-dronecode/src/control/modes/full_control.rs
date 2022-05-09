@@ -32,7 +32,8 @@ impl ModeTrait for FullControl {
             state.current_attitude.roll,
             yaw_goal,
             pitch_goal,
-            roll_goal);
+            roll_goal,
+        );
 
         //
         // let motors = [

@@ -1,4 +1,5 @@
 use crate::control::flight_state::FlightState;
+use crate::control::modes::full_control::FullControl;
 use crate::control::modes::individual_motor_control::IndividualMotorControlMode;
 use crate::control::modes::manual_control::ManualControl;
 use crate::control::modes::panic::PanicMode;
@@ -10,7 +11,6 @@ use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
-use crate::control::modes::full_control::FullControl;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
