@@ -10,6 +10,7 @@ use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
+use crate::control::modes::full_control::FullControl;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -24,13 +25,18 @@ pub fn start_loop() -> ! {
     let mut state = FlightState::default();
 
     let start_time = GlobalTime().get_time_us();
+    let mut last_time = GlobalTime().get_time_us();
     let mut count = 0;
 
     let mut blue_led_status = BlueLedStatus::OFF { at: start_time };
     let mut adc_warning = true;
 
+    let mut time_since_last_print = 0;
+
     loop {
         count += 1;
+        let dt = GlobalTime().get_time_us() - last_time;
+        last_time = GlobalTime().get_time_us();
 
         //Process any incoming messages
         while let Some(msg) = uart_protocol.update() {
@@ -47,7 +53,6 @@ pub fn start_loop() -> ! {
         }
 
         //Read hardware
-        let dt = (GlobalTime().get_time_us() - start_time) / count;
         let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
         let (_accel, _gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
         let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
@@ -70,13 +75,15 @@ pub fn start_loop() -> ! {
             Mode::Safe => SafeMode::iteration(&mut state, dt),
             Mode::Calibration => {}
             Mode::Panic => PanicMode::iteration(&mut state, dt),
-            Mode::FullControl => {}
+            Mode::FullControl => FullControl::iteration(&mut state, dt),
             Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state, dt),
             Mode::Manual => ManualControl::iteration(&mut state, dt),
         }
 
         // Print all info
-        if count % 30 == 0 {
+        time_since_last_print += dt;
+        if time_since_last_print > 1000000 {
+            time_since_last_print = 0;
             log::info!(
                 "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
                 state.mode,
