@@ -1,7 +1,5 @@
 use crate::control::flight_state::FlightState;
 use crate::control::modes::ModeTrait;
-use quadrupel_shared::message::MessageToDrone;
-use quadrupel_shared::state::Mode;
 
 pub struct SafeMode;
 

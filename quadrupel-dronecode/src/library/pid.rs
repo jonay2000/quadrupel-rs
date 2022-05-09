@@ -26,15 +26,15 @@ impl PID {
             return goal - state;
         }
         let neutral = (goal - state).abs();
-        let left = (goal - state + 2 * pi).abs();
-        let right = (goal - state - 2 * pi).abs();
+        let left = (goal - state + 2 * FI32::PI).abs();
+        let right = (goal - state - 2 * FI32::PI).abs();
 
         return if neutral < left && neutral < right {
             goal - state
         } else if left < right {
-            goal - state + 2 * pi
+            goal - state + 2 * FI32::PI
         } else {
-            goal - state - 2 * pi
+            goal - state - 2 * FI32::PI
         };
     }
 

@@ -26,7 +26,6 @@ pub fn start_loop() -> ! {
 
     let start_time = GlobalTime().get_time_us();
     let mut last_time = GlobalTime().get_time_us();
-    let mut count = 0;
 
     let mut blue_led_status = BlueLedStatus::OFF { at: start_time };
     let mut adc_warning = true;
@@ -34,7 +33,6 @@ pub fn start_loop() -> ! {
     let mut time_since_last_print = 0;
 
     loop {
-        count += 1;
         let dt = GlobalTime().get_time_us() - last_time;
         last_time = GlobalTime().get_time_us();
 

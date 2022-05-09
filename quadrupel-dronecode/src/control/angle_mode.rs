@@ -1,6 +1,5 @@
 use crate::library::pid::PID;
 use crate::library::yaw_pitch_roll::FI32;
-use core::cmp::max;
 
 const ENABLE_YAW: bool = true;
 const ENABLE_PITCH: bool = false;
