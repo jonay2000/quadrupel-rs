@@ -1,5 +1,7 @@
 use crate::control::flight_state::FlightState;
+use crate::control::modes::full_control::FullControl;
 use crate::control::modes::individual_motor_control::IndividualMotorControlMode;
+use crate::control::modes::manual_control::ManualControl;
 use crate::control::modes::panic::PanicMode;
 use crate::control::modes::safe::SafeMode;
 use crate::control::modes::ModeTrait;
@@ -7,7 +9,6 @@ use crate::control::process_message::process_message;
 use crate::motors::GlobalTime;
 use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
-use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
 
@@ -24,13 +25,18 @@ pub fn start_loop() -> ! {
     let mut state = FlightState::default();
 
     let start_time = GlobalTime().get_time_us();
+    let mut last_time = GlobalTime().get_time_us();
     let mut count = 0;
 
     let mut blue_led_status = BlueLedStatus::OFF { at: start_time };
     let mut adc_warning = true;
 
+    let mut time_since_last_print = 0;
+
     loop {
         count += 1;
+        let dt = GlobalTime().get_time_us() - last_time;
+        last_time = GlobalTime().get_time_us();
 
         //Process any incoming messages
         while let Some(msg) = uart_protocol.update() {
@@ -46,12 +52,18 @@ pub fn start_loop() -> ! {
             state.mode = Mode::Panic;
         }
 
-        //Check adc
+        //Read hardware
+        let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
+        let (_accel, _gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
+        let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
+        let motors = MOTORS.update_main(|motors| motors.get_motors());
         let adc = ADC.update_main(|adc| adc.read());
-        if adc > 600 && adc < 1050 {
+
+        //Check adc
+        if adc > 650 && adc < 1050 {
             log::error!("Panic: Battery low {adc} 10^-2 V");
             state.mode = Mode::Panic;
-        } else if adc != 0 && adc_warning && adc <= 600 {
+        } else if adc != 0 && adc_warning && adc <= 650 {
             log::warn!(
                 "Warning: Battery is < 6V ({adc}), continuing assuming that this is not a drone."
             );
@@ -60,21 +72,18 @@ pub fn start_loop() -> ! {
 
         // Do action corresponding to current mode
         match state.mode {
-            Mode::Safe => SafeMode::iteration(&mut state),
+            Mode::Safe => SafeMode::iteration(&mut state, dt),
             Mode::Calibration => {}
-            Mode::Panic => PanicMode::iteration(&mut state),
-            Mode::FullControl => {}
-            Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state),
-            Mode::Manual => {}
+            Mode::Panic => PanicMode::iteration(&mut state, dt),
+            Mode::FullControl => FullControl::iteration(&mut state, dt),
+            Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state, dt),
+            Mode::Manual => ManualControl::iteration(&mut state, dt),
         }
 
         // Print all info
-        let dt = (GlobalTime().get_time_us() - start_time) / count;
-        let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
-        let (_accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
-        let motors = MOTORS.update_main(|motors| motors.get_motors());
-        if count % 100 == 0 {
+        time_since_last_print += dt;
+        if time_since_last_print > 1000000 {
+            time_since_last_print = 0;
             log::info!(
                 "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
                 state.mode,
@@ -124,7 +133,7 @@ pub fn start_loop() -> ! {
         MOTORS.update_main(|i| i.set_motors(state.motor_values));
 
         //Send state information
-        let msg = MessageToComputer::StateInformation {
+        let _msg = MessageToComputer::StateInformation {
             state: state.mode,
             height: pres,
             roll: ypr.roll.to_bits(),

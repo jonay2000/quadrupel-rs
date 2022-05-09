@@ -6,7 +6,6 @@ use crate::fifo::Fifo;
 use crate::gyro::{Gyro, GyroFullScale};
 use crate::registers::Register;
 use core::marker::PhantomData;
-use cortex_m::asm;
 use embedded_hal::blocking::delay;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
 

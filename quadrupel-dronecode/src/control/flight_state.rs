@@ -1,14 +1,17 @@
+use crate::control::angle_mode::AngleMode;
+use crate::library::pid::PID;
 use crate::library::yaw_pitch_roll::FI32;
 use crate::motors::GlobalTime;
-use quadrupel_shared::message::Motor;
 use quadrupel_shared::state::Mode;
-use quadrupel_shared::{MotorValue, MotorValueDelta};
+use quadrupel_shared::MotorValue;
 
 pub struct FlightState {
     pub mode: Mode,
     pub motor_values: [MotorValue; 4],
     pub last_heartbeat: u32,
+    pub current_attitude: TargetAttitude,
     pub target_attitude: TargetAttitude,
+    pub angle_mode: AngleMode,
 }
 
 pub struct TargetAttitude {
@@ -28,11 +31,22 @@ impl Default for FlightState {
             mode: Mode::Safe,
             motor_values: [0; 4],
             last_heartbeat: GlobalTime().get_time_us(),
+            current_attitude: TargetAttitude {
+                yaw: FI32::from_num(0),
+                pitch: FI32::from_num(0),
+                roll: FI32::from_num(0),
+                lift: FI32::from_num(0),
+            },
             target_attitude: TargetAttitude {
                 yaw: FI32::from_num(0),
                 pitch: FI32::from_num(0),
                 roll: FI32::from_num(0),
                 lift: FI32::from_num(0),
+            },
+            angle_mode: AngleMode {
+                yaw_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0)),
+                pitch_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0)),
+                roll_pid: PID::new(FI32::from_num(0), FI32::from_num(0), FI32::from_num(0)),
             },
         }
     }

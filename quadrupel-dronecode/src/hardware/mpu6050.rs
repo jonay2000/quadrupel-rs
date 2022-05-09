@@ -1,6 +1,5 @@
 use crate::library::yaw_pitch_roll::{Quaternion, YawPitchRoll};
 use crate::motors::GlobalTime;
-use cortex_m::asm;
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayUs;
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
