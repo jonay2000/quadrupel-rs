@@ -111,23 +111,23 @@ pub fn start_loop() -> ! {
         time_since_last_print += dt;
         if time_since_last_print > 1000000 {
             time_since_last_print = 0;
-            log::info!(
-                "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
-                state.mode,
-                GlobalTime().get_time_us(),
-                dt,
-                motors,
-                ypr.roll,
-                ypr.pitch,
-                ypr.yaw,
-                state.target_attitude.roll,
-                state.target_attitude.pitch,
-                state.target_attitude.yaw,
-                state.target_attitude.lift,
-                adc,
-                temp,
-                pres
-            );
+            // log::info!(
+            //     "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
+            //     state.mode,
+            //     GlobalTime().get_time_us(),
+            //     dt,
+            //     motors,
+            //     ypr.roll,
+            //     ypr.pitch,
+            //     ypr.yaw,
+            //     state.target_attitude.roll,
+            //     state.target_attitude.pitch,
+            //     state.target_attitude.yaw,
+            //     state.target_attitude.lift,
+            //     adc,
+            //     temp,
+            //     pres
+            // );
 
             let msg = MessageToComputer::StateInformation {
                 state: state.mode,
@@ -138,6 +138,12 @@ pub fn start_loop() -> ! {
                 battery: adc,
                 dt,
             };
+
+
+            // let mut encoding_space: [u8; 256] = [0u8; 256];
+            // let count = bincode::encode_into_slice(&msg, &mut encoding_space, standard()).unwrap();
+            // log::info!("{} {:?}", count, &encoding_space[..count]);
+
             UART.as_mut_ref().send_message(msg);
         }
     }

@@ -106,8 +106,12 @@ class Serial:
 
                             if (v := decoded_msg.get("Log")) is not None:
                                 print(bytes(v).decode("utf-8"), end="")
-                            else:
-                                q.put(decoded_msg)
+                            elif (v := decoded_msg.get("StateInformation")) is not None:
+                                # TODO: Decode 16-bit fixedpoint
+                                print(f"State: {v}")
+                            # TODO: Uncommenting this causes code to crash later?
+                            # else:
+                            #     q.put(decoded_msg)
                     except Exception as e:
                         print(e)
                     buf = []
