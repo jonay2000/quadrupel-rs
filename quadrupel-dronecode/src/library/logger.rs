@@ -1,8 +1,8 @@
+use crate::hardware::UART;
 use alloc::format;
 use core::fmt::Write;
 use log::{set_logger_racy, set_max_level, LevelFilter, Log, Metadata, Record};
 use quadrupel_shared::message::MessageToComputer;
-use crate::hardware::UART;
 
 #[cfg(not(test))]
 pub static LOGGER: UartLogger = UartLogger::with_level(LevelFilter::Info);

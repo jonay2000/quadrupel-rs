@@ -1,8 +1,8 @@
-use quadrupel_shared::message::Motor;
-use quadrupel_shared::{MotorValue, MotorValueDelta};
-use quadrupel_shared::state::Mode;
 use crate::library::yaw_pitch_roll::FI32;
 use crate::motors::GlobalTime;
+use quadrupel_shared::message::Motor;
+use quadrupel_shared::state::Mode;
+use quadrupel_shared::{MotorValue, MotorValueDelta};
 
 pub struct FlightState {
     pub mode: Mode,
@@ -33,7 +33,7 @@ impl Default for FlightState {
                 pitch: FI32::from_num(0),
                 roll: FI32::from_num(0),
                 lift: FI32::from_num(0),
-            }
+            },
         }
     }
 }

@@ -1,8 +1,8 @@
-use cortex_m::peripheral::NVIC;
-use nrf51_pac::{interrupt};
-use nrf51_pac::Interrupt;
 use crate::hardware;
 use crate::hardware::HWCell;
+use cortex_m::peripheral::NVIC;
+use nrf51_pac::interrupt;
+use nrf51_pac::Interrupt;
 
 pub struct QAdc {
     adc: nrf51_pac::ADC,
@@ -36,11 +36,16 @@ impl QAdc {
             nvic.set_priority(Interrupt::ADC, 3);
         }
 
-        QAdc { adc, last_result: 0 }
+        QAdc {
+            adc,
+            last_result: 0,
+        }
     }
 
     pub fn enable(&mut self) {
-        unsafe { NVIC::unmask(Interrupt::ADC); }
+        unsafe {
+            NVIC::unmask(Interrupt::ADC);
+        }
     }
 
     fn request_sample(&mut self) {

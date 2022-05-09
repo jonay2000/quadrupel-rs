@@ -1,15 +1,15 @@
+use crate::control::flight_state::FlightState;
+use crate::control::modes::individual_motor_control::IndividualMotorControlMode;
+use crate::control::modes::panic::PanicMode;
+use crate::control::modes::safe::SafeMode;
+use crate::control::modes::ModeTrait;
+use crate::control::process_message::process_message;
+use crate::motors::GlobalTime;
+use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
-use crate::*;
-use crate::control::flight_state::FlightState;
-use crate::control::modes::individual_motor_control::IndividualMotorControlMode;
-use crate::control::modes::ModeTrait;
-use crate::control::modes::panic::PanicMode;
-use crate::control::modes::safe::SafeMode;
-use crate::control::process_message::process_message;
-use crate::motors::GlobalTime;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -38,7 +38,10 @@ pub fn start_loop() -> ! {
         }
 
         //Check heartbeat
-        if state.mode != Mode::Safe && (GlobalTime().get_time_us() - state.last_heartbeat) > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE) {
+        if state.mode != Mode::Safe
+            && (GlobalTime().get_time_us() - state.last_heartbeat)
+                > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE)
+        {
             log::error!("Panic: Heartbeat timeout");
             state.mode = Mode::Panic;
         }
@@ -49,10 +52,11 @@ pub fn start_loop() -> ! {
             log::error!("Panic: Battery low {adc} 10^-2 V");
             state.mode = Mode::Panic;
         } else if adc != 0 && adc_warning && adc <= 600 {
-            log::warn!("Warning: Battery is < 6V ({adc}), continuing assuming that this is not a drone.");
+            log::warn!(
+                "Warning: Battery is < 6V ({adc}), continuing assuming that this is not a drone."
+            );
             adc_warning = false;
         }
-
 
         // Do action corresponding to current mode
         match state.mode {
@@ -71,13 +75,22 @@ pub fn start_loop() -> ! {
         let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         if count % 100 == 0 {
-            log::info!("{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
+            log::info!(
+                "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
                 state.mode,
-                GlobalTime().get_time_us(), dt,
+                GlobalTime().get_time_us(),
+                dt,
                 motors,
-                ypr.roll, ypr.pitch, ypr.yaw,
-                state.target_attitude.roll, state.target_attitude.pitch, state.target_attitude.yaw, state.target_attitude.lift,
-                adc, temp, pres
+                ypr.roll,
+                ypr.pitch,
+                ypr.yaw,
+                state.target_attitude.roll,
+                state.target_attitude.pitch,
+                state.target_attitude.yaw,
+                state.target_attitude.lift,
+                adc,
+                temp,
+                pres
             );
         }
 
@@ -87,31 +100,28 @@ pub fn start_loop() -> ! {
             BlueLedStatus::OFF { at } if GlobalTime().get_time_us() - at > 1000000 => {
                 leds.led_blue.set_low().unwrap();
                 BlueLedStatus::ON { at: at + 1000000 }
-            },
+            }
             BlueLedStatus::ON { at } if GlobalTime().get_time_us() - at > 1000000 => {
                 leds.led_blue.set_high().unwrap();
                 BlueLedStatus::OFF { at: at + 1000000 }
-            },
-            s => s
+            }
+            s => s,
         };
         //green yellow red
-        let (g,y,r) = match state.mode {
-            Mode::Safe => (true,false,false),
-            Mode::Calibration => (false,false,false),
-            Mode::Panic => (true,true,true),
-            Mode::FullControl => (false,true,false),
-            Mode::IndividualMotorControl => (false,true,false),
+        let (g, y, r) = match state.mode {
+            Mode::Safe => (true, false, false),
+            Mode::Calibration => (false, false, false),
+            Mode::Panic => (true, true, true),
+            Mode::FullControl => (false, true, false),
+            Mode::IndividualMotorControl => (false, true, false),
             Mode::Manual => (true, false, true),
         };
         leds.led_green.set_state(PinState::from(!g)).unwrap();
         leds.led_yellow.set_state(PinState::from(!y)).unwrap();
         leds.led_red.set_state(PinState::from(!r)).unwrap();
 
-
         // update peripherals according to current state
-        MOTORS.update_main(|i| {
-            i.set_motors(state.motor_values)
-        });
+        MOTORS.update_main(|i| i.set_motors(state.motor_values));
 
         //Send state information
         let msg = MessageToComputer::StateInformation {
@@ -121,7 +131,7 @@ pub fn start_loop() -> ! {
             pitch: ypr.pitch.to_bits(),
             yaw: ypr.yaw.to_bits(),
             battery: adc,
-            dt
+            dt,
         };
         // UART.as_mut_ref().send_message(msg);
         //TODO send msg
