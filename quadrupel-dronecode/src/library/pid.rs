@@ -1,20 +1,22 @@
 use crate::library::yaw_pitch_roll::FI32;
 
 pub struct PID {
-    kp: FI32,
-    ki: FI32,
-    kd: FI32,
+    pub kp: FI32,
+    pub ki: FI32,
+    pub kd: FI32,
+    pub cap: FI32,
     last_state: FI32,
     buildup: FI32,
     use_mod: bool,
 }
 
 impl PID {
-    pub fn new(kp: FI32, ki: FI32, kd: FI32, use_mod: bool) -> Self {
+    pub fn new(kp: FI32, ki: FI32, kd: FI32, cap: FI32, use_mod: bool) -> Self {
         PID {
             kp,
             ki,
             kd,
+            cap,
             last_state: FI32::from_num(0),
             buildup: FI32::from_num(0),
             use_mod,
