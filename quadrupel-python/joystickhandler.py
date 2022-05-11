@@ -454,8 +454,7 @@ class JoystickHandler:
             if ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets["lift"] <= 50000:
                 self.lift = 0 + keyboard_offsets["lift"]
             else:
-                self.lift = round((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets["lift"]
-- 50000
+                self.lift = round((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets["lift"] - 50000
             ser.send(joystick_message(self.yaw, self.pitch, self.roll, self.lift))
             self.new_joystick_input = False
         elif self.slider0.getValue() != self.previous_motor0:
