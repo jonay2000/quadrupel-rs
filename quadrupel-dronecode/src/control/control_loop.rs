@@ -35,6 +35,7 @@ pub fn start_loop() -> ! {
     loop {
         let dt = GlobalTime().get_time_us() - last_time;
         last_time = GlobalTime().get_time_us();
+        state.count += 1;
 
         //Process any incoming messages
         while let Some(msg) = uart_protocol.update() {
@@ -53,7 +54,7 @@ pub fn start_loop() -> ! {
         //Read hardware
         let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
         let (_accel, _gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
+        let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         let adc = ADC.update_main(|adc| adc.read());
 
@@ -67,6 +68,11 @@ pub fn start_loop() -> ! {
             );
             adc_warning = false;
         }
+
+        //Update state
+        state.current_attitude.yaw = ypr.yaw;
+        state.current_attitude.pitch = ypr.pitch;
+        state.current_attitude.roll = ypr.roll;
 
         // Do action corresponding to current mode
         match state.mode {
@@ -109,7 +115,7 @@ pub fn start_loop() -> ! {
 
         //Send state information
         time_since_last_print += dt;
-        if time_since_last_print > 1000000 {
+        if time_since_last_print > 500000 {
             time_since_last_print = 0;
             // log::info!(
             //     "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
@@ -132,11 +138,20 @@ pub fn start_loop() -> ! {
             let msg = MessageToComputer::StateInformation {
                 state: state.mode,
                 height: pres,
-                roll: ypr.roll.to_bits(),
-                pitch: ypr.pitch.to_bits(),
-                yaw: ypr.yaw.to_bits(),
                 battery: adc,
                 dt,
+                motors,
+                sensor_ypr: [
+                    ypr.yaw.to_bits(),
+                    ypr.pitch.to_bits(),
+                    ypr.roll.to_bits()
+                ],
+                input_typr: [
+                    state.target_attitude.lift.to_bits(),
+                    state.target_attitude.yaw.to_bits(),
+                    state.target_attitude.pitch.to_bits(),
+                    state.target_attitude.roll.to_bits(),
+                ]
             };
 
 

@@ -17,11 +17,11 @@ pub enum MessageToComputer {
     StateInformation {
         state: Mode,
         height: u32,
-        roll: i32,
-        pitch: i32,
-        yaw: i32,
         battery: u16,
         dt: u32,
+        motors: [u16; 4],
+        input_typr: [i32; 4],
+        sensor_ypr: [i32; 3],
     },
 }
 

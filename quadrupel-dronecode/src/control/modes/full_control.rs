@@ -13,40 +13,33 @@ impl ModeTrait for FullControl {
             state.motor_values = [0, 0, 0, 0];
             return;
         }
-        let lift = lift_goal_raw * FI32::from_num(25);
+        let lift_goal = lift_goal_raw * FI32::from_num(25);
 
         fn raw_to_10_deg(inp: FI32) -> FI32 {
             // * 2pi * (10/360) * (1/8) in optimal order
             inp * 2 * FI32::PI * FI32::from_num(10) / FI32::from_num(8) / FI32::from_num(360)
         }
 
-        let yaw_goal = state.current_attitude.yaw + raw_to_10_deg(state.target_attitude.yaw);
+        let yaw_goal = FI32::from_num(0); //state.current_attitude.yaw + raw_to_10_deg(state.target_attitude.yaw);
         let pitch_goal = raw_to_10_deg(state.target_attitude.pitch);
         let roll_goal = raw_to_10_deg(state.target_attitude.roll);
 
-        state.angle_mode.step(
+        let motors = state.angle_mode.step(
             dt,
-            lift,
+            lift_goal,
             state.current_attitude.yaw,
             state.current_attitude.pitch,
             state.current_attitude.roll,
             yaw_goal,
             pitch_goal,
             roll_goal,
+            state.count
         );
 
-        //
-        // let motors = [
-        //     lift_goal_raw - yaw + pitch,
-        //     lift_goal_raw + yaw + roll,
-        //     lift_goal_raw - yaw - pitch,
-        //     lift_goal_raw + yaw - roll,
-        // ];
-        //
-        // state.motor_values = motors.map(|fi32| {
-        //     fi32.clamp(FI32::from_num(0), FI32::from_num(500))
-        //         .round()
-        //         .to_num()
-        // });
+        state.motor_values = motors.map(|fi32| {
+            fi32.clamp(FI32::from_num(0), FI32::from_num(500))
+                .round()
+                .to_num()
+        });
     }
 }

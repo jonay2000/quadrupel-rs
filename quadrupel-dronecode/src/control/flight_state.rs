@@ -12,6 +12,7 @@ pub struct FlightState {
     pub current_attitude: TargetAttitude,
     pub target_attitude: TargetAttitude,
     pub angle_mode: AngleMode,
+    pub count: u32,
 }
 
 pub struct TargetAttitude {
@@ -47,7 +48,7 @@ impl Default for FlightState {
                 yaw_pid: PID::new(
                     FI32::from_num(0),
                     FI32::from_num(0),
-                    FI32::from_num(0),
+                    FI32::from_num(500),
                     true,
                 ),
                 pitch_pid: PID::new(
@@ -63,6 +64,7 @@ impl Default for FlightState {
                     true,
                 ),
             },
+            count: 0
         }
     }
 }

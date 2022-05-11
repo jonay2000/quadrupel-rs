@@ -22,12 +22,16 @@ impl AngleMode {
         yaw_goal: FI32,
         pitch_goal: FI32,
         roll_goal: FI32,
+        count: u32,
     ) -> [FI32; 4] {
         let yaw_offset = if ENABLE_YAW && lift > 0 {
             self.yaw_pid.step(dt, yaw_state, yaw_goal)
         } else {
             FI32::from_num(0)
         };
+        if count % 100 == 0 {
+            log::info!("{} {} {}", yaw_state, yaw_goal, yaw_offset);
+        }
 
         let pitch_offset = if ENABLE_PITCH && lift > 0 {
             self.pitch_pid.step(dt, pitch_state, pitch_goal)
