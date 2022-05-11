@@ -113,7 +113,10 @@ pub fn start_loop() -> ! {
 
         // update peripherals according to current state
         MOTORS.update_main(|i| {
-            let new_motor_values = state.motor_values.map(|m| if m==0 {0} else {rough_isqrt(((m as u32)+70)*900) as u16});
+            let new_motor_values = state.motor_values.map(|m| match m {
+                None => 0,
+                Some(m) => rough_isqrt(((m as u32)+70)*900) as u16,
+            });
             i.set_motors(new_motor_values)
         });
 
