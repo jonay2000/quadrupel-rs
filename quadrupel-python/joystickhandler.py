@@ -33,9 +33,6 @@ keyboard_offsets_step = {
     "roll": 1,
     "pitch": 1,
     "yaw": 1,
-    "yaw_P": 1,
-    "roll_pitch_P1": 1,
-    "roll_pitch_P2": 1,
     "M0": 1,
     "M1": 1,
     "M2": 1,
@@ -63,9 +60,6 @@ keyboard_offsets = {
     "roll": 0,
     "pitch": 0,
     "yaw": 0,
-    "yaw_P": 0,
-    "roll_pitch_P1": 0,
-    "roll_pitch_P2": 0
 }
 
 # Key is allowed to go to the states in the value array
@@ -441,21 +435,21 @@ class JoystickHandler:
         threading.Timer(1 / message_frequency, self.send_data, args=(ser,)).start()
         if self.new_joystick_input and self.joystick is not None:
             if -40000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) + keyboard_offsets["roll"] <= 40000:
-                self.roll = 0 + keyboard_offsets["roll"]
+                self.roll = 0
             else:
                 self.roll = round((-1 * self.joystick.get_axis(0)) * pow(2, 19)) + keyboard_offsets["roll"]
             if -40000 <= ((self.joystick.get_axis(1)) * pow(2, 19)) + keyboard_offsets["pitch"] <= 40000:
-                self.pitch = 0 + keyboard_offsets["pitch"]
+                self.pitch = 0
             else:
                 self.pitch = round((self.joystick.get_axis(1)) * pow(2, 19)) + keyboard_offsets["pitch"]
 
             if -40000 <= ((self.joystick.get_axis(2)) * pow(2, 19)) + keyboard_offsets["yaw"] <= 40000:
-                self.yaw = 0 + keyboard_offsets["yaw"]
+                self.yaw = 0
             else:
                 self.yaw = round((self.joystick.get_axis(2)) * pow(2, 19)) + \
                            keyboard_offsets["yaw"]
             if ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets["lift"] <= 50000:
-                self.lift = 0 + keyboard_offsets["lift"]
+                self.lift = 0
             else:
                 self.lift = round((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets["lift"] - 50000
             ser.send(joystick_message(self.yaw, self.pitch, self.roll, self.lift))
