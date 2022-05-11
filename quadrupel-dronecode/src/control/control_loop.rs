@@ -111,7 +111,10 @@ pub fn start_loop() -> ! {
         leds.led_red.set_state(PinState::from(!r)).unwrap();
 
         // update peripherals according to current state
-        MOTORS.update_main(|i| i.set_motors(state.motor_values));
+        MOTORS.update_main(|i| {
+            let new_motor_values = state.motor_values.map(|m| if m==0 {0} else {(((m as u32)+70)*900).sqrt() as u16});
+            i.set_motors(state.motor_values)
+        });
 
         //Send state information
         time_since_last_print += dt;
