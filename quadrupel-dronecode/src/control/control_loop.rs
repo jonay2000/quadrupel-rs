@@ -11,6 +11,8 @@ use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
+use cordic::sqrt;
+use crate::sqrt::rough_isqrt;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -112,31 +114,14 @@ pub fn start_loop() -> ! {
 
         // update peripherals according to current state
         MOTORS.update_main(|i| {
-            let new_motor_values = state.motor_values.map(|m| if m==0 {0} else {(((m as u32)+70)*900).sqrt() as u16});
-            i.set_motors(state.motor_values)
+            let new_motor_values = state.motor_values.map(|m| if m==0 {0} else {rough_isqrt(((m as u32)+70)*900) as u16});
+            i.set_motors(new_motor_values)
         });
 
         //Send state information
         time_since_last_print += dt;
         if time_since_last_print > 500000 {
             time_since_last_print = 0;
-            // log::info!(
-            //     "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
-            //     state.mode,
-            //     GlobalTime().get_time_us(),
-            //     dt,
-            //     motors,
-            //     ypr.roll,
-            //     ypr.pitch,
-            //     ypr.yaw,
-            //     state.target_attitude.roll,
-            //     state.target_attitude.pitch,
-            //     state.target_attitude.yaw,
-            //     state.target_attitude.lift,
-            //     adc,
-            //     temp,
-            //     pres
-            // );
 
             let msg = MessageToComputer::StateInformation {
                 state: state.mode,

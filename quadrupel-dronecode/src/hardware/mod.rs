@@ -5,6 +5,7 @@ pub mod motors;
 pub mod mpu6050;
 pub mod ms5611;
 pub mod uart;
+pub mod sqrt;
 
 use crate::hardware::adc::QAdc;
 use crate::hardware::leds::QLeds;
