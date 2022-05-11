@@ -1,4 +1,5 @@
 use crate::control::flight_state::FlightState;
+use crate::control::modes::full_control::FullControl;
 use crate::control::modes::individual_motor_control::IndividualMotorControlMode;
 use crate::control::modes::manual_control::ManualControl;
 use crate::control::modes::panic::PanicMode;
@@ -10,6 +11,8 @@ use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
+use cordic::sqrt;
+use crate::sqrt::rough_isqrt;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -24,13 +27,17 @@ pub fn start_loop() -> ! {
     let mut state = FlightState::default();
 
     let start_time = GlobalTime().get_time_us();
-    let mut count = 0;
+    let mut last_time = GlobalTime().get_time_us();
 
     let mut blue_led_status = BlueLedStatus::OFF { at: start_time };
     let mut adc_warning = true;
 
+    let mut time_since_last_print = 0;
+
     loop {
-        count += 1;
+        let dt = GlobalTime().get_time_us() - last_time;
+        last_time = GlobalTime().get_time_us();
+        state.count += 1;
 
         //Process any incoming messages
         while let Some(msg) = uart_protocol.update() {
@@ -47,10 +54,9 @@ pub fn start_loop() -> ! {
         }
 
         //Read hardware
-        let dt = (GlobalTime().get_time_us() - start_time) / count;
         let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
         let (_accel, _gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let (pres, temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
+        let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         let adc = ADC.update_main(|adc| adc.read());
 
@@ -65,35 +71,19 @@ pub fn start_loop() -> ! {
             adc_warning = false;
         }
 
+        //Update state
+        state.current_attitude.yaw = ypr.yaw;
+        state.current_attitude.pitch = ypr.pitch;
+        state.current_attitude.roll = ypr.roll;
+
         // Do action corresponding to current mode
         match state.mode {
             Mode::Safe => SafeMode::iteration(&mut state, dt),
             Mode::Calibration => {}
             Mode::Panic => PanicMode::iteration(&mut state, dt),
-            Mode::FullControl => {}
+            Mode::FullControl => FullControl::iteration(&mut state, dt),
             Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state, dt),
             Mode::Manual => ManualControl::iteration(&mut state, dt),
-        }
-
-        // Print all info
-        if count % 30 == 0 {
-            log::info!(
-                "{:?} {} {} | {:?} | {} {} {} | {} {} {} {} | {} | {} | {}",
-                state.mode,
-                GlobalTime().get_time_us(),
-                dt,
-                motors,
-                ypr.roll,
-                ypr.pitch,
-                ypr.yaw,
-                state.target_attitude.roll,
-                state.target_attitude.pitch,
-                state.target_attitude.yaw,
-                state.target_attitude.lift,
-                adc,
-                temp,
-                pres
-            );
         }
 
         //Update LEDS
@@ -123,19 +113,41 @@ pub fn start_loop() -> ! {
         leds.led_red.set_state(PinState::from(!r)).unwrap();
 
         // update peripherals according to current state
-        MOTORS.update_main(|i| i.set_motors(state.motor_values));
+        MOTORS.update_main(|i| {
+            let new_motor_values = state.motor_values.map(|m| if m==0 {0} else {rough_isqrt(((m as u32)+70)*900) as u16});
+            i.set_motors(new_motor_values)
+        });
 
         //Send state information
-        let _msg = MessageToComputer::StateInformation {
-            state: state.mode,
-            height: pres,
-            roll: ypr.roll.to_bits(),
-            pitch: ypr.pitch.to_bits(),
-            yaw: ypr.yaw.to_bits(),
-            battery: adc,
-            dt,
-        };
-        // UART.as_mut_ref().send_message(msg);
-        //TODO send msg
+        time_since_last_print += dt;
+        if time_since_last_print > 500000 {
+            time_since_last_print = 0;
+
+            let msg = MessageToComputer::StateInformation {
+                state: state.mode,
+                height: pres,
+                battery: adc,
+                dt,
+                motors,
+                sensor_ypr: [
+                    ypr.yaw.to_bits(),
+                    ypr.pitch.to_bits(),
+                    ypr.roll.to_bits()
+                ],
+                input_typr: [
+                    state.target_attitude.lift.to_bits(),
+                    state.target_attitude.yaw.to_bits(),
+                    state.target_attitude.pitch.to_bits(),
+                    state.target_attitude.roll.to_bits(),
+                ]
+            };
+
+
+            // let mut encoding_space: [u8; 256] = [0u8; 256];
+            // let count = bincode::encode_into_slice(&msg, &mut encoding_space, standard()).unwrap();
+            // log::info!("{} {:?}", count, &encoding_space[..count]);
+
+            UART.as_mut_ref().send_message(msg);
+        }
     }
 }

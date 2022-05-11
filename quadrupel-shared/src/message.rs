@@ -17,22 +17,22 @@ pub enum MessageToComputer {
     StateInformation {
         state: Mode,
         height: u32,
-        roll: i32,
-        pitch: i32,
-        yaw: i32,
         battery: u16,
         dt: u32,
+        motors: [u16; 4],
+        input_typr: [i32; 4],
+        sensor_ypr: [i32; 3],
     },
 }
 
 impl MessageToComputer {
     pub fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
         let mut encoding_space: [u8; 256] = [0u8; 256];
-        let bytes = bincode::encode_into_slice(self, &mut encoding_space, standard())?;
-        assert!(bytes < 256);
+        let count = bincode::encode_into_slice(self, &mut encoding_space, standard())?;
+        assert!(count < 256);
 
-        w.write(&[bytes as u8])?;
-        w.write(&encoding_space[..bytes])?;
+        w.write(&[count as u8])?;
+        w.write(&encoding_space[..count])?;
         Ok(())
     }
 

@@ -5,6 +5,7 @@ pub mod motors;
 pub mod mpu6050;
 pub mod ms5611;
 pub mod uart;
+pub mod sqrt;
 
 use crate::hardware::adc::QAdc;
 use crate::hardware::leds::QLeds;
@@ -16,8 +17,8 @@ use crate::library::once_cell::OnceCell;
 use crate::Motors;
 use core::cell::UnsafeCell;
 use cortex_m::asm;
+use nrf51_hal::pac::TWI0;
 use nrf51_hal::Twi;
-use nrf51_pac::TWI0;
 
 pub static LEDS: OnceCell<HWCellType2<QLeds>> = OnceCell::new();
 pub static UART: OnceCell<HWCellType2<QUart>> = OnceCell::new();
