@@ -48,7 +48,7 @@ impl PID {
         let d_term = rot_spd * self.kd / dt;
         self.last_state = state;
         self.buildup += err * dt;
-        self.buildup = self.buildup.clamp(FI32::from_num(-10), FI32::from_num(10));
+        self.buildup = self.buildup.clamp(-self.cap, self.cap);
         let i_term = self.buildup * self.ki;
         p_term + d_term + i_term
     }
