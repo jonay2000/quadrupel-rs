@@ -2,8 +2,8 @@ use crate::library::pid::PID;
 use crate::library::yaw_pitch_roll::FI32;
 
 const ENABLE_YAW: bool = true;
-const ENABLE_PITCH: bool = false;
-const ENABLE_ROLL: bool = false;
+const ENABLE_PITCH: bool = true;
+const ENABLE_ROLL: bool = true;
 
 pub struct AngleMode {
     pub yaw_pid: PID,
@@ -44,9 +44,9 @@ impl AngleMode {
 
         return [
             (lift - yaw_offset + pitch_offset).max(FI32::from_num(0)),
-            (lift + yaw_offset + roll_offset).max(FI32::from_num(0)),
-            (lift - yaw_offset - pitch_offset).max(FI32::from_num(0)),
             (lift + yaw_offset - roll_offset).max(FI32::from_num(0)),
+            (lift - yaw_offset - pitch_offset).max(FI32::from_num(0)),
+            (lift + yaw_offset + roll_offset).max(FI32::from_num(0)),
         ];
     }
 }
