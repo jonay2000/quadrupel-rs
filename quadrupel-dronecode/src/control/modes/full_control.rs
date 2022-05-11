@@ -37,7 +37,7 @@ impl ModeTrait for FullControl {
         );
 
         state.motor_values = motors.map(|fi32| {
-            Some(fi32.clamp(FI32::from_num(0), FI32::from_num(500))
+            Some(fi32.clamp(FI32::from_num(0), FI32::from_num(1000))
                 .round()
                 .to_num())
         });
