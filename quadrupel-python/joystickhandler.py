@@ -170,12 +170,12 @@ class JoystickHandler:
 
         self.label1 = TextBox(screen, 100, 900, 100, 50, fontSize=50)
         self.label1.disable()
-        self.label1.setText("roll")
+        self.label1.setText("lift")
 
-        self.roll_P_tb = TextBox(screen, 300, 900, 80, 80, fontSize=50, onSubmit=self.submit("roll_P"))
-        self.roll_I_tb = TextBox(screen, 400, 900, 80, 80, fontSize=50, onSubmit=self.submit("roll_I"))
-        self.roll_D_tb = TextBox(screen, 500, 900, 80, 80, fontSize=50, onSubmit=self.submit("roll_D"))
-        self.roll_CAP_tb = TextBox(screen, 600, 900, 80, 80, fontSize=50, onSubmit=self.submit("roll_CAP"))
+        self.lift_P_tb = TextBox(screen, 300, 900, 80, 80, fontSize=50, onSubmit=self.submit("lift_P"))
+        self.lift_I_tb = TextBox(screen, 400, 900, 80, 80, fontSize=50, onSubmit=self.submit("lift_I"))
+        self.lift_D_tb = TextBox(screen, 500, 900, 80, 80, fontSize=50, onSubmit=self.submit("lift_D"))
+        self.lift_CAP_tb = TextBox(screen, 600, 900, 80, 80, fontSize=50, onSubmit=self.submit("lift_CAP"))
 
         self.label2 = TextBox(screen, 100, 1000, 100, 50, fontSize=50)
         self.label2.disable()
@@ -232,7 +232,10 @@ class JoystickHandler:
             int_v = int(flt_v * (2 ** 16))
             self.new_pid_input = True
             print(f"set {val} to {flt_v} ({int_v})")
+
             message_control_parameters["TunePID"][val] = int_v
+            message_control_parameters["TunePID"][val.replace("pitch", "roll")] = int_v
+            print(message_control_parameters)
 
         return do_submit
 
@@ -298,7 +301,7 @@ class JoystickHandler:
                 elif event.type == pygame.KEYDOWN:
                     if print_debug:
                         print("Button", event.key, "pressed down")
-                    if event.key == 27 or event.key == ord('1'):
+                    if event.key == 27 or (event.key == ord('1') and self.tb_not_selected()):
                         print("Abort/Exit")
                         ser.send(change_state(state_dictionary_reversed[1]))
 
