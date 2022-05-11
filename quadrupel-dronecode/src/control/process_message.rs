@@ -42,6 +42,8 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             }
         }
         MessageToDrone::HeartBeat(_) => {}
-        MessageToDrone::TunePID { .. } => {}
+        a@MessageToDrone::TunePID { .. } => {
+            log::warn!("{:?}", a)
+        }
     }
 }

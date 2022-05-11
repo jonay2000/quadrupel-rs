@@ -26,3 +26,16 @@ def motor_message(motor: int, value: int) -> str:
         }}
     }}
     """
+
+
+def joystick_message(yaw: int, pitch: int, roll: int, lift: int) -> str:
+    return f"""
+    {{
+        "TargetAttitude": {{
+            "yaw": {yaw},
+            "pitch": {pitch},
+            "roll": {roll},
+            "lift": {lift}
+        }}
+    }}
+    """

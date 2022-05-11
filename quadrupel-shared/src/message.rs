@@ -70,7 +70,21 @@ pub enum MessageToDrone {
         lift: i32,
     },
     HeartBeat(u8),
-    TunePID {/* TODO */},
+    #[allow(non_snake_case)]
+    TunePID {
+        yaw_P: u32,
+        yaw_I: u32,
+        yaw_D: u32,
+        yaw_CAP: u32,
+        pitch_P: u32,
+        pitch_I: u32,
+        pitch_D: u32,
+        pitch_CAP: u32,
+        roll_P: u32,
+        roll_I: u32,
+        roll_D: u32,
+        roll_CAP: u32,
+    },
 }
 
 impl MessageToDrone {

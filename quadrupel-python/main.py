@@ -67,7 +67,7 @@ class Serial:
                 r = create_message_for_drone(msg)
                 self.ser.write(r)
         except:
-            print(msg)
+            print("failed to send", msg)
             os._exit(1)
 
 
