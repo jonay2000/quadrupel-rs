@@ -21,8 +21,8 @@ impl ModeTrait for FullControl {
         }
 
         let yaw_goal = state.current_attitude.yaw + raw_to_10_deg(state.target_attitude.yaw);
-        let pitch_goal = -raw_to_10_deg(state.target_attitude.pitch);
-        let roll_goal = raw_to_10_deg(state.target_attitude.roll);
+        let pitch_goal = raw_to_10_deg(state.target_attitude.pitch);
+        let roll_goal = -raw_to_10_deg(state.target_attitude.roll);
 
         let motors = state.angle_mode.step(
             dt,

@@ -23,7 +23,7 @@ const MOTOR_2_PIN: u8 = 25;
 const MOTOR_3_PIN: u8 = 29;
 
 const MOTOR_MIN: u16 = 0;
-const MOTOR_MAX: u16 = 1000;
+const MOTOR_MAX: u16 = 800;
 
 impl Motors {
     pub fn new(
