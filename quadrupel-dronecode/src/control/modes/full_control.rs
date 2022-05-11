@@ -20,7 +20,7 @@ impl ModeTrait for FullControl {
             inp * 2 * FI32::PI * FI32::from_num(10) / FI32::from_num(8) / FI32::from_num(360)
         }
 
-        let yaw_goal = FI32::from_num(0); //state.current_attitude.yaw + raw_to_10_deg(state.target_attitude.yaw);
+        let yaw_goal = state.current_attitude.yaw + raw_to_10_deg(state.target_attitude.yaw);
         let pitch_goal = -raw_to_10_deg(state.target_attitude.pitch);
         let roll_goal = raw_to_10_deg(state.target_attitude.roll);
 

@@ -6,7 +6,7 @@ pub struct PID {
     pub kd: FI32,
     pub cap: FI32,
     last_state: FI32,
-    buildup: FI32,
+    pub buildup: FI32,
     use_mod: bool,
 }
 

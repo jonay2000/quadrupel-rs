@@ -138,6 +138,11 @@ pub fn start_loop() -> ! {
                     state.target_attitude.yaw.to_bits(),
                     state.target_attitude.pitch.to_bits(),
                     state.target_attitude.roll.to_bits(),
+                ],
+                i_buildup: [
+                    state.angle_mode.yaw_pid.buildup.to_bits(),
+                    state.angle_mode.pitch_pid.buildup.to_bits(),
+                    state.angle_mode.roll_pid.buildup.to_bits(),
                 ]
             };
 
