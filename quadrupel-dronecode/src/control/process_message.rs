@@ -21,11 +21,15 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             state.mode = new_mode;
         }
         MessageToDrone::MotorValue { motor, value } => {
-            state.motor_values[motor as usize] = value;
+            state.motor_values[motor as usize] = Some(value);
         }
         MessageToDrone::MotorValueRel { motor, value } => {
-            let current = state.motor_values[motor as usize] as i32;
-            state.motor_values[motor as usize] = (current + value).max(0) as MotorValue;
+            match &mut state.motor_values[motor as usize] {
+                None => {},
+                Some(v) => {
+                    *v = (*v as i32 + value).max(0) as MotorValue
+                }
+            };
         }
         // inputs are [2^-19 to 2^19]
         MessageToDrone::TargetAttitude {

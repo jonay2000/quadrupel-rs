@@ -10,7 +10,7 @@ impl ModeTrait for FullControl {
 
         let lift_goal_raw = state.target_attitude.lift;
         if lift_goal_raw <= 0.1 {
-            state.motor_values = [0, 0, 0, 0];
+            state.motor_values = [None, None, None, None];
             return;
         }
         let lift_goal = lift_goal_raw * FI32::from_num(25);
@@ -37,9 +37,9 @@ impl ModeTrait for FullControl {
         );
 
         state.motor_values = motors.map(|fi32| {
-            fi32.clamp(FI32::from_num(0), FI32::from_num(500))
+            Some(fi32.clamp(FI32::from_num(0), FI32::from_num(500))
                 .round()
-                .to_num()
+                .to_num())
         });
     }
 }

@@ -7,7 +7,7 @@ use quadrupel_shared::MotorValue;
 
 pub struct FlightState {
     pub mode: Mode,
-    pub motor_values: [MotorValue; 4],
+    pub motor_values: [Option<MotorValue>; 4],
     pub last_heartbeat: u32,
     pub current_attitude: TargetAttitude,
     pub target_attitude: TargetAttitude,
@@ -30,7 +30,7 @@ impl Default for FlightState {
     fn default() -> Self {
         Self {
             mode: Mode::Safe,
-            motor_values: [0; 4],
+            motor_values: [None; 4],
             last_heartbeat: GlobalTime().get_time_us(),
             current_attitude: TargetAttitude {
                 yaw: FI32::from_num(0),

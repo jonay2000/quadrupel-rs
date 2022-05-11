@@ -8,7 +8,7 @@ impl ModeTrait for ManualControl {
     fn iteration(state: &mut FlightState, _dt: u32) {
         let lift = FI32::from_num(25) * state.target_attitude.lift; // [0,16]
         if lift <= 0.1 {
-            state.motor_values = [0, 0, 0, 0];
+            state.motor_values = [None, None, None, None];
             return;
         }
 
@@ -24,9 +24,9 @@ impl ModeTrait for ManualControl {
         ];
 
         state.motor_values = motors.map(|fi32| {
-            fi32.clamp(FI32::from_num(0), FI32::from_num(500))
+            Some(fi32.clamp(FI32::from_num(0), FI32::from_num(500))
                 .round()
-                .to_num()
+                .to_num())
         });
     }
 }
