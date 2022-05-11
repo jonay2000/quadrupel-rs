@@ -48,16 +48,19 @@ impl Default for FlightState {
                 yaw_pid: PID::new(
                     FI32::from_num(0),
                     FI32::from_num(0),
-                    FI32::from_num(500),
+                    FI32::from_num(0), //500
+                    FI32::from_num(0),
                     true,
                 ),
                 pitch_pid: PID::new(
                     FI32::from_num(0),
                     FI32::from_num(0),
                     FI32::from_num(0),
+                    FI32::from_num(0),
                     true,
                 ),
                 roll_pid: PID::new(
+                    FI32::from_num(0),
                     FI32::from_num(0),
                     FI32::from_num(0),
                     FI32::from_num(0),

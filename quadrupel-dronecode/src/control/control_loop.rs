@@ -11,7 +11,6 @@ use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
-use cordic::sqrt;
 use crate::sqrt::rough_isqrt;
 
 const HEARTBEAT_FREQ: u32 = 100000;
