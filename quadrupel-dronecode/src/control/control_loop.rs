@@ -6,12 +6,12 @@ use crate::control::modes::panic::PanicMode;
 use crate::control::modes::safe::SafeMode;
 use crate::control::modes::ModeTrait;
 use crate::control::process_message::process_message;
+use crate::library::sqrt::rough_isqrt;
 use crate::motors::GlobalTime;
 use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
-use crate::sqrt::rough_isqrt;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -60,7 +60,9 @@ pub fn start_loop() -> ! {
         let adc = ADC.update_main(|adc| adc.read());
 
         //Check adc
-        if adc > 650 && adc < 950/*1050*/ {
+        if adc > 650 && adc < 950
+        /*1050*/
+        {
             log::error!("Panic: Battery low {adc} 10^-2 V");
             state.mode = Mode::Panic;
         } else if adc != 0 && adc_warning && adc <= 650 {
@@ -115,7 +117,7 @@ pub fn start_loop() -> ! {
         MOTORS.update_main(|i| {
             let new_motor_values = state.motor_values.map(|m| match m {
                 None => 0,
-                Some(m) => rough_isqrt(((m as u32)+70)*900) as u16,
+                Some(m) => rough_isqrt(((m as u32) + 70) * 900) as u16,
             });
             i.set_motors(new_motor_values)
         });
@@ -131,11 +133,7 @@ pub fn start_loop() -> ! {
                 battery: adc,
                 dt,
                 motors,
-                sensor_ypr: [
-                    ypr.yaw.to_bits(),
-                    ypr.pitch.to_bits(),
-                    ypr.roll.to_bits()
-                ],
+                sensor_ypr: [ypr.yaw.to_bits(), ypr.pitch.to_bits(), ypr.roll.to_bits()],
                 input_typr: [
                     state.target_attitude.lift.to_bits(),
                     state.target_attitude.yaw.to_bits(),
@@ -146,9 +144,8 @@ pub fn start_loop() -> ! {
                     state.angle_mode.yaw_pid.buildup.to_bits(),
                     state.angle_mode.pitch_pid.buildup.to_bits(),
                     state.angle_mode.roll_pid.buildup.to_bits(),
-                ]
+                ],
             };
-
 
             // let mut encoding_space: [u8; 256] = [0u8; 256];
             // let count = bincode::encode_into_slice(&msg, &mut encoding_space, standard()).unwrap();

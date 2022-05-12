@@ -67,7 +67,7 @@ impl Default for FlightState {
                     true,
                 ),
             },
-            count: 0
+            count: 0,
         }
     }
 }

@@ -25,10 +25,8 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
         }
         MessageToDrone::MotorValueRel { motor, value } => {
             match &mut state.motor_values[motor as usize] {
-                None => {},
-                Some(v) => {
-                    *v = (*v as i32 + value).max(0) as MotorValue
-                }
+                None => {}
+                Some(v) => *v = (*v as i32 + value).max(0) as MotorValue,
             };
         }
         // inputs are [2^-19 to 2^19]
@@ -46,7 +44,20 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             }
         }
         MessageToDrone::HeartBeat(_) => {}
-        MessageToDrone::TunePID { yaw_P, yaw_I, yaw_D, yaw_CAP, pitch_P, pitch_I, pitch_D, pitch_CAP, roll_P, roll_I, roll_D, roll_CAP } => {
+        MessageToDrone::TunePID {
+            yaw_P,
+            yaw_I,
+            yaw_D,
+            yaw_CAP,
+            pitch_P,
+            pitch_I,
+            pitch_D,
+            pitch_CAP,
+            roll_P,
+            roll_I,
+            roll_D,
+            roll_CAP,
+        } => {
             state.angle_mode.yaw_pid.kp = FI32::from_bits(yaw_P as i32);
             state.angle_mode.yaw_pid.ki = FI32::from_bits(yaw_I as i32);
             state.angle_mode.yaw_pid.kd = FI32::from_bits(yaw_D as i32);
