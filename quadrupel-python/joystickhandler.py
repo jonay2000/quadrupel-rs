@@ -29,10 +29,10 @@ message_frequency = 100  # In hertz
 # TODO: Tune the offset step
 # Increase/Decrease to be applied to the keyboard offset per key press
 keyboard_offsets_step = {
-    "lift": 1,
-    "roll": 1,
-    "pitch": 1,
-    "yaw": 1,
+    "lift": 10000,
+    "roll": 10000,
+    "pitch": 10000,
+    "yaw": 10000,
     "M0": 1,
     "M1": 1,
     "M2": 1,
@@ -120,6 +120,7 @@ message_individual_relative_control = {
     }
 }
 
+c_background = (0x81, 0x8D, 0x92)
 
 class JoystickHandler:
     def __init__(self, screen, joystick=None):
@@ -131,19 +132,49 @@ class JoystickHandler:
         self.new_joystick_input = False
         self.new_pid_input = False
 
-        self.slider0 = Slider(screen, 100, 100, 800, 40, min=0, max=1000, step=1, handleColour=(255, 255, 255),
-                              initial=0)
-        self.output0 = TextBox(screen, 475, 200, 100, 50, fontSize=30)
-        self.slider1 = Slider(screen, 100, 300, 800, 40, min=0, max=1000, step=1, handleColour=(255, 255, 255),
-                              initial=0)
-        self.output1 = TextBox(screen, 475, 400, 100, 50, fontSize=30)
-        self.slider2 = Slider(screen, 100, 500, 800, 40, min=0, max=1000, step=1, handleColour=(255, 255, 255),
-                              initial=0)
-        self.output2 = TextBox(screen, 475, 600, 100, 50, fontSize=30)
-        self.slider3 = Slider(screen, 100, 700, 800, 40, min=0, max=1000, step=1, handleColour=(255, 255, 255),
-                              initial=0)
-        self.output3 = TextBox(screen, 475, 800, 100, 50, fontSize=30)
+        self.initialize_ui()
 
+        # Get the number of each type of input from the joystick
+        self.joyButtons = dict()
+        self.current_state = state_dictionary["Safe"]
+
+        self.yaw = 0
+        self.pitch = 0
+        self.roll = 0
+        self.lift = 0
+
+    def initialize_ui(self):
+        pygame_widgets.WidgetHandler.getWidgets().clear()
+
+        screen = self.screen
+        width = screen.get_width()
+        height = screen.get_height()
+
+        half_width = width // 2
+        half_height = height // 2
+
+        slider_border = 160
+        slider_width = half_width - slider_border * 2
+        slider_spacing = max(50, (half_height // 4) - (half_height // 8))
+        slider_height = int(slider_spacing * 0.4)
+        label_border = 10
+        label_width = slider_border - 4*label_border
+
+        self.slider0 = Slider(screen, slider_border, slider_spacing, slider_width, slider_height, min=0, max=1000, step=1, handleColour=(255, 255, 255),
+                              initial=0)
+        self.output0 = TextBox(screen, label_border, slider_spacing, label_width, slider_height, fontSize=30)
+
+        self.slider1 = Slider(screen, slider_border, 2*slider_spacing, slider_width, slider_height, min=0, max=1000, step=1, handleColour=(255, 255, 255),
+                              initial=0)
+        self.output1 = TextBox(screen, label_border, 2*slider_spacing, label_width, slider_height, fontSize=30)
+
+        self.slider2 = Slider(screen, slider_border, 3*slider_spacing, slider_width, slider_height, min=0, max=1000, step=1, handleColour=(255, 255, 255),
+                              initial=0)
+        self.output2 = TextBox(screen, label_border, 3*slider_spacing, label_width, slider_height, fontSize=30)
+
+        self.slider3 = Slider(screen, slider_border, 4*slider_spacing, slider_width, slider_height, min=0, max=1000, step=1, handleColour=(255, 255, 255),
+                              initial=0)
+        self.output3 = TextBox(screen, label_border, 4*slider_spacing, label_width, slider_height, fontSize=30)
 
 
         self.label4 = TextBox(screen, 300, 1200, 50, 50, fontSize=50)
@@ -198,15 +229,6 @@ class JoystickHandler:
         self.output1.disable()
         self.output2.disable()
         self.output3.disable()
-
-        # Get the number of each type of input from the joystick
-        self.joyButtons = dict()
-        self.current_state = state_dictionary["Safe"]
-
-        self.yaw = 0
-        self.pitch = 0
-        self.roll = 0
-        self.lift = 0
 
         self.textboxes = [x for i in self.__dict__ if isinstance(x := getattr(self, i), TextBox) and not x._disabled and "tb" in i]
         for i in self.textboxes:
@@ -292,6 +314,9 @@ class JoystickHandler:
                 elif event.type == pygame.QUIT:
                     os._exit(0)
 
+                elif event.type == pygame.VIDEORESIZE:
+                    self.initialize_ui()
+
                 elif event.type == pygame.KEYDOWN:
                     if print_debug:
                         print("Button", event.key, "pressed down")
@@ -314,19 +339,23 @@ class JoystickHandler:
                         if print_debug: print("roll offset up")
                         keyboard_offsets["roll"] += keyboard_offsets_step["roll"]
                         self.new_joystick_input = True
+                        print(keyboard_offsets)
                     if event.key == 1073741903:  # Right arrow key
                         if print_debug: print("roll offset down")
                         keyboard_offsets["roll"] -= keyboard_offsets_step["roll"]
                         self.new_joystick_input = True
+                        print(keyboard_offsets)
 
                     if event.key == 1073741905:  # Down arrow key
                         if print_debug: print("pitch offset up")
                         keyboard_offsets["pitch"] += keyboard_offsets_step["pitch"]
                         self.new_joystick_input = True
+                        print(keyboard_offsets)
                     if event.key == 1073741906:  # Up arrow key
                         if print_debug: print("pitch offset down")
                         keyboard_offsets["pitch"] -= keyboard_offsets_step["pitch"]
                         self.new_joystick_input = True
+                        print(keyboard_offsets)
 
                     if event.key == ord('w'):
                         if print_debug:
@@ -422,7 +451,7 @@ class JoystickHandler:
                             "lift"] <= 50000:
                             ser.send(change_state(state_dictionary_reversed[int(chr(event.key))]))
 
-            self.screen.fill((0, 0, 0))
+            self.screen.fill(c_background)
             self.output0.setText("M0: " + str(self.slider0.getValue()))
             self.output1.setText("M1: " + str(self.slider1.getValue()))
             self.output2.setText("M2: " + str(self.slider2.getValue()))
@@ -502,7 +531,7 @@ def main(ser):
         joystick = None
 
     pygame.init()
-    screen = pygame.display.set_mode((0, 0), pygame.WINDOWMAXIMIZED)
+    screen = pygame.display.set_mode((0, 0), pygame.WINDOWMAXIMIZED | pygame.RESIZABLE)
     pygame.display.set_caption("Joystick tester")
     # # Initialize the display class
     window = JoystickHandler(screen, joystick)
