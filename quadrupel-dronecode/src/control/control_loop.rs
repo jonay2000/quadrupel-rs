@@ -57,7 +57,7 @@ pub fn start_loop() -> ! {
 
         //Read hardware
         let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
-        let (_accel, _gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
+        // let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
         let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         let adc = ADC.update_main(|adc| adc.read());
@@ -126,8 +126,12 @@ pub fn start_loop() -> ! {
         });
 
         //Handle flash
+        if state.flash_record && flash_protocol.is_done() {
+            state.flash_record = false;
+            // TODO autosend? state.flash_send = true;
+        }
         if state.flash_record {
-            flash_protocol.write(FlashPacket::Time(dt));
+            // flash_protocol.write(FlashPacket::Data(accel.x()));
         }
         if state.flash_send {
             while UART.as_mut_ref().buffer_left_rx() >= 128 && UART.as_mut_ref().buffer_left_tx() >= 128 {

@@ -49,6 +49,10 @@ impl FlashProtocol {
         if self.read_address == self.write_address { return None; }
         Some(bincode::decode_from_reader(self, standard()).unwrap())
     }
+
+    pub fn is_done(&self) -> bool {
+        self.done
+    }
 }
 
 impl Reader for FlashProtocol {
