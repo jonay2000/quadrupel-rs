@@ -1,8 +1,6 @@
 use crate::hardware::{HWCell, MOTORS};
 use crate::Level;
-use core::sync::atomic::{AtomicU32, Ordering};
 use cortex_m::peripheral::NVIC;
-use embedded_hal::blocking::delay::{DelayMs, DelayUs};
 use embedded_hal::digital::v2::OutputPin;
 use nrf51_hal::gpio::p0::P0_20;
 use nrf51_hal::gpio::{Disconnected, Output, PushPull};
