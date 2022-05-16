@@ -21,7 +21,9 @@ use core::cell::UnsafeCell;
 use cortex_m::asm;
 use nrf51_hal::pac::TWI0;
 use nrf51_hal::Twi;
+use crate::time::GlobalTime;
 
+pub static TIME: OnceCell<HWCellType3<GlobalTime>> = OnceCell::new();
 pub static LEDS: OnceCell<HWCellType2<QLeds>> = OnceCell::new();
 pub static UART: OnceCell<HWCellType2<QUart>> = OnceCell::new();
 pub static I2C: OnceCell<HWCellType3<Twi<TWI0>>> = OnceCell::new();
@@ -45,6 +47,12 @@ pub fn init_hardware(mut pc: cortex_m::Peripherals, mut pn: nrf51_hal::pac::Peri
         cell: UnsafeCell::new(QLeds::new(gpio.p0_22, gpio.p0_24, gpio.p0_28, gpio.p0_30)),
     });
     log::info!("LEDS OK");
+    asm::delay(100_000);
+
+    TIME.initialize(HWCellType3 {
+        cell: UnsafeCell::new(GlobalTime::new(pn.TIMER0))
+    });
+    log::info!("TIME OK");
     asm::delay(100_000);
 
     MOTORS.initialize(HWCellType1 {

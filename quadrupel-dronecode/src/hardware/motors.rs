@@ -15,8 +15,6 @@ pub struct Motors {
     pin20: P0_20<Output<PushPull>>,
 }
 
-static GLOBAL_TIME: AtomicU32 = AtomicU32::new(0);
-
 const MOTOR_0_PIN: u8 = 21;
 const MOTOR_1_PIN: u8 = 23;
 const MOTOR_2_PIN: u8 = 25;
@@ -218,7 +216,6 @@ unsafe fn TIMER2() {
     MOTORS.update_interrupt(|motors| {
         if motors.timer2.events_compare[3].read().bits() != 0 {
             motors.timer2.events_compare[3].reset();
-            GLOBAL_TIME.store(GLOBAL_TIME.load(Ordering::SeqCst) + 312, Ordering::SeqCst);
             //2500 * 0.125
             motors.timer2.tasks_capture[2].write(|w| w.bits(1));
 
@@ -246,31 +243,4 @@ unsafe fn TIMER1() {
             }
         }
     });
-}
-
-pub struct GlobalTime();
-
-impl GlobalTime {
-    pub fn get_time_us(&mut self) -> u32 {
-        GLOBAL_TIME.load(Ordering::SeqCst)
-    }
-}
-
-impl DelayMs<u32> for GlobalTime {
-    fn delay_ms(&mut self, ms: u32) {
-        self.delay_us(1000 * ms);
-    }
-}
-
-impl DelayUs<u32> for GlobalTime {
-    fn delay_us(&mut self, us: u32) {
-        let end = self.get_time_us() + us;
-
-        loop {
-            let read = self.get_time_us();
-            if read >= end {
-                return;
-            }
-        }
-    }
 }

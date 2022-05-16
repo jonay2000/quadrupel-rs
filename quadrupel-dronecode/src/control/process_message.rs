@@ -1,9 +1,9 @@
 use crate::control::flight_state::{FlightState, TargetAttitude};
 use crate::library::fixed_point::FI32;
-use crate::motors::GlobalTime;
 use quadrupel_shared::message::MessageToDrone;
 use quadrupel_shared::state::Mode;
 use quadrupel_shared::MotorValue;
+use crate::TIME;
 
 pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
     // Always immediately handle panics
@@ -12,7 +12,7 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
         state.mode = Mode::Panic;
         return;
     }
-    state.last_heartbeat = GlobalTime().get_time_us();
+    state.last_heartbeat = TIME.as_mut_ref().get_time_us();
 
     match message {
         MessageToDrone::ChangeState(new_mode) => {
