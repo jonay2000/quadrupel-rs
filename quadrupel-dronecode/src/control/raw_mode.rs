@@ -26,7 +26,6 @@ impl RawMode {
         let pitch = cordic::atan2(accel_x, accel_z);
         let roll = cordic::atan2(accel_y, cordic::sqrt(accel_x*accel_x + accel_z * accel_z));
 
-        let mut d_yaw = FI32::from_bits(-gyro.z as i32); //Change in 2000 deg/second
         /*
         We're gonna do some trickery to convert the unit (2000 deg/second) to radians.
         dt is in 10^-6 seconds, so we get:
@@ -35,9 +34,11 @@ impl RawMode {
         The number in radians will be too small to represent as a FI32
         Instead, we're gonna calculate the middle 32 bits of a FI64 with 48 decimal points (we really don't need the lower 16 bits, but fixed doesn't support 48 bit numbers), which has a value of 2^-16, then add those to the FI64
          */
+        let mut d_yaw = FI32::from_bits(-gyro.z as i32); //Change in 2000 deg/second
 
         // First to deg/second, then to rad/second
         d_yaw *= FI32::from_num(2000) / 360 * 2 * FI32::PI;
+        d_yaw *= 2; // No clue why this one is needed
 
         if state % 1000 == 0 {
             log::info!("{} {}", d_yaw, self.yaw);
