@@ -4,8 +4,8 @@ pub mod leds;
 pub mod motors;
 pub mod mpu6050;
 pub mod ms5611;
+pub mod spi_flash;
 pub mod uart;
-pub mod sqrt;
 
 use crate::hardware::adc::QAdc;
 use crate::hardware::leds::QLeds;
@@ -14,6 +14,7 @@ use crate::hardware::ms5611::QMs5611;
 use crate::hardware::uart::QUart;
 use crate::i2c::I2C;
 use crate::library::once_cell::OnceCell;
+use crate::spi_flash::SpiFlash;
 use crate::Motors;
 use core::cell::UnsafeCell;
 use cortex_m::asm;
@@ -27,6 +28,7 @@ pub static MPU: OnceCell<HWCellType3<QMpu6050<TWI0>>> = OnceCell::new();
 pub static BARO: OnceCell<HWCellType3<QMs5611<TWI0>>> = OnceCell::new();
 pub static ADC: OnceCell<HWCellType1<QAdc>> = OnceCell::new();
 pub static MOTORS: OnceCell<HWCellType1<Motors>> = OnceCell::new();
+pub static FLASH: OnceCell<HWCellType3<SpiFlash>> = OnceCell::new();
 
 pub fn init_hardware(mut pc: cortex_m::Peripherals, mut pn: nrf51_hal::pac::Peripherals) {
     let gpio = nrf51_hal::gpio::p0::Parts::new(pn.GPIO);
@@ -81,6 +83,14 @@ pub fn init_hardware(mut pc: cortex_m::Peripherals, mut pn: nrf51_hal::pac::Peri
     });
     ADC.update_main(|adc| adc.enable());
     log::info!("ADC OK");
+    asm::delay(100_000);
+
+    FLASH.initialize(HWCellType3 {
+        cell: UnsafeCell::new(SpiFlash::new(
+            pn.SPI1, gpio.p0_17, gpio.p0_18, gpio.p0_00, gpio.p0_13, gpio.p0_11, gpio.p0_09,
+        )),
+    });
+    log::info!("FLASH OK");
     asm::delay(100_000);
 }
 

@@ -410,6 +410,7 @@ dependencies = [
  "fixed",
  "log",
  "mpu6050-dmp",
+ "nb 1.0.0",
  "nrf51-hal",
  "nrf51-pac",
  "quadrupel-shared",
