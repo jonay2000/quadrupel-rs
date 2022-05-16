@@ -24,6 +24,13 @@ pub enum MessageToComputer {
         sensor_ypr: [i32; 3],
         i_buildup: [i32; 3],
     },
+    FlashPacket(FlashPacket)
+}
+
+#[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
+#[derive(Decode, Encode, Debug)]
+pub enum FlashPacket {
+    Time(u32),
 }
 
 impl MessageToComputer {
@@ -86,6 +93,9 @@ pub enum MessageToDrone {
         roll_D: u32,
         roll_CAP: u32,
     },
+    FlashStartRecording,
+    FlashStopRecording,
+    FlashRead,
 }
 
 impl MessageToDrone {

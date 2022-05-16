@@ -88,7 +88,7 @@ pub fn init_hardware(mut pc: cortex_m::Peripherals, mut pn: nrf51_hal::pac::Peri
     FLASH.initialize(HWCellType3 {
         cell: UnsafeCell::new(SpiFlash::new(
             pn.SPI1, gpio.p0_17, gpio.p0_18, gpio.p0_00, gpio.p0_13, gpio.p0_11, gpio.p0_09,
-        )),
+        ).unwrap()),
     });
     log::info!("FLASH OK");
     asm::delay(100_000);

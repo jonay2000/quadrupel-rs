@@ -415,6 +415,7 @@ dependencies = [
  "nrf51-pac",
  "quadrupel-shared",
  "ringbuffer",
+ "void",
 ]
 
 [[package]]

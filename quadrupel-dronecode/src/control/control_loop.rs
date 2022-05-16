@@ -10,8 +10,9 @@ use crate::library::sqrt::rough_isqrt;
 use crate::motors::GlobalTime;
 use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
-use quadrupel_shared::message::MessageToComputer;
+use quadrupel_shared::message::{FlashPacket, MessageToComputer};
 use quadrupel_shared::state::Mode;
+use crate::control::flash_protocol::{FlashProtocol};
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -23,6 +24,8 @@ enum BlueLedStatus {
 
 pub fn start_loop() -> ! {
     let mut uart_protocol = UartProtocol::new();
+    let mut flash_protocol = FlashProtocol::new();
+
     let mut state = FlightState::default();
 
     let start_time = GlobalTime().get_time_us();
@@ -121,6 +124,23 @@ pub fn start_loop() -> ! {
             });
             i.set_motors(new_motor_values)
         });
+
+        //Handle flash
+        if state.flash_record {
+            flash_protocol.write(FlashPacket::Time(dt));
+        }
+        if state.flash_send {
+            while UART.as_mut_ref().buffer_left_rx() >= 128 && UART.as_mut_ref().buffer_left_tx() >= 128 {
+                if let Some(packet) = flash_protocol.read() {
+                    UART.as_mut_ref().send_message(MessageToComputer::FlashPacket(packet));
+                } else {
+                    log::info!("Finished sending flash, resetting flash.");
+                    state.flash_send = false;
+                    flash_protocol.reset();
+                    break;
+                }
+            }
+        }
 
         //Send state information
         time_since_last_print += dt;

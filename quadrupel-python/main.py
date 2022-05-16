@@ -109,6 +109,8 @@ class Serial:
                             elif (v := decoded_msg.get("StateInformation")) is not None:
                                 # TODO: Decode 16-bit fixedpoint
                                 print(f"State: {v}")
+                            elif (v := decoded_msg.get("FlashPacket")) is not None:
+                                print(f"Flash packet: {v}")
                             # TODO: Uncommenting this causes code to crash later?
                             # else:
                             #     q.put(decoded_msg)

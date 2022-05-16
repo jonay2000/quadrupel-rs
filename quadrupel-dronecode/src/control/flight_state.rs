@@ -13,6 +13,9 @@ pub struct FlightState {
     pub target_attitude: TargetAttitude,
     pub angle_mode: AngleMode,
     pub count: u32,
+
+    pub flash_record: bool,
+    pub flash_send: bool,
 }
 
 pub struct TargetAttitude {
@@ -68,6 +71,8 @@ impl Default for FlightState {
                 ),
             },
             count: 0,
+            flash_record: false,
+            flash_send: false
         }
     }
 }

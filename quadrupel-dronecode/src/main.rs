@@ -67,7 +67,7 @@ fn panic(info: &PanicInfo) -> ! {
     hprintln!("{}", info);
 
     #[cfg(not(test))]
-    log::error!("{}", info);
+    log::error!("RUST PANIC: {}", info);
 
     loop {}
 }
