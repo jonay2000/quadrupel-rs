@@ -20,6 +20,7 @@ impl FlashProtocol {
         }
     }
 
+    #[allow(unused)]
     pub fn write(&mut self, packet: FlashPacket) {
         if self.done {
             return;

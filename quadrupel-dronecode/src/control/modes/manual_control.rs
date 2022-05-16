@@ -1,6 +1,6 @@
 use crate::control::flight_state::FlightState;
 use crate::control::modes::ModeTrait;
-use crate::library::yaw_pitch_roll::FI32;
+use crate::library::fixed_point::FI32;
 
 pub struct ManualControl;
 

@@ -1,4 +1,4 @@
-use crate::library::yaw_pitch_roll::FI32;
+use crate::library::fixed_point::FI32;
 
 pub struct PID {
     pub kp: FI32,

@@ -1,7 +1,6 @@
 use cordic::{atan2, sqrt};
 use fixed::{types, FixedI32};
-
-pub type FI32 = FixedI32<types::extra::U16>;
+use crate::library::fixed_point::FI32;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Quaternion {
@@ -35,6 +34,7 @@ impl Quaternion {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct YawPitchRoll {
     /// psu
     pub yaw: FI32,
@@ -42,6 +42,12 @@ pub struct YawPitchRoll {
     pub pitch: FI32,
     /// phi
     pub roll: FI32,
+}
+
+impl YawPitchRoll {
+    pub fn zero() -> Self {
+        Self{ yaw: FI32::from_num(0), pitch: FI32::from_num(0), roll: FI32::from_num(0) }
+    }
 }
 
 impl From<Quaternion> for YawPitchRoll {

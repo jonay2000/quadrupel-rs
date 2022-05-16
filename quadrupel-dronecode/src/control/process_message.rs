@@ -1,5 +1,5 @@
 use crate::control::flight_state::{FlightState, TargetAttitude};
-use crate::library::yaw_pitch_roll::FI32;
+use crate::library::fixed_point::FI32;
 use crate::motors::GlobalTime;
 use quadrupel_shared::message::MessageToDrone;
 use quadrupel_shared::state::Mode;

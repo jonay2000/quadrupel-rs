@@ -6,6 +6,7 @@ pub mod mpu6050;
 pub mod ms5611;
 pub mod spi_flash;
 pub mod uart;
+pub mod time;
 
 use crate::hardware::adc::QAdc;
 use crate::hardware::leds::QLeds;

@@ -1,4 +1,7 @@
 use core::mem::size_of;
+use fixed::{FixedI32, types};
+
+pub type FI32 = FixedI32<types::extra::U16>;
 
 pub fn rough_isqrt(x: u32) -> u32 {
     if x == 0 {
