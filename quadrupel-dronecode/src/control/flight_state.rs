@@ -72,7 +72,7 @@ impl Default for FlightState {
             },
             count: 0,
             flash_record: false,
-            flash_send: false
+            flash_send: false,
         }
     }
 }

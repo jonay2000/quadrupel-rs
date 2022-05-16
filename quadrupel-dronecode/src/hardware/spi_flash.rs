@@ -22,7 +22,7 @@ const AAI: u8 = 0xAF;
 #[derive(Debug)]
 pub enum FlashError {
     SpiError(nrf51_hal::spi::Error),
-    OutOfSpace
+    OutOfSpace,
 }
 
 impl From<void::Void> for FlashError {
@@ -36,7 +36,6 @@ impl From<nrf51_hal::spi::Error> for FlashError {
         FlashError::SpiError(e)
     }
 }
-
 
 pub struct SpiFlash {
     spi: Spi<SPI1>,
@@ -98,7 +97,7 @@ impl SpiFlash {
 
         // Disable slave
         self.pin_cs.set_high()?;
-        
+
         Ok(())
     }
 
@@ -117,7 +116,7 @@ impl SpiFlash {
 
         // Disable slave
         self.pin_cs.set_high()?;
-        
+
         Ok(())
     }
 
@@ -139,7 +138,11 @@ impl SpiFlash {
     //     self.pin_cs.set_high().unwrap();
     // }
 
-    fn spi_master_tx_rx_fast_read(&mut self, tx_data: &[u8; 4], rx_data: &mut [u8]) -> Result<(), FlashError> {
+    fn spi_master_tx_rx_fast_read(
+        &mut self,
+        tx_data: &[u8; 4],
+        rx_data: &mut [u8],
+    ) -> Result<(), FlashError> {
         assert_ne!(rx_data.len(), 0);
 
         // Enable slave
@@ -157,11 +160,15 @@ impl SpiFlash {
 
         // Disable slave
         self.pin_cs.set_high()?;
-        
+
         Ok(())
     }
 
-    fn spi_master_tx_rx_fast_write(&mut self, tx_data: &[u8; 4], bytes: &[u8]) -> Result<(), FlashError> {
+    fn spi_master_tx_rx_fast_write(
+        &mut self,
+        tx_data: &[u8; 4],
+        bytes: &[u8],
+    ) -> Result<(), FlashError> {
         assert_ne!(bytes.len(), 0);
 
         let mut bytes_written: u32 = 0;
@@ -200,7 +207,7 @@ impl SpiFlash {
             self.pin_cs.set_high()?;
 
             if address + bytes_written >= 0x1FFFF && i < bytes.len() - 1 {
-                return Err(FlashError::OutOfSpace)
+                return Err(FlashError::OutOfSpace);
             }
         }
 

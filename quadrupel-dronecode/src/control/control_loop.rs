@@ -1,3 +1,4 @@
+use crate::control::flash_protocol::FlashProtocol;
 use crate::control::flight_state::FlightState;
 use crate::control::modes::full_control::FullControl;
 use crate::control::modes::individual_motor_control::IndividualMotorControlMode;
@@ -10,9 +11,8 @@ use crate::library::sqrt::rough_isqrt;
 use crate::motors::GlobalTime;
 use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
-use quadrupel_shared::message::{FlashPacket, MessageToComputer};
+use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
-use crate::control::flash_protocol::{FlashProtocol};
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -134,9 +134,12 @@ pub fn start_loop() -> ! {
             // flash_protocol.write(FlashPacket::Data(accel.x()));
         }
         if state.flash_send {
-            while UART.as_mut_ref().buffer_left_rx() >= 128 && UART.as_mut_ref().buffer_left_tx() >= 128 {
+            while UART.as_mut_ref().buffer_left_rx() >= 128
+                && UART.as_mut_ref().buffer_left_tx() >= 128
+            {
                 if let Some(packet) = flash_protocol.read() {
-                    UART.as_mut_ref().send_message(MessageToComputer::FlashPacket(packet));
+                    UART.as_mut_ref()
+                        .send_message(MessageToComputer::FlashPacket(packet));
                 } else {
                     log::info!("Finished sending flash, resetting flash.");
                     state.flash_send = false;

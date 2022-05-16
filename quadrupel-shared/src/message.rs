@@ -24,7 +24,7 @@ pub enum MessageToComputer {
         sensor_ypr: [i32; 3],
         i_buildup: [i32; 3],
     },
-    FlashPacket(FlashPacket)
+    FlashPacket(FlashPacket),
 }
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
