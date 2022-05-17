@@ -34,21 +34,21 @@ impl RawMode {
         The number in radians will be too small to represent as a FI32
         Instead, we're gonna calculate the middle 32 bits of a FI64 with 48 decimal points (we really don't need the lower 16 bits, but fixed doesn't support 48 bit numbers), which has a value of 2^-16, then add those to the FI64
          */
-        // let mut d_yaw = FI32::from_bits(-gyro.z as i32); //Change in 2000 deg/second
-        //
-        // // First to deg/second, then to rad/second
-        // d_yaw *= FI32::from_num(2000);
-        // d_yaw /= 360;
-        // d_yaw *= 2;
-        // d_yaw *= FI32::PI;
-        // d_yaw *= 2; // No clue why this one is needed
-        //
-        // // Then, we convert to radians. At the same time, we convert it to
-        // d_yaw *= FI32::from_num(dt);
-        // d_yaw *= FI32::from_num(0.065536); //(2^16 / 10^6);
-        //
-        // // Negative since yaw is the wrong way around in comparison with gyro
-        // self.yaw += FI64::from_bits((d_yaw.to_bits() as i64) << 16);
+        let mut d_yaw = FI32::from_bits(-gyro.z as i32); //Change in 2000 deg/second
+
+        // First to deg/second, then to rad/second
+        d_yaw *= FI32::from_num(2000);
+        d_yaw /= 360;
+        d_yaw *= 2;
+        d_yaw *= FI32::PI;
+        d_yaw *= 2; // No clue why this one is needed
+
+        // Then, we convert to radians. At the same time, we convert it to
+        d_yaw *= FI32::from_num(dt);
+        d_yaw *= FI32::from_num(0.065536); //(2^16 / 10^6);
+
+        // Negative since yaw is the wrong way around in comparison with gyro
+        self.yaw += FI64::from_bits((d_yaw.to_bits() as i64) << 16);
 
         YawPitchRoll {
             yaw: FI32::from_bits((self.yaw.to_bits() >> 32) as i32),

@@ -12,7 +12,6 @@ use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
 use crate::library::fixed_point::rough_isqrt;
-use crate::library::yaw_pitch_roll::YawPitchRoll;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -58,11 +57,14 @@ pub fn start_loop() -> ! {
         }
 
         //Read hardware
-        // let mpu_ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
-        let mpu_ypr = YawPitchRoll::zero();
+        let mpu_ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
+        // let mpu_ypr = crate::library::yaw_pitch_roll::YawPitchRoll::zero();
+
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let raw_ypr = state.raw_mode.update(accel, gyro, dt);
-        let ypr = raw_ypr;
+        // let raw_ypr = state.raw_mode.update(accel, gyro, dt);
+        let raw_ypr = library::yaw_pitch_roll::YawPitchRoll::zero();
+
+        let ypr = mpu_ypr;
 
         let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
