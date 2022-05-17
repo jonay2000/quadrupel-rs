@@ -7,12 +7,11 @@ use crate::control::modes::panic::PanicMode;
 use crate::control::modes::safe::SafeMode;
 use crate::control::modes::ModeTrait;
 use crate::control::process_message::process_message;
-use crate::library::sqrt::rough_isqrt;
-use crate::motors::GlobalTime;
 use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
+use crate::library::fixed_point::rough_isqrt;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -28,8 +27,8 @@ pub fn start_loop() -> ! {
 
     let mut state = FlightState::default();
 
-    let start_time = GlobalTime().get_time_us();
-    let mut last_time = GlobalTime().get_time_us();
+    let start_time = TIME.as_mut_ref().get_time_us();
+    let mut last_time = start_time;
 
     let mut blue_led_status = BlueLedStatus::OFF { at: start_time };
     let mut adc_warning = true;
@@ -37,9 +36,11 @@ pub fn start_loop() -> ! {
     let mut time_since_last_print = 0;
 
     loop {
-        let dt = GlobalTime().get_time_us() - last_time;
-        last_time = GlobalTime().get_time_us();
+        let cur_time = TIME.as_mut_ref().get_time_us();
+        let dt = cur_time - last_time;
+        last_time = cur_time;
         state.count += 1;
+
 
         //Process any incoming messages
         while let Some(msg) = uart_protocol.update() {
@@ -48,7 +49,7 @@ pub fn start_loop() -> ! {
 
         //Check heartbeat
         if state.mode != Mode::Safe
-            && (GlobalTime().get_time_us() - state.last_heartbeat)
+            && (cur_time - state.last_heartbeat)
                 > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE)
         {
             log::error!("Panic: Heartbeat timeout");
@@ -56,8 +57,15 @@ pub fn start_loop() -> ! {
         }
 
         //Read hardware
-        let ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
-        // let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
+        let mpu_ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
+        // let mpu_ypr = crate::library::yaw_pitch_roll::YawPitchRoll::zero();
+
+        let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
+        // let raw_ypr = state.raw_mode.update(accel, gyro, dt);
+        let raw_ypr = library::yaw_pitch_roll::YawPitchRoll::zero();
+
+        let ypr = mpu_ypr;
+
         let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         let adc = ADC.update_main(|adc| adc.read());
@@ -93,11 +101,11 @@ pub fn start_loop() -> ! {
         //Update LEDS
         let leds = LEDS.as_mut_ref();
         blue_led_status = match blue_led_status {
-            BlueLedStatus::OFF { at } if GlobalTime().get_time_us() - at > 1000000 => {
+            BlueLedStatus::OFF { at } if cur_time - at > 1000000 => {
                 leds.led_blue.set_low().unwrap();
                 BlueLedStatus::ON { at: at + 1000000 }
             }
-            BlueLedStatus::ON { at } if GlobalTime().get_time_us() - at > 1000000 => {
+            BlueLedStatus::ON { at } if cur_time - at > 1000000 => {
                 leds.led_blue.set_high().unwrap();
                 BlueLedStatus::OFF { at: at + 1000000 }
             }
@@ -158,9 +166,10 @@ pub fn start_loop() -> ! {
                 state: state.mode,
                 height: pres,
                 battery: adc,
-                dt,
+                dt: (cur_time - start_time) / state.count,
                 motors,
-                sensor_ypr: [ypr.yaw.to_bits(), ypr.pitch.to_bits(), ypr.roll.to_bits()],
+                sensor_ypr: [mpu_ypr.yaw.to_bits(), mpu_ypr.pitch.to_bits(), mpu_ypr.roll.to_bits()],
+                raw_ypr: [raw_ypr.yaw.to_bits(), raw_ypr.pitch.to_bits(), raw_ypr.roll.to_bits()],
                 input_typr: [
                     state.target_attitude.lift.to_bits(),
                     state.target_attitude.yaw.to_bits(),
@@ -172,6 +181,8 @@ pub fn start_loop() -> ! {
                     state.angle_mode.pitch_pid.buildup.to_bits(),
                     state.angle_mode.roll_pid.buildup.to_bits(),
                 ],
+                accel: [accel.x, accel.y, accel.z],
+                gyro: [gyro.x, gyro.y, gyro.z],
             };
 
             // let mut encoding_space: [u8; 256] = [0u8; 256];

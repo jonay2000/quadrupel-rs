@@ -149,75 +149,75 @@ where
         self.write_register(i2c, Register::IntEnable, 0x00)
     }
 
-    /// Super simple averaging calibration of the accelerometers.
-    /// Probably should be called before initializing the DMP.
-    // TODO that's obviously not optimal situation, fix this with typestates or something.
-    // TODO: consider this: https://wired.chillibasket.com/2015/01/calibrating-mpu6050/
-    pub fn calibrate_accel(
-        &mut self,
-        i2c: &mut I2c,
-        loops: u8,
-        delay: &mut impl delay::DelayMs<u32>,
-    ) -> Result<(), Error<I2c>> {
-        delay.delay_ms(10);
-        let mut accumulator = [0i16; 3];
-        for _ in 0..loops {
-            let sample = self.accel(i2c).unwrap();
-            accumulator[0] += ((sample.x() as f32) / loops as f32) as i16;
-            accumulator[1] += ((sample.y() as f32) / loops as f32) as i16;
-            accumulator[2] += ((sample.z() as f32) / loops as f32) as i16;
-            delay.delay_ms(1);
-        }
-
-        let h = ((accumulator[0]) << 8) as u8;
-        let l = (accumulator[0] & 0x00FF) as u8;
-        self.write(i2c, &[Register::AccelOffsetX_H as u8, h, l])?;
-
-        let h = ((accumulator[1]) << 8) as u8;
-        let l = (accumulator[1] & 0x00FF) as u8;
-        self.write(i2c, &[Register::AccelOffsetY_H as u8, h, l])?;
-
-        let h = ((accumulator[2]) << 8) as u8;
-        let l = (accumulator[2] & 0x00FF) as u8;
-        self.write(i2c, &[Register::AccelOffsetZ_H as u8, h, l])?;
-
-        Ok(())
-    }
-
-    /// Super simple averaging calibration of the gyroscopes.
-    /// Probably should be called before initializing the DMP.
-    // TODO that's obviously not optimal situation, fix this with typestates or something.
-    // TODO: consider this: https://wired.chillibasket.com/2015/01/calibrating-mpu6050/
-    pub fn calibrate_gyro(
-        &mut self,
-        i2c: &mut I2c,
-        loops: u8,
-        delay: &mut impl delay::DelayMs<u32>,
-    ) -> Result<(), Error<I2c>> {
-        delay.delay_ms(10);
-        let mut accumulator = [0i16; 3];
-        for _ in 0..loops {
-            let gyros = self.gyro(i2c).unwrap();
-            accumulator[0] += (gyros.x() as f32 / loops as f32) as i16;
-            accumulator[1] += (gyros.y() as f32 / loops as f32) as i16;
-            accumulator[2] += (gyros.z() as f32 / loops as f32) as i16;
-            delay.delay_ms(1);
-        }
-
-        let h = ((accumulator[0]) << 8) as u8;
-        let l = (accumulator[0] & 0x00FF) as u8;
-        self.write(i2c, &[Register::GyroOffsetX_H as u8, h, l])?;
-
-        let h = ((accumulator[1]) << 8) as u8;
-        let l = (accumulator[1] & 0x00FF) as u8;
-        self.write(i2c, &[Register::GyroOffsetY_H as u8, h, l])?;
-
-        let h = ((accumulator[2]) << 8) as u8;
-        let l = (accumulator[2] & 0x00FF) as u8;
-        self.write(i2c, &[Register::GyroOffsetZ_H as u8, h, l])?;
-
-        Ok(())
-    }
+    // /// Super simple averaging calibration of the accelerometers.
+    // /// Probably should be called before initializing the DMP.
+    // // TODO that's obviously not optimal situation, fix this with typestates or something.
+    // // TODO: consider this: https://wired.chillibasket.com/2015/01/calibrating-mpu6050/
+    // pub fn calibrate_accel(
+    //     &mut self,
+    //     i2c: &mut I2c,
+    //     loops: u8,
+    //     delay: &mut impl delay::DelayMs<u32>,
+    // ) -> Result<(), Error<I2c>> {
+    //     delay.delay_ms(10);
+    //     let mut accumulator = [0i16; 3];
+    //     for _ in 0..loops {
+    //         let sample = self.accel(i2c).unwrap();
+    //         accumulator[0] += ((sample.x() as f32) / loops as f32) as i16;
+    //         accumulator[1] += ((sample.y() as f32) / loops as f32) as i16;
+    //         accumulator[2] += ((sample.z() as f32) / loops as f32) as i16;
+    //         delay.delay_ms(1);
+    //     }
+    //
+    //     let h = ((accumulator[0]) << 8) as u8;
+    //     let l = (accumulator[0] & 0x00FF) as u8;
+    //     self.write(i2c, &[Register::AccelOffsetX_H as u8, h, l])?;
+    //
+    //     let h = ((accumulator[1]) << 8) as u8;
+    //     let l = (accumulator[1] & 0x00FF) as u8;
+    //     self.write(i2c, &[Register::AccelOffsetY_H as u8, h, l])?;
+    //
+    //     let h = ((accumulator[2]) << 8) as u8;
+    //     let l = (accumulator[2] & 0x00FF) as u8;
+    //     self.write(i2c, &[Register::AccelOffsetZ_H as u8, h, l])?;
+    //
+    //     Ok(())
+    // }
+    //
+    // /// Super simple averaging calibration of the gyroscopes.
+    // /// Probably should be called before initializing the DMP.
+    // // TODO that's obviously not optimal situation, fix this with typestates or something.
+    // // TODO: consider this: https://wired.chillibasket.com/2015/01/calibrating-mpu6050/
+    // pub fn calibrate_gyro(
+    //     &mut self,
+    //     i2c: &mut I2c,
+    //     loops: u8,
+    //     delay: &mut impl delay::DelayMs<u32>,
+    // ) -> Result<(), Error<I2c>> {
+    //     delay.delay_ms(10);
+    //     let mut accumulator = [0i16; 3];
+    //     for _ in 0..loops {
+    //         let gyros = self.gyro(i2c).unwrap();
+    //         accumulator[0] += (gyros.x() as f32 / loops as f32) as i16;
+    //         accumulator[1] += (gyros.y() as f32 / loops as f32) as i16;
+    //         accumulator[2] += (gyros.z() as f32 / loops as f32) as i16;
+    //         delay.delay_ms(1);
+    //     }
+    //
+    //     let h = ((accumulator[0]) << 8) as u8;
+    //     let l = (accumulator[0] & 0x00FF) as u8;
+    //     self.write(i2c, &[Register::GyroOffsetX_H as u8, h, l])?;
+    //
+    //     let h = ((accumulator[1]) << 8) as u8;
+    //     let l = (accumulator[1] & 0x00FF) as u8;
+    //     self.write(i2c, &[Register::GyroOffsetY_H as u8, h, l])?;
+    //
+    //     let h = ((accumulator[2]) << 8) as u8;
+    //     let l = (accumulator[2] & 0x00FF) as u8;
+    //     self.write(i2c, &[Register::GyroOffsetZ_H as u8, h, l])?;
+    //
+    //     Ok(())
+    // }
 
     pub fn set_accel_full_scale(
         &mut self,

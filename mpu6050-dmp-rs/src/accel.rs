@@ -1,8 +1,8 @@
 #[derive(Copy, Clone, Debug)]
 pub struct Accel {
-    x: i16,
-    y: i16,
-    z: i16,
+    pub x: i16,
+    pub y: i16,
+    pub z: i16,
 }
 
 impl Accel {
