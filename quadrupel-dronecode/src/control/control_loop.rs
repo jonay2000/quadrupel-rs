@@ -12,6 +12,7 @@ use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
 use crate::library::fixed_point::rough_isqrt;
+use crate::library::yaw_pitch_roll::YawPitchRoll;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -57,20 +58,15 @@ pub fn start_loop() -> ! {
         }
 
         //Read hardware
-        let mpu_ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref()); // YawPitchRoll::zero();
-        let t1 = TIME.as_mut_ref().get_time_us() - last_time;
+        // let mpu_ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
+        let mpu_ypr = YawPitchRoll::zero();
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let t2 = TIME.as_mut_ref().get_time_us() - last_time;
-        let raw_ypr = state.raw_mode.update(accel, gyro, dt, state.count);
+        let raw_ypr = state.raw_mode.update(accel, gyro, dt);
         let ypr = raw_ypr;
-        let t3 = TIME.as_mut_ref().get_time_us() - last_time;
 
         let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
-        let t4 = TIME.as_mut_ref().get_time_us() - last_time;
         let motors = MOTORS.update_main(|motors| motors.get_motors());
-        let t5 = TIME.as_mut_ref().get_time_us() - last_time;
         let adc = ADC.update_main(|adc| adc.read());
-        let t6 = TIME.as_mut_ref().get_time_us() - last_time;
 
         //Check adc
         if adc > 650 && adc < 950
@@ -159,14 +155,10 @@ pub fn start_loop() -> ! {
             }
         }
 
-        let t7 = TIME.as_mut_ref().get_time_us() - last_time;
-
         //Send state information
         time_since_last_print += dt;
         if time_since_last_print > 500000 {
             time_since_last_print = 0;
-
-            log::info!("TS: {} {} {} {} {} {} {}", t1, t2, t3, t4, t5, t6, t7);
 
             let msg = MessageToComputer::StateInformation {
                 state: state.mode,
