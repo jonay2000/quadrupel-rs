@@ -60,12 +60,12 @@ pub fn start_loop() -> ! {
         //YPR
         const ENABLE_RAW: bool = false;
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let mut ypr = if ENABLE_RAW {
+        let ypr = if ENABLE_RAW {
             state.raw_mode.update(accel, gyro, dt)
         } else {
             MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref())
         };
-        ypr = state.calibrate.fix_ypr(ypr);
+        let ypr = state.calibrate.fix_ypr(ypr);
         state.current_attitude.yaw = ypr.yaw;
         state.current_attitude.pitch = ypr.pitch;
         state.current_attitude.roll = ypr.roll;
