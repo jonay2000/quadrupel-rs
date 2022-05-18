@@ -3,6 +3,7 @@ use crate::library::pid::PID;
 use crate::library::fixed_point::FI32;
 use quadrupel_shared::state::Mode;
 use quadrupel_shared::MotorValue;
+use crate::control::calibrate::Calibrate;
 use crate::control::raw_mode::RawMode;
 use crate::TIME;
 
@@ -18,6 +19,8 @@ pub struct FlightState {
 
     pub flash_record: bool,
     pub flash_send: bool,
+
+    pub calibrate: Calibrate
 }
 
 pub struct TargetAttitude {
