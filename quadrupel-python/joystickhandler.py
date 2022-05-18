@@ -151,6 +151,9 @@ class JoystickHandler:
         self.roll = 0
         self.lift = 0
 
+        self.currently_raw_mode = false
+        self.currently_height_mode = false
+
 
         self.reported_battery_voltage = 0
         self.reported_mode = "Safe"
@@ -533,11 +536,16 @@ class JoystickHandler:
                     if ord('0') <= event.key <= ord('9') and self.joystick is not None and self.tb_not_selected():
                         if print_debug:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
+                        if event.key == ord('7'): # Specific behavior for height control toggle
+                            ser.send(toggle_height_control())
                         if -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= 20000 \
                                 and -20000 <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= 20000 \
                                 and -20000 <= ((self.joystick.get_axis(2)) * pow(2, 19)) <= 20000 \
                                 and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19))  <= 50000:
-                            ser.send(change_state(state_dictionary_reversed[int(chr(event.key))]))
+                            if event.key == ord('6'):
+                                ser.send(toggle_raw_mode())
+                            else:
+                                ser.send(change_state(state_dictionary_reversed[int(chr(event.key))]))
 
             self.screen.fill(c_background)
             pygame.draw.rect(self.screen, c_visual, (self.width // 2, 0, self.width // 2, self.height // 2), 0, 0, 0, 0, 10)
