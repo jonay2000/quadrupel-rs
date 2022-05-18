@@ -1,0 +1,16 @@
+
+current: default
+setups:
+    default:
+        lift_P: 0
+        lift_I: 0
+        lift_D: 0
+        lift_CAP: 0
+        pitch_P: 150
+        pitch_I: 1
+        pitch_D: 400
+        pitch_CAP: 60
+        yaw_P: 400
+        yaw_I: 0
+        yaw_D: 500
+        yaw_CAP: 0

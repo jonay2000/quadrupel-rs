@@ -32,6 +32,7 @@ impl MessageToComputer {
         let count = bincode::encode_into_slice(self, &mut encoding_space, standard())?;
         assert!(count < 256);
 
+        w.write(&[0xab as u8])?;
         w.write(&[count as u8])?;
         w.write(&encoding_space[..count])?;
         Ok(())
