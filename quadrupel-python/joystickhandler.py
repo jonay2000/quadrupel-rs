@@ -116,6 +116,10 @@ message_control_parameters = {
         "roll_I": 0,
         "roll_D": 0,
         "roll_CAP": 0,
+        "height_P": 0,
+        "height_I": 0,
+        "height_D": 0,
+        "height_CAP": 0,
     }
 }
 
@@ -170,7 +174,7 @@ class JoystickHandler:
                 keyboard_offsets["roll"] = setup["roll_trim"]
                 keyboard_offsets["pitch"] = setup["pitch_trim"]
                 keyboard_offsets["yaw"] = setup["yaw_trim"]
-                keyboard_offsets["lift"] = setup["lift_trim"]
+                keyboard_offsets["lift"] = setup["height_trim"]
 
                 self.new_pid_input = True
 
@@ -256,12 +260,12 @@ class JoystickHandler:
 
         self.label1 = TextBox(screen, b_start - b_width, b_v_start - b_v_distance, 100, 50, fontSize=50)
         self.label1.disable()
-        self.label1.setText("lift")
+        self.label1.setText("height")
 
-        self.lift_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance, 80, 80, fontSize=50)
-        self.lift_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance, 80, 80, fontSize=50)
-        self.lift_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance, 80, 80, fontSize=50)
-        self.lift_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance, 80, 80, fontSize=50)
+        self.height_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance, 80, 80, fontSize=50)
+        self.height_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance, 80, 80, fontSize=50)
+        self.height_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance, 80, 80, fontSize=50)
+        self.height_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance, 80, 80, fontSize=50)
 
         self.label2 = TextBox(screen, b_start - b_width, b_v_start - b_v_distance * 2, 100, 50, fontSize=50)
         self.label2.disable()
@@ -310,6 +314,8 @@ class JoystickHandler:
     def submit(self):
         for name, i in self.textboxes.items():
             value = i.getText()
+
+            print(name, value)
 
             try:
                 flt_v = float(value)
