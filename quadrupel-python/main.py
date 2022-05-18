@@ -4,6 +4,14 @@ import threading
 import time
 from collections import deque
 import os
+from pathlib import Path
+
+FILE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
+if os.path.exists(FILE_PATH / "messages.txt"):
+    os.remove(FILE_PATH / "messages.txt")
+if os.path.exists(FILE_PATH / "messages_cp.txt"):
+    os.remove(FILE_PATH / "messages_cp.txt")
+
 
 try:
     # run `build_python_bindings.sh` to create this library
@@ -27,8 +35,7 @@ import msgs
 class Serial:
     def __init__(self, serport="/dev/ttyUSB0"):
         try:
-            self.ser = serial.Serial(serport)
-            self.ser.baudrate = 115200
+            self.ser = serial.Serial(serport, baudrate=115200)
         except Exception as e:
             print(traceback.format_exception(type(e), e, e.__traceback__))
             self.ser = None
@@ -82,9 +89,14 @@ class Serial:
         target_length = 0
         receiving = False
         incoming = deque()
+        lost_count = False
 
         def read_more():
-            r = self.ser.read()
+            try:
+                r = self.ser.read()
+            except Exception as e:
+                print(e)
+                return None
             if r is not None:
                 incoming.extend(r)
 
@@ -102,29 +114,45 @@ class Serial:
                     try:
                         if len(buf) != 0:
                             msg, num = parse_message_from_drone(bytes(buf))
+                            if msg[0] == 0xab:
+                                msg = msg[1:]
                             decoded_msg = json.loads(msg)
 
                             if (v := decoded_msg.get("Log")) is not None:
                                 print(bytes(v).decode("utf-8"), end="")
-                            elif (v := decoded_msg.get("StateInformation")) is not None:
-                                # TODO: Decode 16-bit fixedpoint
-                                print(f"State: {v}")
+                            # elif (v := decoded_msg.get("StateInformation")) is not None:
+                            #     TODO: Decode 16-bit fixedpoint
+                                # print(f"State: {v}")
                             elif (v := decoded_msg.get("FlashPacket")) is not None:
                                 print(f"Flash packet: {v}")
                             # TODO: Uncommenting this causes code to crash later?
-                            # else:
-                            #     q.put(decoded_msg)
+                            else:
+                                with open(FILE_PATH / "messages.txt", "a") as f:
+                                    f.writelines([msg])
+                                # print(decoded_msg)
                     except Exception as e:
                         print(e)
+                        lost_count = True
                     buf = []
                     continue
 
-                if (b := get_byte()) is not None:
+                if (b := get_byte()) is not None and not lost_count:
                     if not receiving:
+                        if b == 0xab:
+                            b = get_byte()
+
                         target_length = b
                         receiving = True
                     else:
                         buf.append(b)
+                else:
+                    print("lost count")
+                    while (b := get_byte()) != 0xab:
+                        if b is not None:
+                            print(chr(b), end="")
+                        pass
+                    lost_count = False
+
 
 if __name__ == '__main__':
     ser = Serial()

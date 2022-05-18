@@ -32,6 +32,7 @@ use cortex_m_semihosting::hprintln;
 use crate::control::control_loop;
 use crate::control::uart_protocol::UartProtocol;
 use nrf51_hal::gpio::Level;
+use crate::library::yaw_pitch_roll::FI32;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();

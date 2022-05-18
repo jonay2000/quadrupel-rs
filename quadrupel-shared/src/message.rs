@@ -38,9 +38,10 @@ pub enum FlashPacket {
 impl MessageToComputer {
     pub fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
         let mut encoding_space: [u8; 256] = [0u8; 256];
-        let count = bincode::encode_into_slice(self, &mut encoding_space[1..], standard())?;
+        let count = bincode::encode_into_slice(self, &mut encoding_space[2..], standard())?;
         assert!(count < 256);
-        encoding_space[0] = count as u8;
+        encoding_space[1] = count as u8;
+        encoding_space[0] = 0xab as u8;
         w.write(&encoding_space[..count+1])?;
         Ok(())
     }
