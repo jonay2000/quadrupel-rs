@@ -22,19 +22,28 @@ pub enum MessageToComputer {
         motors: [u16; 4],
         input_typr: [i32; 4],
         sensor_ypr: [i32; 3],
+        raw_ypr: [i32; 3],
         i_buildup: [i32; 3],
+        accel: [i16; 3],
+        gyro: [i16; 3],
     },
+    FlashPacket(FlashPacket),
+}
+
+#[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
+#[derive(Decode, Encode, Debug)]
+pub enum FlashPacket {
+    Data(i16),
 }
 
 impl MessageToComputer {
     pub fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
         let mut encoding_space: [u8; 256] = [0u8; 256];
-        let count = bincode::encode_into_slice(self, &mut encoding_space, standard())?;
+        let count = bincode::encode_into_slice(self, &mut encoding_space[2..], standard())?;
         assert!(count < 256);
-
-        w.write(&[0xab as u8])?;
-        w.write(&[count as u8])?;
-        w.write(&encoding_space[..count])?;
+        encoding_space[1] = count as u8;
+        encoding_space[0] = 0xab as u8;
+        w.write(&encoding_space[..count+1])?;
         Ok(())
     }
 
@@ -87,6 +96,9 @@ pub enum MessageToDrone {
         roll_D: u32,
         roll_CAP: u32,
     },
+    FlashStartRecording,
+    FlashStopRecording,
+    FlashRead,
 }
 
 impl MessageToDrone {

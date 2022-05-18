@@ -1,7 +1,5 @@
-use cordic::{atan2, sqrt};
 use fixed::{types, FixedI32};
-
-pub type FI32 = FixedI32<types::extra::U16>;
+use crate::library::fixed_point::{atan2_approx, FI32, sqrt_approx};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Quaternion {
@@ -35,6 +33,7 @@ impl Quaternion {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct YawPitchRoll {
     /// psu
     pub yaw: FI32,
@@ -42,6 +41,12 @@ pub struct YawPitchRoll {
     pub pitch: FI32,
     /// phi
     pub roll: FI32,
+}
+
+impl YawPitchRoll {
+    pub fn zero() -> Self {
+        Self{ yaw: FI32::from_num(0), pitch: FI32::from_num(0), roll: FI32::from_num(0) }
+    }
 }
 
 impl From<Quaternion> for YawPitchRoll {
@@ -54,16 +59,16 @@ impl From<Quaternion> for YawPitchRoll {
         let gz = w * w - x * x - y * y + z * z;
 
         // yaw: (about Z axis)
-        let yaw = atan2(
+        let yaw = atan2_approx(
             2 * x * y - 2 * w * z,
             2 * w * w + 2 * x * x - FI32::from_num(1),
         );
 
         // pitch: (nose up/down, about Y axis)
-        let pitch = atan2(gx, sqrt(gy * gy + gz * gz));
+        let pitch = atan2_approx(gx, sqrt_approx(gy * gy + gz * gz));
 
         // roll: (tilt left/right, about X axis)
-        let roll = atan2(gy, gz);
+        let roll = atan2_approx(gy, gz);
 
         Self { yaw, pitch, roll }
     }

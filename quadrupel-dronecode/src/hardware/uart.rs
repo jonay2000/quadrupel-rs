@@ -10,14 +10,16 @@ use nrf51_hal::gpio::Disconnected;
 use nrf51_pac::interrupt;
 use nrf51_pac::Interrupt;
 use quadrupel_shared::message::MessageToComputer;
-use ringbuffer::{ConstGenericRingBuffer, RingBufferRead, RingBufferWrite};
+use ringbuffer::{ConstGenericRingBuffer, RingBuffer, RingBufferRead, RingBufferWrite};
+
+const BUFFER_SIZE: usize = 256;
 
 /// Can be used for interfacing with the UART.
 /// It uses an interrupt to send bytes, when they're ready to send.
 pub struct QUart {
     uart: nrf51_pac::UART0,
-    rx_queue: ConstGenericRingBuffer<u8, 256>,
-    tx_queue: ConstGenericRingBuffer<u8, 256>,
+    rx_queue: ConstGenericRingBuffer<u8, BUFFER_SIZE>,
+    tx_queue: ConstGenericRingBuffer<u8, BUFFER_SIZE>,
 
     /// True if the uart system is not busy, marking we can immediately
     /// write the first byte to the UART register. Subsequent bytes are put in a queue
@@ -111,6 +113,14 @@ impl QUart {
 
     pub fn send_message(&mut self, msg: MessageToComputer) {
         msg.encode(self).expect("encoding error");
+    }
+
+    pub fn buffer_left_tx(&mut self) -> usize {
+        BUFFER_SIZE - self.tx_queue.len()
+    }
+
+    pub fn buffer_left_rx(&mut self) -> usize {
+        BUFFER_SIZE - self.rx_queue.len()
     }
 }
 

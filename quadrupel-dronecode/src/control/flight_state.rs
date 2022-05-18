@@ -1,9 +1,10 @@
 use crate::control::angle_mode::AngleMode;
 use crate::library::pid::PID;
-use crate::library::yaw_pitch_roll::FI32;
-use crate::motors::GlobalTime;
+use crate::library::fixed_point::FI32;
 use quadrupel_shared::state::Mode;
 use quadrupel_shared::MotorValue;
+use crate::control::raw_mode::RawMode;
+use crate::TIME;
 
 pub struct FlightState {
     pub mode: Mode,
@@ -13,6 +14,10 @@ pub struct FlightState {
     pub target_attitude: TargetAttitude,
     pub angle_mode: AngleMode,
     pub count: u32,
+    pub raw_mode: RawMode,
+
+    pub flash_record: bool,
+    pub flash_send: bool,
 }
 
 pub struct TargetAttitude {
@@ -31,7 +36,7 @@ impl Default for FlightState {
         Self {
             mode: Mode::Safe,
             motor_values: [None; 4],
-            last_heartbeat: GlobalTime().get_time_us(),
+            last_heartbeat: TIME.as_mut_ref().get_time_us(),
             current_attitude: TargetAttitude {
                 yaw: FI32::from_num(0),
                 pitch: FI32::from_num(0),
@@ -68,6 +73,9 @@ impl Default for FlightState {
                 ),
             },
             count: 0,
+            raw_mode: RawMode::new(),
+            flash_record: false,
+            flash_send: false,
         }
     }
 }
