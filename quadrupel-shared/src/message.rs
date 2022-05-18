@@ -64,6 +64,8 @@ pub enum Motor {
 #[derive(Decode, Encode, Debug)]
 pub enum MessageToDrone {
     ChangeState(Mode),
+    SetHeightMode(bool),
+    SetRawMode(bool),
     MotorValue {
         motor: Motor,
         value: MotorValue,

@@ -22,6 +22,9 @@ pub struct FlightState {
 
     pub calibrate: Calibrate,
 
+    pub height_mode_enable: bool,
+    pub raw_mode_enable: bool,
+
     pub height_lock: Option<FI32>,
 }
 
