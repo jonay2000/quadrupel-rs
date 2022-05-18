@@ -1,10 +1,11 @@
-use crate::library::yaw_pitch_roll::FI32;
+use crate::library::fixed_point::FI32;
+use crate::library::yaw_pitch_roll::YawPitchRoll;
 
 pub struct Calibrate {
     yaw: FI32,
     pitch: FI32,
     roll: FI32,
-    yaw_rate: FI32
+    // yaw_rate: FI32
 }
 
 impl Calibrate {
@@ -13,7 +14,7 @@ impl Calibrate {
             yaw: FI32::from_num(0),
             pitch: FI32::from_num(0),
             roll: FI32::from_num(0),
-            yaw_rate: FI32::from_num(0),
+            // yaw_rate: FI32::from_num(0),
         }
     }
 
@@ -31,7 +32,7 @@ impl Calibrate {
         };
     }
 
-    pub fn calibrate(&mut self, yaw: FI32, pitch: FI32, roll: FI32,yaw_rate:FI32) {
+    pub fn calibrate(&mut self, yaw: FI32, pitch: FI32, roll: FI32) {
         let yaw_err = self.round_dist(self.yaw,yaw);
 
         self.yaw = self.yaw + yaw_err * FI32::from_num(0.01);
@@ -43,22 +44,30 @@ impl Calibrate {
         }
         self.pitch = self.pitch * FI32::from_num(0.99) + pitch * FI32::from_num(0.01);
         self.roll = self.roll * FI32::from_num(0.99) + roll * FI32::from_num(0.01);
-        self.yaw_rate = self.yaw_rate * FI32::from_num(0.99) + yaw_rate * FI32::from_num(0.01);
+        // self.yaw_rate = self.yaw_rate * FI32::from_num(0.99) + yaw_rate * FI32::from_num(0.01);
     }
 
-    pub fn fix_yaw(&mut self, yaw: FI32) {
-        yaw - self.yaw;
+    pub fn fix_ypr(&mut self, ypr: YawPitchRoll) -> YawPitchRoll {
+        YawPitchRoll {
+            yaw: self.fix_yaw(ypr.yaw),
+            pitch: self.fix_pitch(ypr.pitch),
+            roll: self.fix_roll(ypr.roll),
+        }
     }
 
-    pub fn fix_pitch(&mut self, pitch: FI32) {
-        pitch - self.pitch;
+    pub fn fix_yaw(&mut self, yaw: FI32) -> FI32 {
+        yaw - self.yaw
     }
 
-    pub fn fix_roll(&mut self, roll: FI32) {
-        roll - self.roll;
+    pub fn fix_pitch(&mut self, pitch: FI32) -> FI32 {
+        pitch - self.pitch
     }
 
-    pub fn fix_yaw_rate(&mut self, yaw_rate: FI32) {
-        yaw_rate - self.yaw_rate;
+    pub fn fix_roll(&mut self, roll: FI32) -> FI32 {
+        roll - self.roll
     }
+
+    // pub fn fix_yaw_rate(&mut self, yaw_rate: FI32) -> FI32 {
+    //     yaw_rate - self.yaw_rate
+    // }
 }

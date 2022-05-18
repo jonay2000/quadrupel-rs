@@ -11,7 +11,7 @@ pub struct FlightState {
     pub mode: Mode,
     pub motor_values: [Option<MotorValue>; 4],
     pub last_heartbeat: u32,
-    pub current_attitude: TargetAttitude,
+    pub current_attitude: CurrentAttitude,
     pub target_attitude: TargetAttitude,
     pub angle_mode: AngleMode,
     pub count: u32,
@@ -21,6 +21,14 @@ pub struct FlightState {
     pub flash_send: bool,
 
     pub calibrate: Calibrate
+}
+
+pub struct CurrentAttitude {
+    pub yaw: FI32,
+    pub pitch: FI32,
+    pub roll: FI32,
+    pub height: FI32,
+    pub yaw_rate: FI32,
 }
 
 pub struct TargetAttitude {
@@ -40,11 +48,12 @@ impl Default for FlightState {
             mode: Mode::Safe,
             motor_values: [None; 4],
             last_heartbeat: TIME.as_mut_ref().get_time_us(),
-            current_attitude: TargetAttitude {
+            current_attitude: CurrentAttitude {
                 yaw: FI32::from_num(0),
                 pitch: FI32::from_num(0),
                 roll: FI32::from_num(0),
-                lift: FI32::from_num(0),
+                height: FI32::from_num(0),
+                yaw_rate: FI32::from_num(0),
             },
             target_attitude: TargetAttitude {
                 yaw: FI32::from_num(0),
@@ -79,6 +88,7 @@ impl Default for FlightState {
             raw_mode: RawMode::new(),
             flash_record: false,
             flash_send: false,
+            calibrate: Calibrate::new(),
         }
     }
 }

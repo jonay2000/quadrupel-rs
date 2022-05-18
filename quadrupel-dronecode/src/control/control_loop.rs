@@ -11,6 +11,7 @@ use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
+use crate::control::modes::calibrate_mode::CalibrateMode;
 use crate::library::fixed_point::rough_isqrt;
 
 const HEARTBEAT_FREQ: u32 = 100000;
@@ -49,23 +50,27 @@ pub fn start_loop() -> ! {
 
         //Check heartbeat
         if state.mode != Mode::Safe
-            && (cur_time - state.last_heartbeat)
+            && (TIME.as_mut_ref().get_time_us() - state.last_heartbeat)
                 > (HEARTBEAT_FREQ * HEARTBEAT_TIMEOUT_MULTIPLE)
         {
             log::error!("Panic: Heartbeat timeout");
             state.mode = Mode::Panic;
         }
 
-        //Read hardware
-        let mpu_ypr = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
-        // let mpu_ypr = crate::library::yaw_pitch_roll::YawPitchRoll::zero();
-
+        //YPR
+        const ENABLE_RAW: bool = false;
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let raw_ypr = state.raw_mode.update(accel, gyro, dt);
-        // let raw_ypr = library::yaw_pitch_roll::YawPitchRoll::zero();
+        let mut ypr = if ENABLE_RAW {
+            state.raw_mode.update(accel, gyro, dt)
+        } else {
+            MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref())
+        };
+        ypr = state.calibrate.fix_ypr(ypr);
+        state.current_attitude.yaw = ypr.yaw;
+        state.current_attitude.pitch = ypr.pitch;
+        state.current_attitude.roll = ypr.roll;
 
-        let ypr = mpu_ypr;
-
+        //Read other hardware
         let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         let adc = ADC.update_main(|adc| adc.read());
@@ -83,15 +88,10 @@ pub fn start_loop() -> ! {
             adc_warning = false;
         }
 
-        //Update state
-        state.current_attitude.yaw = ypr.yaw;
-        state.current_attitude.pitch = ypr.pitch;
-        state.current_attitude.roll = ypr.roll;
-
         // Do action corresponding to current mode
         match state.mode {
             Mode::Safe => SafeMode::iteration(&mut state, dt),
-            Mode::Calibration => {}
+            Mode::Calibration => CalibrateMode::iteration(&mut state, dt),
             Mode::Panic => PanicMode::iteration(&mut state, dt),
             Mode::FullControl => FullControl::iteration(&mut state, dt),
             Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state, dt),
@@ -168,8 +168,7 @@ pub fn start_loop() -> ! {
                 battery: adc,
                 dt: (cur_time - start_time) / state.count,
                 motors,
-                sensor_ypr: [mpu_ypr.yaw.to_bits(), mpu_ypr.pitch.to_bits(), mpu_ypr.roll.to_bits()],
-                raw_ypr: [raw_ypr.yaw.to_bits(), raw_ypr.pitch.to_bits(), raw_ypr.roll.to_bits()],
+                sensor_ypr: [ypr.yaw.to_bits(), ypr.pitch.to_bits(), ypr.roll.to_bits()],
                 input_typr: [
                     state.target_attitude.lift.to_bits(),
                     state.target_attitude.yaw.to_bits(),

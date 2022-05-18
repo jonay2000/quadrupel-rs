@@ -22,7 +22,6 @@ pub enum MessageToComputer {
         motors: [u16; 4],
         input_typr: [i32; 4],
         sensor_ypr: [i32; 3],
-        raw_ypr: [i32; 3],
         i_buildup: [i32; 3],
         accel: [i16; 3],
         gyro: [i16; 3],
