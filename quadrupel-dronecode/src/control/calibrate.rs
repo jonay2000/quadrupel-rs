@@ -33,6 +33,11 @@ impl Calibrate {
     }
 
     pub fn calibrate(&mut self, yaw: FI32, pitch: FI32, roll: FI32) {
+        //Undo calibration
+        let yaw = yaw + self.yaw;
+        let pitch = pitch + self.pitch;
+        let roll = roll + self.roll;
+
         let yaw_err = self.round_dist(self.yaw,yaw);
 
         self.yaw = self.yaw + yaw_err * FI32::from_num(0.01);
