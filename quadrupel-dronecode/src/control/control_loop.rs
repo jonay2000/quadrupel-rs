@@ -61,8 +61,8 @@ pub fn start_loop() -> ! {
         // let mpu_ypr = crate::library::yaw_pitch_roll::YawPitchRoll::zero();
 
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        // let raw_ypr = state.raw_mode.update(accel, gyro, dt);
-        let raw_ypr = library::yaw_pitch_roll::YawPitchRoll::zero();
+        let raw_ypr = state.raw_mode.update(accel, gyro, dt);
+        // let raw_ypr = library::yaw_pitch_roll::YawPitchRoll::zero();
 
         let ypr = mpu_ypr;
 
