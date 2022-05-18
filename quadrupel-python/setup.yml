@@ -14,3 +14,8 @@ setups:
         yaw_I: 0
         yaw_D: 500
         yaw_CAP: 0
+
+        yaw_trim: -50000
+        pitch_trim: -70000
+        roll_trim: 30000
+        lift_trim: 0

@@ -167,6 +167,11 @@ class JoystickHandler:
                 current = res["current"]
                 setup = res["setups"][current]
 
+                keyboard_offsets["roll"] = setup["roll_trim"]
+                keyboard_offsets["pitch"] = setup["pitch_trim"]
+                keyboard_offsets["yaw"] = setup["yaw_trim"]
+                keyboard_offsets["lift"] = setup["lift_trim"]
+
                 self.new_pid_input = True
 
                 for name, i in self.textboxes.items():
@@ -446,11 +451,13 @@ class JoystickHandler:
                             print("yaw offset up")
                         keyboard_offsets["yaw"] += keyboard_offsets_step["yaw"]
                         self.new_joystick_input = True
+                        print(keyboard_offsets)
                     if event.key == ord('q'):
                         if print_debug:
                             print("yaw offset down")
                         keyboard_offsets["yaw"] -= keyboard_offsets_step["yaw"]
                         self.new_joystick_input = True
+                        print(keyboard_offsets)
 
                     if event.key == ord('u'):
                         if print_debug: print("yaw control P offset up")
