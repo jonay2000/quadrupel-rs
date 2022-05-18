@@ -341,13 +341,17 @@ class JoystickHandler:
                 os.rename(FILE_PATH / "messages.txt", FILE_PATH / "messages_cp.txt")
                 with open(FILE_PATH / "messages_cp.txt", "r") as f:
                     for str_msg in f.readlines():
-                        msg = json.loads(str_msg)
+                        try:
+                            msg = json.loads(str_msg)
+                        except Exception as e:
+                            print(e)
+                            continue
                         print(msg)
 
                         if (v := msg.get("StateInformation")) is not None:
                             self.reported_mode = v["state"]
                             self.reported_height = v["height"]
-                            self.reported_battery_voltage = v["height"] / 10000
+                            self.reported_battery_voltage = v["battery"] / 100
                             self.reported_iteration_freq = 1_000_000 / v["dt"]
                             self.reported_i_buildup = v["i_buildup"]
                         else:
@@ -522,13 +526,10 @@ class JoystickHandler:
                     if ord('0') <= event.key <= ord('9') and self.joystick is not None and self.tb_not_selected():
                         if print_debug:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
-                        if -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) + keyboard_offsets["roll"] <= 20000 \
-                                and -20000 <= ((self.joystick.get_axis(1)) * pow(2, 19)) + keyboard_offsets[
-                            "pitch"] <= 20000 \
-                                and -20000 <= ((self.joystick.get_axis(2)) * pow(2, 19)) + keyboard_offsets[
-                            "yaw"] <= 20000 \
-                                and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) + keyboard_offsets[
-                            "lift"] <= 50000:
+                        if -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= 20000 \
+                                and -20000 <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= 20000 \
+                                and -20000 <= ((self.joystick.get_axis(2)) * pow(2, 19)) <= 20000 \
+                                and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19))  <= 50000:
                             ser.send(change_state(state_dictionary_reversed[int(chr(event.key))]))
 
             self.screen.fill(c_background)
