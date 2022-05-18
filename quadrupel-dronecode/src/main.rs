@@ -12,7 +12,8 @@ pub mod hardware;
 #[cfg(test)]
 mod test;
 
-mod control;
+pub mod control;
+pub mod filters;
 
 extern crate alloc;
 extern crate cortex_m;
