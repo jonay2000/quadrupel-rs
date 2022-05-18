@@ -1,5 +1,5 @@
 use fixed::{types, FixedI32};
-use crate::library::fixed_point::{atan2_approx, FI32, sqrt_approx};
+pub use crate::library::fixed_point::{atan2_approx, FI32, sqrt_approx};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Quaternion {

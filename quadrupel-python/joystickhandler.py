@@ -321,7 +321,7 @@ class JoystickHandler:
             print(message_control_parameters)
 
     def tb_not_selected(self):
-        return not any(i.selected for i in self.textboxes)
+        return not any(i.selected for i in self.textboxes.values())
 
     def run(self, ser: Serial):
         running = True  # This is the main "loop running" variable -- set to false to exit the loop
@@ -342,11 +342,12 @@ class JoystickHandler:
                 with open(FILE_PATH / "messages_cp.txt", "r") as f:
                     for str_msg in f.readlines():
                         msg = json.loads(str_msg)
+                        print(msg)
 
                         if (v := msg.get("StateInformation")) is not None:
                             self.reported_mode = v["state"]
                             self.reported_height = v["height"]
-                            self.reported_battery_voltage = v["height"] / 100
+                            self.reported_battery_voltage = v["height"] / 10000
                             self.reported_iteration_freq = 1_000_000 / v["dt"]
                             self.reported_i_buildup = v["i_buildup"]
                         else:
@@ -539,10 +540,10 @@ class JoystickHandler:
             self.drone_visual.draw()
             self.drone_visual.rot[0] += 0.01
 
-            self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}")
+            self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}V")
             self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}")
             self.stats[2].setText(f"height: {self.reported_height:.2f}")
-            self.stats[3].setText(f"mode: {self.current_state}")
+            self.stats[3].setText(f"mode: {self.reported_mode}")
 
             pygame_widgets.update(approved_events)
             pygame.display.update()

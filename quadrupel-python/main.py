@@ -114,6 +114,8 @@ class Serial:
                     try:
                         if len(buf) != 0:
                             msg, num = parse_message_from_drone(bytes(buf))
+                            if msg[0] == 0xab:
+                                msg = msg[1:]
                             decoded_msg = json.loads(msg)
 
                             if (v := decoded_msg.get("Log")) is not None:
@@ -127,7 +129,7 @@ class Serial:
                             else:
                                 with open(FILE_PATH / "messages.txt", "a") as f:
                                     f.writelines([msg])
-                                # threading.Thread(target=q.put, args=(decoded_msg,)).start()
+                                # print(decoded_msg)
                     except Exception as e:
                         print(e)
                         lost_count = True
