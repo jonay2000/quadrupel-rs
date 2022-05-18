@@ -1,6 +1,3 @@
-#![feature(generic_const_exprs)]
-
-use fixed::{types, FixedI32};
 use crate::library::fixed_point::FI32;
 
 pub struct ButterworthLowPass2nd {
@@ -47,7 +44,7 @@ impl ButterworthLowPass2nd {
         let c_yi_2 = self.a_yi_2*self.yi_2;
 
 
-        let y = (c_xi+c_xi_1+c_xi_2+c_yi_1+c_yi_2);
+        let y = c_xi+c_xi_1+c_xi_2+c_yi_1+c_yi_2;
 
         self.yi_2 = self.yi_1;
         self.yi_1 = y;
