@@ -182,6 +182,8 @@ pub fn start_loop() -> ! {
                 ],
                 accel: [accel.x, accel.y, accel.z],
                 gyro: [gyro.x, gyro.y, gyro.z],
+                height_mode: state.height_mode_enable,
+                raw_mode: state.raw_mode_enable,
             };
 
             // let mut encoding_space: [u8; 256] = [0u8; 256];

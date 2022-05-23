@@ -24,8 +24,15 @@ impl ModeTrait for FullControl {
         let pitch_goal = raw_to_10_deg(state.target_attitude.pitch);
         let roll_goal = -raw_to_10_deg(state.target_attitude.roll);
 
-
-        let height_goal = state.target_attitude.
+        if state.height_mode_enable && state.height_lock.is_none() {
+            state.height_lock = Some((state.target_attitude.lift, state.current_attitude.height));
+        } else {
+            state.height_lock = None;
+        }
+        let (prev_lift, height_goal) = state.height_lock.unwrap_or((state.target_attitude.lift, state.current_attitude.height));
+        if state.height_mode_enable && (prev_lift.abs_diff(state.target_attitude.lift)) > 10  {
+            state.height_mode_enable = false;
+        }
 
         let motors = state.angle_mode.step(
             dt,
@@ -38,6 +45,7 @@ impl ModeTrait for FullControl {
             pitch_goal,
             roll_goal,
             height_goal,
+            state.height_mode_enable
         );
 
         state.motor_values = motors.map(|fi32| {

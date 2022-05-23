@@ -82,6 +82,12 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
         MessageToDrone::FlashRead => {
             state.flash_record = false;
             state.flash_send = true;
+        },
+        MessageToDrone::SetHeightMode(_) => {
+            state.height_mode_enable = !state.height_mode_enable;
+        }
+        MessageToDrone::SetRawMode(_) => {
+            state.raw_mode_enable = !state.raw_mode_enable;
         }
     }
 }

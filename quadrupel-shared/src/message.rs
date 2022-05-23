@@ -25,6 +25,8 @@ pub enum MessageToComputer {
         i_buildup: [i32; 3],
         accel: [i16; 3],
         gyro: [i16; 3],
+        height_mode: bool,
+        raw_mode: bool,
     },
     FlashPacket(FlashPacket),
 }
@@ -65,8 +67,8 @@ pub enum Motor {
 #[derive(Decode, Encode, Debug)]
 pub enum MessageToDrone {
     ChangeState(Mode),
-    SetHeightMode(bool),
-    SetRawMode(bool),
+    SetHeightMode(u8),
+    SetRawMode(u8),
     MotorValue {
         motor: Motor,
         value: MotorValue,

@@ -151,10 +151,6 @@ class JoystickHandler:
         self.roll = 0
         self.lift = 0
 
-        self.currently_raw_mode = false
-        self.currently_height_mode = false
-
-
         self.reported_battery_voltage = 0
         self.reported_mode = "Safe"
         self.reported_height = 0
