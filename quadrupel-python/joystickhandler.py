@@ -12,6 +12,8 @@ import os
 from drone_visual import Drone
 from pathlib import Path
 import yaml
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 FILE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 
@@ -546,6 +548,7 @@ class JoystickHandler:
                             ser.send(change_state(state_dictionary_reversed[int(chr(event.key))]))
 
             self.screen.fill(c_background)
+
             pygame.draw.rect(self.screen, c_visual, (self.width // 2, 0, self.width // 2, self.height // 2), 0, 0, 0, 0, 10)
             self.output0.setText("M0: " + str(self.slider0.getValue()))
             self.output1.setText("M1: " + str(self.slider1.getValue()))
@@ -560,7 +563,7 @@ class JoystickHandler:
             self.stats[3].setText(f"mode: {self.reported_mode}")
 
             pygame_widgets.update(approved_events)
-            pygame.display.update()
+            pygame.display.flip()
 
     # Send the data to the drone periodically based on joystick changes
     def send_data(self, ser):
