@@ -16,7 +16,7 @@ pub enum MessageToComputer {
     Log(Vec<u8>),
     StateInformation {
         state: Mode,
-        height: u32,
+        height: i32,
         battery: u16,
         dt: u32,
         motors: [u16; 4],
@@ -44,7 +44,7 @@ impl MessageToComputer {
         assert!(count < 256);
         encoding_space[1] = count as u8;
         encoding_space[0] = 0xab as u8;
-        w.write(&encoding_space[..count+1])?;
+        w.write(&encoding_space[..count+2])?;
         Ok(())
     }
 

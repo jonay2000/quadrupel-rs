@@ -17,7 +17,7 @@ FILE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 
 if typing.TYPE_CHECKING:
     from main import Serial
-from msgs import motor_message, heartbeat, change_state, joystick_message
+from msgs import *
 
 # Roll: Axis 0
 # Pitch: Axis 1
@@ -534,7 +534,7 @@ class JoystickHandler:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
                         if event.key == ord('7'): # Specific behavior for height control toggle
                             ser.send(toggle_height_control())
-                        if -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= 20000 \
+                        elif -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= 20000 \
                                 and -20000 <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= 20000 \
                                 and -20000 <= ((self.joystick.get_axis(2)) * pow(2, 19)) <= 20000 \
                                 and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19))  <= 50000:
