@@ -1,6 +1,7 @@
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
 use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
+use crate::filters::compl_filter::ComplFilter;
 use crate::library::fixed_point::{atan2_approx, FI32, FI64, sqrt_approx};
 use crate::library::yaw_pitch_roll::YawPitchRoll;
 
@@ -12,6 +13,7 @@ pub struct RawMode {
 
 impl RawMode {
     pub fn new() -> Self {
+        // TODO: Tune all filters (and possibly make them different across different filters)
         let a_yi = FI32::from_num(35.639);
         let a_yi_1 = FI32::from_num(52.512)/a_yi;
         let a_yi_2 = FI32::from_num(-20.873)/a_yi;
@@ -28,7 +30,31 @@ impl RawMode {
                 a_xi,
                 a_xi_1,
                 a_xi_2,
-            )
+            ),
+            roll_bw_filter: ButterworthLowPass2nd::new(
+                a_yi,
+                a_yi_1,
+                a_yi_2,
+                a_xi,
+                a_xi_1,
+                a_xi_2,
+            ),
+            roll_filter: ComplFilter::new(
+                10,
+                50,
+            ),
+            pitch_bw_filter: ButterworthLowPass2nd::new(
+                a_yi,
+                a_yi_1,
+                a_yi_2,
+                a_xi,
+                a_xi_1,
+                a_xi_2,
+            ),
+            pitch_filter: ComplFilter::new(
+                10,
+                50,
+            ),
         }
     }
 
@@ -39,10 +65,20 @@ impl RawMode {
         let accel_x: FI32 = FI32::from_bits(accel.x as i32);
         let accel_y: FI32 = FI32::from_bits(accel.y as i32);
         let accel_z: FI32 = FI32::from_bits(accel.z as i32);
-        let gyro_z: FI32 = FI32::from_bits(gyro.z as i32);
+        let gyro_pitch: FI32 = FI32::from_bits(gyro.x as i32);
+        let  gyro_roll: FI32 = FI32::from_bits(gyro.y as i32);
+        let gyro_yaw: FI32 = FI32::from_bits(gyro.z as i32);
 
         let pitch = atan2_approx(accel_x, accel_z);
         let roll = atan2_approx(accel_y, sqrt_approx(accel_x*accel_x + accel_z * accel_z));
+
+        // TODO uncomment if butterworth before kalman-not-kalman is desired
+        // let roll = self.roll_bw_filter(roll);
+        // let pitch = self.pith_bw_filter(pitch);
+
+        let (gyro_roll, roll) = self.roll_filter(gyro_roll, roll, dt);
+        let (gyro_pitch, pitch) = self.pitch_filter(gyro_pitch, pitch, dt);
+
 
         /*
         We're gonna do some trickery to convert the unit (2000 deg/second) to radians.
