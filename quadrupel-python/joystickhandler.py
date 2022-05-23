@@ -12,8 +12,6 @@ import os
 from drone_visual import Drone
 from pathlib import Path
 import yaml
-from OpenGL.GL import *
-from OpenGL.GLU import *
 
 FILE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 

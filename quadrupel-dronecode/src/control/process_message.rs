@@ -72,6 +72,11 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             state.angle_mode.roll_pid.ki = FI32::from_bits(roll_I as i32);
             state.angle_mode.roll_pid.kd = FI32::from_bits(roll_D as i32);
             state.angle_mode.roll_pid.cap = FI32::from_bits(roll_CAP as i32);
+
+            state.angle_mode.height_pid.kp = FI32::from_bits(height_P as i32);
+            state.angle_mode.height_pid.ki = FI32::from_bits(height_I as i32);
+            state.angle_mode.height_pid.kd = FI32::from_bits(height_D as i32);
+            state.angle_mode.height_pid.cap = FI32::from_bits(height_CAP as i32);
         }
         MessageToDrone::FlashStartRecording => {
             state.flash_record = true;

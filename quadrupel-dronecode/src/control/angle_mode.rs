@@ -44,6 +44,7 @@ impl AngleMode {
         } else {
             FI32::from_num(0)
         };
+
         let height_offset = if enable_height && lift > 0 {
             self.height_pid.step(dt, height_state, height_goal)
         } else {
