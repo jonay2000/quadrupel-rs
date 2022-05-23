@@ -24,10 +24,6 @@ impl ModeTrait for FullControl {
         let pitch_goal = raw_to_10_deg(state.target_attitude.pitch);
         let roll_goal = -raw_to_10_deg(state.target_attitude.roll);
 
-        if state.count % 1000 == 0 {
-            log::info!("{:?} {:?}", state.height_lock, state.current_attitude.height);
-        }
-
         if state.height_mode_enable && state.height_lock.is_none() {
             state.height_lock = Some((state.target_attitude.lift, state.current_attitude.height));
         } else if !state.height_mode_enable {
