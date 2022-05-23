@@ -41,7 +41,7 @@ impl ComplFilter {
         self.phi = self.phi + p * dt;
         let e = self.round_dist(sphi, self.phi);
         self.phi = self.phi - e / self.c1;
-        self.phi = (self.phi + FI32::PI) % (2 * FI32::PI) - FI32::PI
+        self.phi = (self.phi + FI32::PI) % (2 * FI32::PI) - FI32::PI;
         self.b = self.b + (e / dt) / self.c2;
         (p, self.phi)
     }
