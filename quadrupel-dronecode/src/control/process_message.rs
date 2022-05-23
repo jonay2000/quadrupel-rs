@@ -56,7 +56,7 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             roll_P,
             roll_I,
             roll_D,
-            roll_CAP,
+            roll_CAP, height_P, height_I, height_D, height_CAP,
         } => {
             state.angle_mode.yaw_pid.kp = FI32::from_bits(yaw_P as i32);
             state.angle_mode.yaw_pid.ki = FI32::from_bits(yaw_I as i32);
