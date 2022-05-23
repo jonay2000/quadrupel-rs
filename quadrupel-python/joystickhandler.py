@@ -12,8 +12,6 @@ import os
 from drone_visual import Drone
 from pathlib import Path
 import yaml
-from OpenGL.GL import *
-from OpenGL.GLU import *
 
 FILE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 
@@ -60,11 +58,20 @@ state_dictionary = {
     "IndividualMotorControl": 9,
 }
 
+name_dictionary = {
+    "Safe": "safe",
+    "Panic": "panic",
+    "Manual": "manual",
+    "Calibration": "calibration",
+    "yaw_control": "yaw control",
+    "FullControl": "full control",
+    "raw": "raw",
+    "height_control": "height control",
+    "wireless": "wireless",
+    "IndividualMotorControl": "individual motor",
+}
+
 state_dictionary_reversed: dict[int, str] = {value: key for key, value in state_dictionary.items()}
-
-
-def state_name(name: str):
-    return name.lower().replace("_", " ")
 
 
 # Offsets to be added to the joystick input
@@ -81,7 +88,9 @@ allowed_state_transition = {
         state_dictionary["Safe"],
         state_dictionary["Panic"],
         state_dictionary["Manual"],
-        state_dictionary["Calibration"]
+        state_dictionary["Calibration"],
+        state_dictionary["FullControl"],
+        state_dictionary["IndividualMotorControl"],
     ],
     "Panic": [],
     "Manual": [
@@ -94,6 +103,9 @@ allowed_state_transition = {
         state_dictionary["Safe"]
     ],
     "FullControl": [
+        state_dictionary["Safe"]
+    ],
+    "IndividualMotorControl": [
         state_dictionary["Safe"]
     ],
     "raw": [
@@ -315,6 +327,11 @@ class JoystickHandler:
                 b
             )
 
+        def transition(state: int):
+            def f():
+                self.change_state(state)
+                self.initialize_ui()
+            return f
 
         buttons = []
         allowed = [i for i in allowed_state_transition[self.current_state] if state_dictionary_reversed[i] != self.current_state]
@@ -322,14 +339,10 @@ class JoystickHandler:
             if i >= len(allowed):
                 break
 
-            state = allowed[i]
-            txt = state_dictionary_reversed[allowed[i]]
-            def f():
-                self.change_state(state)
-                self.initialize_ui()
+            txt = name_dictionary[state_dictionary_reversed[allowed[i]]]
 
             b = Button(screen, half_width + 450 * (i // 4), half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3) , 400, int(fontsize * 1.3), fontSize=fontsize, text=txt)
-            b.onClick = f
+            b.onClick = transition(allowed[i])
 
         self.drone_visual = Drone(screen, (half_width, half_height), (half_width, 0))
 
@@ -542,7 +555,7 @@ class JoystickHandler:
                         if print_debug: print("M1 offset down")
                         message_individual_relative_control["MotorValueRel"]["motor"] = 1
                         message_individual_relative_control["MotorValueRel"]["value"] = -1
-                        ser.send(json.dumps(message_individual_relative_control))
+                        self.ser.send(json.dumps(message_individual_relative_control))
 
                     if event.key == ord('b'):
                         if print_debug: print("M2 offset up")
@@ -584,7 +597,7 @@ class JoystickHandler:
             self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}V")
             self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}")
             self.stats[2].setText(f"height: {self.reported_height:.2f}")
-            self.stats[3].setText(f"mode: {state_name(self.current_state)}")
+            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]}")
 
             pygame_widgets.update(approved_events)
             pygame.display.flip()
