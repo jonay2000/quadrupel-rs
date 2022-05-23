@@ -26,12 +26,14 @@ impl ModeTrait for FullControl {
 
         if state.height_mode_enable && state.height_lock.is_none() {
             state.height_lock = Some((state.target_attitude.lift, state.current_attitude.height));
-        } else if !state.height_mode_enable {
+        }
+        if !state.height_mode_enable {
             state.height_lock = None;
         }
         let (prev_lift, height_goal) = state.height_lock.unwrap_or((state.target_attitude.lift, state.current_attitude.height));
-        if state.height_mode_enable && (prev_lift.abs_diff(state.target_attitude.lift)) > 10  {
+        if state.height_mode_enable && (prev_lift.abs_diff(state.target_attitude.lift)) > FI32::from_num(0.1)  {
             state.height_mode_enable = false;
+            state.height_lock = None;
         }
 
         let motors = state.angle_mode.step(

@@ -156,6 +156,8 @@ c_visual = (0x58, 0x6A, 0x6A)
 class JoystickHandler:
     def __init__(self, screen, ser, joystick=None):
         # Setup class variables
+        self.current_state_raw = False
+        self.current_state_height = False
         self.screen = screen
         self.width = screen.get_width()
         self.height = screen.get_height()
@@ -402,6 +404,8 @@ class JoystickHandler:
 
                         if (v := msg.get("StateInformation")) is not None:
                             self.current_state = v["state"]
+                            self.current_state_height = v["height_mode"]
+                            self.current_state_raw = v["raw_mode"]
                             self.reported_height = v["height"]
                             self.reported_battery_voltage = v["battery"] / 100
                             self.reported_iteration_freq = 1_000_000 / v["dt"]
@@ -596,7 +600,9 @@ class JoystickHandler:
             self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}V")
             self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}")
             self.stats[2].setText(f"height: {self.reported_height:.2f}")
-            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]}")
+            flag_h = "H" if self.current_state_height else ""
+            flag_r = "R" if self.current_state_raw else ""
+            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}")
 
             pygame_widgets.update(approved_events)
             pygame.display.flip()
