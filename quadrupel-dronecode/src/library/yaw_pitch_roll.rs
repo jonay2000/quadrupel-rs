@@ -52,25 +52,6 @@ impl YawPitchRoll {
 impl From<Quaternion> for YawPitchRoll {
     // Rust shows some errors in this function if using CLion, they're fake
     fn from(q: Quaternion) -> Self {
-        // let Quaternion { w, x, y, z } = q;
-        //
-        // let gx = 2 * (x * z - w * y);
-        // let gy = 2 * (w * x + y * z);
-        // let gz = w * w - x * x - y * y + z * z;
-        //
-        // // yaw: (about Z axis)
-        // let yaw = atan2_approx(
-        //     2 * x * y - 2 * w * z,
-        //     2 * w * w + 2 * x * x - FI32::from_num(1),
-        // );
-        //
-        // // pitch: (nose up/down, about Y axis)
-        // let pitch = atan2_approx(gx, sqrt_approx(gy * gy + gz * gz));
-        //
-        // // roll: (tilt left/right, about X axis)
-        // let roll = atan2_approx(gy, gz);
-
-
         let Quaternion { w, x, y, z } = q;
 
         let gx = 2 * (x * z - w * y);
@@ -78,16 +59,16 @@ impl From<Quaternion> for YawPitchRoll {
         let gz = w * w - x * x - y * y + z * z;
 
         // yaw: (about Z axis)
-        let yaw = cordic::atan2(
+        let yaw = atan2_approx(
             2 * x * y - 2 * w * z,
             2 * w * w + 2 * x * x - FI32::from_num(1),
         );
 
         // pitch: (nose up/down, about Y axis)
-        let pitch = cordic::atan2(gx, cordic::sqrt(gy * gy + gz * gz));
+        let pitch = atan2_approx(gx, sqrt_approx(gy * gy + gz * gz));
 
         // roll: (tilt left/right, about X axis)
-        let roll = cordic::atan2(gy, gz);
+        let roll = atan2_approx(gy, gz);
 
 
         Self { yaw, pitch, roll }
