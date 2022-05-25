@@ -81,9 +81,11 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             state.cs = [FI32::from_bits(c1 as i32), FI32::from_bits(c2 as i32)];
         }
         MessageToDrone::FlashStartRecording => {
+            log::info!("Start recording.");
             state.flash_record = true;
         }
         MessageToDrone::FlashStopRecording => {
+            log::info!("Stop recording.");
             state.flash_record = false;
         }
         MessageToDrone::FlashRead => {
