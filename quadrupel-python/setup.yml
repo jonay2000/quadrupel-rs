@@ -1,5 +1,5 @@
 
-current: zeroed
+current: default
 setups:
     default:
         height_P: 1
@@ -14,8 +14,8 @@ setups:
         yaw_I: 0
         yaw_D: 500
         yaw_CAP: 0
-        c1: 10
-        c2: 50000
+        c1: 200
+        c2: 10000
 
         yaw_trim: -420000
         pitch_trim: -110000
