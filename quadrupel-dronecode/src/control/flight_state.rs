@@ -26,6 +26,7 @@ pub struct FlightState {
     pub raw_mode_enable: bool,
 
     pub height_lock: Option<(FI32, FI32)>,
+    pub pid_contributions: [FI32; 5],
 }
 
 pub struct CurrentAttitude {
@@ -104,6 +105,7 @@ impl Default for FlightState {
             height_lock: None,
             height_mode_enable: false,
             raw_mode_enable: false,
+            pid_contributions: [FI32::ZERO; 5],
         }
     }
 }

@@ -9,7 +9,7 @@ use crate::control::modes::ModeTrait;
 use crate::control::process_message::process_message;
 use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
-use quadrupel_shared::message::MessageToComputer;
+use quadrupel_shared::message::{FlashPacket, MessageToComputer};
 use quadrupel_shared::state::Mode;
 use crate::control::modes::calibrate_mode::CalibrateMode;
 use crate::library::fixed_point::{FI32, rough_isqrt};
@@ -36,6 +36,8 @@ pub fn start_loop() -> ! {
 
     let mut time_since_last_print = 0;
 
+    let mut adc_filtered = 1000;
+
     loop {
         let cur_time = TIME.as_mut_ref().get_time_us();
         let dt = cur_time - last_time;
@@ -58,9 +60,8 @@ pub fn start_loop() -> ! {
         }
 
         //YPR
-        const ENABLE_RAW: bool = false;
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let ypr = if ENABLE_RAW {
+        let ypr = if state.raw_mode_enable {
             state.raw_mode.update(accel, gyro, dt)
         } else {
             MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref())
@@ -76,15 +77,21 @@ pub fn start_loop() -> ! {
 
         //Read other hardware
         let motors = MOTORS.update_main(|motors| motors.get_motors());
-        let adc = ADC.update_main(|adc| adc.read());
+
 
         //Check adc
-        if adc > 650 && adc < 950
-        /*1050*/
+        let adc = ADC.update_main(|adc| adc.read());
+        if adc > adc_filtered {
+            adc_filtered += 10;
+        } else {
+            adc_filtered -= 10;
+        }
+
+        if adc_filtered > adc_filtered && adc < 1000
         {
-            log::error!("Panic: Battery low {adc} 10^-2 V");
+            log::error!("Panic: Battery low {adc_filtered} 10^-2 V");
             state.mode = Mode::Panic;
-        } else if adc != 0 && adc_warning && adc <= 650 {
+        } else if adc_filtered != 0 && adc_warning && adc_filtered <= 650 {
             log::warn!(
                 "Warning: Battery is < 6V ({adc}), continuing assuming that this is not a drone."
             );
@@ -137,12 +144,16 @@ pub fn start_loop() -> ! {
         });
 
         //Handle flash
+        if state.target_attitude.lift > 0 {
+            state.flash_record = true;
+        }
         if state.flash_record && flash_protocol.is_done() {
             state.flash_record = false;
+            state.flash_send = true;
             // TODO autosend? state.flash_send = true;
         }
         if state.flash_record {
-            // flash_protocol.write(FlashPacket::Data(accel.x()));
+            flash_protocol.write(FlashPacket::Data(ypr.pitch.to_bits() as i16))
         }
         if state.flash_send {
             while UART.as_mut_ref().buffer_left_rx() >= 128
@@ -168,7 +179,7 @@ pub fn start_loop() -> ! {
             let msg = MessageToComputer::StateInformation {
                 state: state.mode,
                 height: pres,
-                battery: adc,
+                battery: adc_filtered,
                 dt: (cur_time - start_time) / state.count,
                 motors,
                 sensor_ypr: [ypr.yaw.to_bits(), ypr.pitch.to_bits(), ypr.roll.to_bits()],
@@ -187,6 +198,7 @@ pub fn start_loop() -> ! {
                 gyro: [gyro.x, gyro.y, gyro.z],
                 height_mode: state.height_mode_enable,
                 raw_mode: state.raw_mode_enable,
+                pid_contributions: state.pid_contributions.map(|f| f.to_bits()),
             };
 
             // let mut encoding_space: [u8; 256] = [0u8; 256];

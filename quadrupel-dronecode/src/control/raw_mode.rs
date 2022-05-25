@@ -9,6 +9,10 @@ pub struct RawMode {
     //TODO add filters
     yaw: FI64,
     yaw_filter: ButterworthLowPass2nd,
+    roll_bw_filter: ButterworthLowPass2nd,
+    roll_filter: ComplFilter,
+    pitch_bw_filter: ButterworthLowPass2nd,
+    pitch_filter: ComplFilter,
 }
 
 impl RawMode {
@@ -40,8 +44,9 @@ impl RawMode {
                 a_xi_2,
             ),
             roll_filter: ComplFilter::new(
-                10,
-                50,
+                FI32::from_num(10),
+                FI32::from_num(2000),
+                false,
             ),
             pitch_bw_filter: ButterworthLowPass2nd::new(
                 a_yi,
@@ -52,8 +57,9 @@ impl RawMode {
                 a_xi_2,
             ),
             pitch_filter: ComplFilter::new(
-                10,
-                50,
+                FI32::from_num(10),
+                FI32::from_num(2000),
+                false,
             ),
         }
     }
@@ -66,7 +72,7 @@ impl RawMode {
         let accel_y: FI32 = FI32::from_bits(accel.y as i32);
         let accel_z: FI32 = FI32::from_bits(accel.z as i32);
         let gyro_pitch: FI32 = FI32::from_bits(gyro.x as i32);
-        let  gyro_roll: FI32 = FI32::from_bits(gyro.y as i32);
+        let gyro_roll: FI32 = FI32::from_bits(gyro.y as i32);
         let gyro_yaw: FI32 = FI32::from_bits(gyro.z as i32);
 
         let pitch = atan2_approx(accel_x, accel_z);
@@ -76,8 +82,8 @@ impl RawMode {
         // let roll = self.roll_bw_filter(roll);
         // let pitch = self.pith_bw_filter(pitch);
 
-        let (gyro_roll, roll) = self.roll_filter(gyro_roll, roll, dt);
-        let (gyro_pitch, pitch) = self.pitch_filter(gyro_pitch, pitch, dt);
+        // let (gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
+        // let (gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
 
 
         /*
@@ -88,7 +94,7 @@ impl RawMode {
         The number in radians will be too small to represent as a FI32
         Instead, we're gonna calculate the middle 32 bits of a FI64 with 48 decimal points (we really don't need the lower 16 bits, but fixed doesn't support 48 bit numbers), which has a value of 2^-16, then add those to the FI64
          */
-        let mut d_yaw = gyro_z; //Change in 2000 deg/second
+        let mut d_yaw = gyro_yaw    ; //Change in 2000 deg/second
 
         // First to deg/second, then to rad/second
         d_yaw *= FI32::from_num(2000);

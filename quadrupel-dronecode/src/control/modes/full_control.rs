@@ -36,7 +36,7 @@ impl ModeTrait for FullControl {
             state.height_lock = None;
         }
 
-        let motors = state.angle_mode.step(
+        let (motors, st) = state.angle_mode.step(
             dt,
             lift_goal,
             state.current_attitude.yaw,
@@ -57,5 +57,6 @@ impl ModeTrait for FullControl {
                     .to_num(),
             )
         });
+        state.pid_contributions = st;
     }
 }
