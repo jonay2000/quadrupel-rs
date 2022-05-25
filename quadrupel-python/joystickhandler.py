@@ -603,7 +603,6 @@ class JoystickHandler:
             self.output3.setText("M3: " + str(self.slider3.getValue()))
             self.drone_visual.rot = self.reported_ypr
             self.drone_visual.draw()
-            self.drone_visual.rot[0] += 0.01
 
             self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}V")
             self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}")
