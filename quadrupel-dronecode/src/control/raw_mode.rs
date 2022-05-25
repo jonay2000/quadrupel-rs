@@ -1,5 +1,7 @@
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
+use quadrupel_shared::message::FlashPacket;
+use crate::control::flash_protocol::FlashProtocol;
 use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
 use crate::filters::compl_filter::ComplFilter;
 use crate::library::fixed_point::{atan2_approx, FI32, FI64, sqrt_approx};
@@ -64,7 +66,7 @@ impl RawMode {
         }
     }
 
-    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32) -> YawPitchRoll {
+    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32, fp: &mut FlashProtocol) -> YawPitchRoll {
         // Accel is in range [-2G, 2G]
         // Gyro is in range [-2000 deg, 2000 deg]
 
@@ -84,6 +86,7 @@ impl RawMode {
 
         // let (gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
         // let (gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
+        fp.write(FlashPacket::Data(gyro_pitch.to_bits(), pitch.to_bits()));
 
 
         /*

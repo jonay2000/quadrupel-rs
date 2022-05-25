@@ -79,7 +79,7 @@ pub fn start_loop() -> ! {
         //YPR
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
         let ypr = if state.raw_mode_enable {
-            state.raw_mode.update(accel, gyro, dt)
+            state.raw_mode.update(accel, gyro, dt, &mut flash_protocol)
         } else {
             MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref())
         };
