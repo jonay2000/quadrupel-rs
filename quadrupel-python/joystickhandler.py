@@ -73,7 +73,6 @@ name_dictionary = {
 
 state_dictionary_reversed: dict[int, str] = {value: key for key, value in state_dictionary.items()}
 
-
 # Offsets to be added to the joystick input
 keyboard_offsets = {
     "lift": 0,
@@ -137,6 +136,8 @@ message_control_parameters = {
         "height_I": 0,
         "height_D": 0,
         "height_CAP": 0,
+        "c1": 0,
+        "c2": 0,
     }
 }
 
@@ -146,8 +147,7 @@ message_individual_relative_control = {
         "value": 0
     }
 }
-PID_MULTIPLIER = 2**16
-
+PID_MULTIPLIER = 2 ** 16
 
 c_background = (0x81, 0x8D, 0x92)
 c_visual = (0x58, 0x6A, 0x6A)
@@ -266,7 +266,8 @@ class JoystickHandler:
         b_v_start = half_height + b_height * 4
         b_v_distance = int(b_height * 1.5)
 
-        self.submit_button = Button(screen, width / 8, b_v_start + b_v_distance, 200, 50, fontSize=fontsize, text="submit", onClick=self.submit)
+        self.submit_button = Button(screen, width / 8, b_v_start + b_v_distance, 200, 50, fontSize=fontsize,
+                                    text="submit", onClick=self.submit)
 
         self.label4 = TextBox(screen, b_start, b_v_start, 50, 50, fontSize=fontsize)
         self.label4.disable()
@@ -299,8 +300,10 @@ class JoystickHandler:
 
         self.pitch_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance * 2, 80, 80, fontSize=fontsize)
         self.pitch_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance * 2, 80, 80, fontSize=fontsize)
-        self.pitch_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance * 2, 80, 80, fontSize=fontsize)
-        self.pitch_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance * 2, 80, 80, fontSize=fontsize)
+        self.pitch_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance * 2, 80, 80,
+                                  fontSize=fontsize)
+        self.pitch_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance * 2, 80, 80,
+                                    fontSize=fontsize)
 
         self.label3 = TextBox(screen, b_start - b_width, b_v_start - b_v_distance * 3, 130, 70, fontSize=fontsize)
         self.label3.disable()
@@ -309,7 +312,19 @@ class JoystickHandler:
         self.yaw_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance * 3, 80, 80, fontSize=fontsize)
         self.yaw_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance * 3, 80, 80, fontSize=fontsize)
         self.yaw_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance * 3, 80, 80, fontSize=fontsize)
-        self.yaw_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance * 3, 80, 80, fontSize=fontsize)
+        self.yaw_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance * 3, 80, 80,
+                                  fontSize=fontsize)
+
+
+        self.label4 = TextBox(screen, b_start - b_width, b_v_start - b_v_distance * 4, 80, 70, fontSize=fontsize)
+        self.label4.disable()
+        self.label4.setText("c1:")
+        self.label4 = TextBox(screen, b_start + b_width, b_v_start - b_v_distance * 4, 80, 70, fontSize=fontsize)
+        self.label4.disable()
+        self.label4.setText("c2:")
+
+        self.c1_tb = TextBox(screen, b_start , b_v_start - b_v_distance * 4, 80, 80, fontSize=fontsize)
+        self.c2_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance * 4, 80, 80, fontSize=fontsize)
 
         self.previous_motor0 = 0
         self.previous_motor1 = 0
@@ -324,7 +339,9 @@ class JoystickHandler:
 
         self.stats = []
         for i in range(8):
-            b = TextBox(screen, half_width + 450 * (i // 4), half_height + (i % 4) * int(fontsize * 1.3) + 40, 400, int(fontsize * 1.3), fontSize=fontsize)
+            bw = int(half_width / 2.5)
+            b = TextBox(screen, half_width + (bw - 20) * (i // 4), half_height + (i % 4) * int(fontsize * 1.3) + 40, bw,
+                        int(fontsize * 1.3), fontSize=fontsize)
             b.disable()
             self.stats.append(
                 b
@@ -332,19 +349,23 @@ class JoystickHandler:
 
         def transition(state: int):
             def f():
-                self.change_state(state)
+                self.change_state(state, None)
                 self.initialize_ui()
+
             return f
 
         buttons = []
-        allowed = [i for i in allowed_state_transition[self.current_state] if state_dictionary_reversed[i] != self.current_state]
+        allowed = [i for i in allowed_state_transition[self.current_state] if
+                   state_dictionary_reversed[i] != self.current_state]
         for i in range(8):
             if i >= len(allowed):
                 break
 
             txt = name_dictionary[state_dictionary_reversed[allowed[i]]]
 
-            b = Button(screen, half_width + 450 * (i // 4), half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3) , 400, int(fontsize * 1.3), fontSize=fontsize, text=txt)
+            b = Button(screen, half_width + 450 * (i // 4),
+                       half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+                       int(fontsize * 1.3), fontSize=fontsize, text=txt)
             b.onClick = transition(allowed[i])
 
         self.drone_visual = Drone(screen, (half_width, half_height), (half_width, 0))
@@ -375,7 +396,9 @@ class JoystickHandler:
             print(message_control_parameters)
 
     def tb_not_selected(self):
-        return not any(i.selected for i in self.textboxes.values())
+        res = not any(i.selected for i in self.textboxes.values())
+        print(res)
+        return res
 
     def run(self):
         running = True  # This is the main "loop running" variable -- set to false to exit the loop
@@ -594,9 +617,13 @@ class JoystickHandler:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
                         self.change_state(int(chr(event.key)), event)
 
-            self.screen.fill(c_background)
+            if self.current_state == "Panic":
+                self.screen.fill((220, 50, 50))
+            else:
+                self.screen.fill(c_background)
 
-            pygame.draw.rect(self.screen, c_visual, (self.width // 2, 0, self.width // 2, self.height // 2), 0, 0, 0, 0, 10)
+            pygame.draw.rect(self.screen, c_visual, (self.width // 2, 0, self.width // 2, self.height // 2), 0, 0, 0, 0,
+                             10)
             self.output0.setText("M0: " + str(self.slider0.getValue()))
             self.output1.setText("M1: " + str(self.slider1.getValue()))
             self.output2.setText("M2: " + str(self.slider2.getValue()))
@@ -611,7 +638,16 @@ class JoystickHandler:
             flag_h = "H" if self.current_state_height else ""
             flag_r = "R" if self.current_state_raw else ""
             self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}")
-            self.stats[4].setText(f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f}")
+            self.stats[4].setText(
+                f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f}")
+
+            self.stats[5].setText(
+                f"yprl: {self.yaw / 5000:.2f} {self.pitch / 5000:.2f} {self.roll / 5000:.2f} {self.lift / 10000:.2f}")
+
+            if self.can_change_mode():
+                self.stats[5].colour = (50, 220, 50)
+            else:
+                self.stats[5].colour = (220, 50, 50)
 
             pygame_widgets.update(approved_events)
             pygame.display.flip()
@@ -619,21 +655,26 @@ class JoystickHandler:
             if self.current_state != prev_state:
                 self.initialize_ui()
 
-    def change_state(self, state: int, event):
-        if event.key == ord('7'): # Specific behavior for height control toggle
+    def can_change_mode(self):
+        ypr_margin = 30_000
+        lift_margin = 5_000
+
+        return (-ypr_margin <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= ypr_margin
+                and -ypr_margin <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= ypr_margin
+                and -ypr_margin <= ((self.joystick.get_axis(2)) * pow(2, 19)) <= ypr_margin
+                and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19)) <= lift_margin)
+
+    def change_state(self, state: int, event=None):
+        if event is not None and event.key == ord('7'):  # Specific behavior for height control toggle
             self.ser.send(toggle_height_control())
-        elif -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= 20000 \
-                and -20000 <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= 20000 \
-                and -20000 <= ((self.joystick.get_axis(2)) * pow(2, 19)) <= 20000 \
-                and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19))  <= 50000:
-            if event.key == ord('6'):
+        elif self.can_change_mode() and self.tb_not_selected():
+            if event is not None and event.key == ord('6'):
                 self.ser.send(toggle_raw_mode())
             else:
                 state = state_dictionary_reversed[state]
                 self.current_state = state
                 self.ser.send(change_state(state))
-            self.mode_changed = 3
-
+            self.mode_changed = 2
 
         # TODO
 

@@ -103,6 +103,8 @@ pub enum MessageToDrone {
         height_I: u32,
         height_D: u32,
         height_CAP: u32,
+        c1: u32,
+        c2: u32,
     },
     FlashStartRecording,
     FlashStopRecording,
