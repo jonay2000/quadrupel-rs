@@ -12,7 +12,7 @@ use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
 use quadrupel_shared::state::Mode;
 use crate::control::modes::calibrate_mode::CalibrateMode;
-use crate::library::fixed_point::rough_isqrt;
+use crate::library::fixed_point::{FI32, rough_isqrt};
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -65,13 +65,16 @@ pub fn start_loop() -> ! {
         } else {
             MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref())
         };
+        let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
+        let mut pres = pres as i32;
+        pres -= 100000;
         let ypr = state.calibrate.fix_ypr(ypr);
         state.current_attitude.yaw = ypr.yaw;
         state.current_attitude.pitch = ypr.pitch;
         state.current_attitude.roll = ypr.roll;
+        state.current_attitude.height = FI32::from_bits((pres as i32) << 16);
 
         //Read other hardware
-        let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let motors = MOTORS.update_main(|motors| motors.get_motors());
         let adc = ADC.update_main(|adc| adc.read());
 
@@ -182,6 +185,8 @@ pub fn start_loop() -> ! {
                 ],
                 accel: [accel.x, accel.y, accel.z],
                 gyro: [gyro.x, gyro.y, gyro.z],
+                height_mode: state.height_mode_enable,
+                raw_mode: state.raw_mode_enable,
             };
 
             // let mut encoding_space: [u8; 256] = [0u8; 256];

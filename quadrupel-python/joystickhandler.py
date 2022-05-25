@@ -17,7 +17,7 @@ FILE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 
 if typing.TYPE_CHECKING:
     from main import Serial
-from msgs import motor_message, heartbeat, change_state, joystick_message
+from msgs import *
 
 # Roll: Axis 0
 # Pitch: Axis 1
@@ -156,6 +156,8 @@ c_visual = (0x58, 0x6A, 0x6A)
 class JoystickHandler:
     def __init__(self, screen, ser, joystick=None):
         # Setup class variables
+        self.current_state_raw = False
+        self.current_state_height = False
         self.screen = screen
         self.width = screen.get_width()
         self.height = screen.get_height()
@@ -174,7 +176,6 @@ class JoystickHandler:
         self.pitch = 0
         self.roll = 0
         self.lift = 0
-
 
         self.reported_battery_voltage = 0
         self.reported_mode = "Safe"
@@ -406,6 +407,8 @@ class JoystickHandler:
                         if (v := msg.get("StateInformation")) is not None:
                             if self.mode_changed <= 0:
                                 self.current_state = v["state"]
+                                self.current_state_height = v["height_mode"]
+                                self.current_state_raw = v["raw_mode"]
                             else:
                                 self.mode_changed -= 1
 
@@ -589,7 +592,7 @@ class JoystickHandler:
                     if ord('0') <= event.key <= ord('9'):
                         if print_debug:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
-                        self.change_state(int(chr(event.key)))
+                        self.change_state(int(chr(event.key)), event)
 
             self.screen.fill(c_background)
 
@@ -600,11 +603,15 @@ class JoystickHandler:
             self.output3.setText("M3: " + str(self.slider3.getValue()))
             self.drone_visual.rot = self.reported_ypr
             self.drone_visual.draw()
+            self.drone_visual.rot[0] += 0.01
 
             self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}V")
             self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}")
             self.stats[2].setText(f"height: {self.reported_height:.2f}")
-            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]}")
+
+            flag_h = "H" if self.current_state_height else ""
+            flag_r = "R" if self.current_state_raw else ""
+            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}")
             self.stats[4].setText(f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f}")
 
             pygame_widgets.update(approved_events)
@@ -613,19 +620,21 @@ class JoystickHandler:
             if self.current_state != prev_state:
                 self.initialize_ui()
 
-    def change_state(self, state: int):
-        if self.joystick is not None and self.tb_not_selected():
-            if -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= 20000 \
+    def change_state(self, state: int, event):
+        if event.key == ord('7'): # Specific behavior for height control toggle
+            self.ser.send(toggle_height_control())
+        elif -20000 <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= 20000 \
                 and -20000 <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= 20000 \
                 and -20000 <= ((self.joystick.get_axis(2)) * pow(2, 19)) <= 20000 \
                 and ((-1 * self.joystick.get_axis(3) + 1) * pow(2, 19))  <= 50000:
+            if event.key == ord('6'):
+                self.ser.send(toggle_raw_mode())
+            else:
                 state = state_dictionary_reversed[state]
                 self.current_state = state
                 self.ser.send(change_state(state))
+            self.mode_changed = 3
 
-                self.mode_changed = 3
-
-                return
 
         # TODO
 

@@ -163,11 +163,6 @@ unsafe fn UART0() {
     if uart.uart.events_error.read().bits() != 0 {
         uart.uart.events_error.reset();
         //TODO log somehow
-        panic!(
-            "Uart error: (Framing: {}) (Overrun: {}) (Parity: {})",
-            uart.uart.errorsrc.read().framing().bit(),
-            uart.uart.errorsrc.read().overrun().bit(),
-            uart.uart.errorsrc.read().parity().bit()
-        )
+        panic!("Uart error")
     }
 }

@@ -16,7 +16,7 @@ pub enum MessageToComputer {
     Log(Vec<u8>),
     StateInformation {
         state: Mode,
-        height: u32,
+        height: i32,
         battery: u16,
         dt: u32,
         motors: [u16; 4],
@@ -25,6 +25,8 @@ pub enum MessageToComputer {
         i_buildup: [i32; 3],
         accel: [i16; 3],
         gyro: [i16; 3],
+        height_mode: bool,
+        raw_mode: bool,
     },
     FlashPacket(FlashPacket),
 }
@@ -42,7 +44,7 @@ impl MessageToComputer {
         assert!(count < 256);
         encoding_space[1] = count as u8;
         encoding_space[0] = 0xab as u8;
-        w.write(&encoding_space[..count+1])?;
+        w.write(&encoding_space[..count+2])?;
         Ok(())
     }
 
@@ -65,6 +67,8 @@ pub enum Motor {
 #[derive(Decode, Encode, Debug)]
 pub enum MessageToDrone {
     ChangeState(Mode),
+    SetHeightMode(u8),
+    SetRawMode(u8),
     MotorValue {
         motor: Motor,
         value: MotorValue,
