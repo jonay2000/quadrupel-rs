@@ -56,7 +56,7 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             roll_P,
             roll_I,
             roll_D,
-            roll_CAP,
+            roll_CAP, height_P, height_I, height_D, height_CAP,
         } => {
             state.angle_mode.yaw_pid.kp = FI32::from_bits(yaw_P as i32);
             state.angle_mode.yaw_pid.ki = FI32::from_bits(yaw_I as i32);
@@ -72,6 +72,11 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             state.angle_mode.roll_pid.ki = FI32::from_bits(roll_I as i32);
             state.angle_mode.roll_pid.kd = FI32::from_bits(roll_D as i32);
             state.angle_mode.roll_pid.cap = FI32::from_bits(roll_CAP as i32);
+
+            state.angle_mode.height_pid.kp = FI32::from_bits(height_P as i32);
+            state.angle_mode.height_pid.ki = FI32::from_bits(height_I as i32);
+            state.angle_mode.height_pid.kd = FI32::from_bits(height_D as i32);
+            state.angle_mode.height_pid.cap = FI32::from_bits(height_CAP as i32);
         }
         MessageToDrone::FlashStartRecording => {
             state.flash_record = true;
@@ -82,6 +87,12 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
         MessageToDrone::FlashRead => {
             state.flash_record = false;
             state.flash_send = true;
+        },
+        MessageToDrone::SetHeightMode(_) => {
+            state.height_mode_enable = !state.height_mode_enable;
+        }
+        MessageToDrone::SetRawMode(_) => {
+            state.raw_mode_enable = !state.raw_mode_enable;
         }
     }
 }

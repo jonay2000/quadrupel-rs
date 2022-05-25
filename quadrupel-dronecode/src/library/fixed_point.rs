@@ -34,7 +34,7 @@ pub fn sqrt_approx(x: FI32) -> FI32 {
     FI32::from_bits(res)
 }
 
-pub fn atan2_approx(x: FI32, y: FI32) -> FI32 {
+pub fn atan2_approx(y: FI32, x: FI32) -> FI32 {
     if x == FI32::ZERO {
         return if y < FI32::ZERO {
             -FI32::FRAC_PI_2

@@ -20,7 +20,12 @@ pub struct FlightState {
     pub flash_record: bool,
     pub flash_send: bool,
 
-    pub calibrate: Calibrate
+    pub calibrate: Calibrate,
+
+    pub height_mode_enable: bool,
+    pub raw_mode_enable: bool,
+
+    pub height_lock: Option<(FI32, FI32)>,
 }
 
 pub struct CurrentAttitude {
@@ -83,12 +88,22 @@ impl Default for FlightState {
                     FI32::from_num(0),
                     true,
                 ),
+                height_pid: PID::new(
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    FI32::from_num(0),
+                    false,
+                ),
             },
             count: 0,
             raw_mode: RawMode::new(),
             flash_record: false,
             flash_send: false,
             calibrate: Calibrate::new(),
+            height_lock: None,
+            height_mode_enable: false,
+            raw_mode_enable: false,
         }
     }
 }
