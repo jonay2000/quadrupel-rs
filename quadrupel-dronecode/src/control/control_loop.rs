@@ -7,6 +7,7 @@ use crate::control::modes::panic::PanicMode;
 use crate::control::modes::safe::SafeMode;
 use crate::control::modes::ModeTrait;
 use crate::control::process_message::process_message;
+use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
 use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::MessageToComputer;
@@ -35,6 +36,22 @@ pub fn start_loop() -> ! {
     let mut adc_warning = true;
 
     let mut time_since_last_print = 0;
+
+    let a_yi = FI32::from_num(54818.728);
+    let a_yi_1 = FI32::from_num(108973.229)/a_yi;
+    let a_yi_2 = FI32::from_num(-54158.500)/a_yi;
+    let a_xi = FI32::from_num(1)/a_yi;
+    let a_xi_1 = FI32::from_num(2)/a_yi;
+    let a_xi_2 = FI32::from_num(1)/a_yi;
+    let height_filter_raw = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
+
+    let a_yi = FI32::from_num(1291.029);
+    let a_yi_1 = FI32::from_num(2478.450)/a_yi;
+    let a_yi_2 = FI32::from_num(-1191.421)/a_yi;
+    let a_xi = FI32::from_num(1)/a_yi;
+    let a_xi_1 = FI32::from_num(2)/a_yi;
+    let a_xi_2 = FI32::from_num(1)/a_yi;
+    let height_filter_mpu = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
 
     loop {
         let cur_time = TIME.as_mut_ref().get_time_us();
@@ -68,6 +85,13 @@ pub fn start_loop() -> ! {
         let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let mut pres = pres as i32;
         pres -= 100000;
+
+            if (state.raw_mode_enable) {
+                pres = height_filter_raw.filter(pres);
+            } else {
+                pres = height_filter_mpu.filter(pres);
+            }
+
         let ypr = state.calibrate.fix_ypr(ypr);
         state.current_attitude.yaw = ypr.yaw;
         state.current_attitude.pitch = ypr.pitch;
