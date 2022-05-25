@@ -125,6 +125,8 @@ class Serial:
                                 # print(f"State: {v}")
                             elif (v := decoded_msg.get("FlashPacket")) is not None:
                                 print(f"Flash packet: {v}")
+                                with open("flash_data.txt", "a") as f:
+                                    print(v["Data"], file=f)
                             # TODO: Uncommenting this causes code to crash later?
                             else:
                                 with open(FILE_PATH / "messages.txt", "a") as f:
