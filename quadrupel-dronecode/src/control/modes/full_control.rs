@@ -26,6 +26,7 @@ impl ModeTrait for FullControl {
 
         if state.height_mode_enable && state.height_lock.is_none() {
             state.height_lock = Some((state.target_attitude.lift, state.current_attitude.height));
+            state.angle_mode.height_pid.buildup = FI32::ZERO;
         }
         if !state.height_mode_enable {
             state.height_lock = None;

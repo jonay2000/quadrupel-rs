@@ -1,9 +1,9 @@
 use crate::library::pid::PID;
 use crate::library::fixed_point::FI32;
 
-const ENABLE_YAW: bool = false;
+const ENABLE_YAW: bool = true;
 const ENABLE_PITCH: bool = true;
-const ENABLE_ROLL: bool = false;
+const ENABLE_ROLL: bool = true;
 
 pub struct AngleMode {
     pub yaw_pid: PID,

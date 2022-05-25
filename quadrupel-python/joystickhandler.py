@@ -181,7 +181,7 @@ class JoystickHandler:
         self.reported_mode = "Safe"
         self.reported_height = 0
         self.reported_motor_values = [0] * 4
-        self.reported_i_buildup = [0] * 3
+        self.reported_i_buildup = [0] * 4
         self.reported_iteration_freq = 0
         self.mode_changed = 0
         self.reported_ypr = [0] * 3
@@ -211,7 +211,7 @@ class JoystickHandler:
                         print("bad float value")
                         return
 
-                    int_v = int(flt_v * (2 ** 16))
+                    int_v = int(flt_v * PID_MULTIPLIER)
                     self.new_pid_input = True
                     print(f"set {name} to {flt_v} ({int_v})")
 
@@ -373,7 +373,7 @@ class JoystickHandler:
         self.textboxes = {i.replace("_tb", ""): x for i in self.__dict__ if
                           isinstance(x := getattr(self, i), TextBox) and not x._disabled and "tb" in i}
         for k, v in self.textboxes.items():
-            v.setText(f"{message_control_parameters['TunePID'][k] / PID_MULTIPLIER:.00f}")
+            v.setText(f"{message_control_parameters['TunePID'][k] / PID_MULTIPLIER:.01f}")
 
     def submit(self):
         for name, i in self.textboxes.items():
@@ -639,7 +639,7 @@ class JoystickHandler:
             flag_r = "R" if self.current_state_raw else ""
             self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}")
             self.stats[4].setText(
-                f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f}")
+                f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f} {self.reported_i_buildup[3]:.2f}")
 
             self.stats[5].setText(
                 f"yprl: {self.yaw / 5000:.2f} {self.pitch / 5000:.2f} {self.roll / 5000:.2f} {self.lift / 10000:.2f}")

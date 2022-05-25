@@ -56,7 +56,7 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             roll_P,
             roll_I,
             roll_D,
-            roll_CAP, height_P, height_I, height_D, height_CAP,
+            roll_CAP, height_P, height_I, height_D, height_CAP, c1, c2,
         } => {
             state.angle_mode.yaw_pid.kp = FI32::from_bits(yaw_P as i32);
             state.angle_mode.yaw_pid.ki = FI32::from_bits(yaw_I as i32);
@@ -77,6 +77,8 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
             state.angle_mode.height_pid.ki = FI32::from_bits(height_I as i32);
             state.angle_mode.height_pid.kd = FI32::from_bits(height_D as i32);
             state.angle_mode.height_pid.cap = FI32::from_bits(height_CAP as i32);
+
+            state.cs = [FI32::from_bits(c1 as i32), FI32::from_bits(c2 as i32)];
         }
         MessageToDrone::FlashStartRecording => {
             state.flash_record = true;
