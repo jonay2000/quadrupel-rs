@@ -182,6 +182,8 @@ class JoystickHandler:
         self.reported_motor_values = [0] * 4
         self.reported_i_buildup = [0] * 3
         self.reported_iteration_freq = 0
+        self.mode_changed = 0
+        self.reported_ypr = [0] * 3
 
         setup_path = FILE_PATH / "setup.yml"
         print(setup_path)
@@ -402,11 +404,16 @@ class JoystickHandler:
                         print(msg)
 
                         if (v := msg.get("StateInformation")) is not None:
-                            self.current_state = v["state"]
+                            if self.mode_changed <= 0:
+                                self.current_state = v["state"]
+                            else:
+                                self.mode_changed -= 1
+
                             self.reported_height = v["height"]
                             self.reported_battery_voltage = v["battery"] / 100
                             self.reported_iteration_freq = 1_000_000 / v["dt"]
                             self.reported_i_buildup = v["i_buildup"]
+                            self.reported_ypr = [i / (1 << 16) for i in v["sensor_ypr"]]
                         else:
                             print("msg: ", msg)
 
@@ -591,13 +598,14 @@ class JoystickHandler:
             self.output1.setText("M1: " + str(self.slider1.getValue()))
             self.output2.setText("M2: " + str(self.slider2.getValue()))
             self.output3.setText("M3: " + str(self.slider3.getValue()))
+            self.drone_visual.rot = self.reported_ypr
             self.drone_visual.draw()
-            self.drone_visual.rot[0] += 0.01
 
             self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}V")
             self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}")
             self.stats[2].setText(f"height: {self.reported_height:.2f}")
             self.stats[3].setText(f"mode: {name_dictionary[self.current_state]}")
+            self.stats[4].setText(f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f}")
 
             pygame_widgets.update(approved_events)
             pygame.display.flip()
@@ -614,6 +622,9 @@ class JoystickHandler:
                 state = state_dictionary_reversed[state]
                 self.current_state = state
                 self.ser.send(change_state(state))
+
+                self.mode_changed = 3
+
                 return
 
         # TODO
