@@ -14,6 +14,8 @@ setups:
         yaw_I: 0
         yaw_D: 500
         yaw_CAP: 0
+        c1: 10
+        c2: 500
 
         yaw_trim: -170000
         pitch_trim: -110000
