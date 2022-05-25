@@ -50,7 +50,7 @@ state_dictionary = {
     "Panic": 1,
     "Manual": 2,
     "Calibration": 3,
-    "yaw_control": 4,
+    "YawControl": 4,
     "FullControl": 5,
     "raw": 6,
     "height_control": 7,
@@ -63,7 +63,7 @@ name_dictionary = {
     "Panic": "panic",
     "Manual": "manual",
     "Calibration": "calibration",
-    "yaw_control": "yaw control",
+    "YawControl": "yaw control",
     "FullControl": "full control",
     "raw": "raw",
     "height_control": "height control",
@@ -98,7 +98,7 @@ allowed_state_transition = {
     "Calibration": [
         state_dictionary["Safe"]
     ],
-    "yaw_control": [
+    "YawControl": [
         state_dictionary["Safe"]
     ],
     "FullControl": [
@@ -354,9 +354,16 @@ class JoystickHandler:
 
             return f
 
+        def send_message(msg: str):
+            def f():
+                self.ser.send(f"\"{msg}\"")
+
+            return f
+
         buttons = []
         allowed = [i for i in allowed_state_transition[self.current_state] if
                    state_dictionary_reversed[i] != self.current_state]
+        i = 0
         for i in range(8):
             if i >= len(allowed):
                 break
@@ -368,12 +375,23 @@ class JoystickHandler:
                        int(fontsize * 1.3), fontSize=fontsize, text=txt)
             b.onClick = transition(allowed[i])
 
+        for txt in ["FlashStopRecording", "FlashStartRecording", "FlashRead"]:
+            b = Button(screen, half_width + 450 * (i // 4),
+                       half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+                       int(fontsize * 1.3), fontSize=fontsize, text=txt)
+            b.onClick = send_message(txt)
+            i += 1
+
         self.drone_visual = Drone(screen, (half_width, half_height), (half_width, 0))
 
         self.textboxes = {i.replace("_tb", ""): x for i in self.__dict__ if
                           isinstance(x := getattr(self, i), TextBox) and not x._disabled and "tb" in i}
         for k, v in self.textboxes.items():
-            v.setText(f"{message_control_parameters['TunePID'][k] / PID_MULTIPLIER:.01f}")
+            res = message_control_parameters['TunePID'][k] / PID_MULTIPLIER
+            if res < 0:
+                v.setText(f"{res:.02f}")
+            else:
+                v.setText(f"{res:.00f}")
 
     def submit(self):
         for name, i in self.textboxes.items():
