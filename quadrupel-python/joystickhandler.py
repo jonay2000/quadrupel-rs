@@ -90,6 +90,7 @@ allowed_state_transition = {
         state_dictionary["Calibration"],
         state_dictionary["FullControl"],
         state_dictionary["IndividualMotorControl"],
+        state_dictionary["YawControl"]
     ],
     "Panic": [],
     "Manual": [
