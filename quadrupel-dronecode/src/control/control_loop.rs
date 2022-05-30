@@ -129,6 +129,7 @@ pub fn start_loop() -> ! {
             Mode::Calibration => CalibrateMode::iteration(&mut state, dt),
             Mode::Panic => PanicMode::iteration(&mut state, dt),
             Mode::FullControl => FullControl::iteration(&mut state, dt),
+            Mode::YawControl => FullControl::iteration(&mut state, dt),
             Mode::IndividualMotorControl => IndividualMotorControlMode::iteration(&mut state, dt),
             Mode::Manual => ManualControl::iteration(&mut state, dt),
         }
@@ -151,6 +152,7 @@ pub fn start_loop() -> ! {
             Mode::Safe => (true, false, false),
             Mode::Calibration => (false, false, false),
             Mode::Panic => (true, true, true),
+            Mode::YawControl => (false, true, false),
             Mode::FullControl => (false, true, false),
             Mode::IndividualMotorControl => (false, true, false),
             Mode::Manual => (true, false, true),
