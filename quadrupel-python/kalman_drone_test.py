@@ -1,5 +1,5 @@
 from math import sin, pi
-
+from scipy import signal
 import matplotlib.pyplot as plt
 from numpy.random import normal
 
@@ -88,9 +88,17 @@ for d in data[:]:
 
     k_phi.append(kphi)
 
+butterworth_order = 2
+cutoff_freq = 5
+sampling_freq = 1260
+
+sos = signal.butter(butterworth_order, cutoff_freq, 'low', fs=sampling_freq, output='sos')
+filtered = signal.sosfilt(sos, k_phi)
+
 # plt.plot(measured_p,label="mes_p")
 # plt.plot(measured_phi,label="mes_phi")
-plt.plot(k_phi, label="k_phi")
+plt.plot(k_phi, label="k_phi", color='r')
+plt.plot(filtered, label="filtered", color='g')
 plt.legend()
 plt.show()
 
@@ -142,3 +150,19 @@ plt.show()
 #         kp, kphi = kal.filter(sp, sphi, dt)
 #         basic_integrator+=sp*dt
 #
+
+# import matplotlib.pyplot as plt
+# with open('flash_data.txt', 'r') as f:
+#     lines = f.readlines()
+#     x1 = [float(line.split(", ")[0]) for line in lines]
+#     x2 = [float(line.split(", ")[1]) for line in lines]
+#     x3 = [float(line.split(", ")[2]) for line in lines]
+#
+# # with open('output.txt', 'r') as f:
+# #     lines = f.readlines()
+# #     y = [float(line.split()[0]) for line in lines]
+# plt.plot(x1)
+# plt.plot(x2)
+# plt.plot(x3)
+# # plt.plot(y)
+# plt.show()
