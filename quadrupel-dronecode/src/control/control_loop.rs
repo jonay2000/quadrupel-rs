@@ -10,11 +10,12 @@ use crate::control::process_message::process_message;
 use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
 use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
-use quadrupel_shared::message::{MessageToComputer};
+use quadrupel_shared::message::{FlashPacket, MessageToComputer};
 use quadrupel_shared::state::Mode;
 use quadrupel_shared::state::Mode::{Panic, Safe};
 use crate::control::modes::calibrate_mode::CalibrateMode;
 use crate::library::fixed_point::{FI32, rough_isqrt};
+use crate::library::yaw_pitch_roll::YawPitchRoll;
 
 const HEARTBEAT_FREQ: u32 = 100000;
 const HEARTBEAT_TIMEOUT_MULTIPLE: u32 = 2;
@@ -56,6 +57,8 @@ pub fn start_loop() -> ! {
     let a_xi_2 = FI32::from_num(1)/a_yi;
     let mut height_filter_mpu = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
 
+    let mut ypr2 = YawPitchRoll::zero();
+
     loop {
         let cur_time = TIME.as_mut_ref().get_time_us();
         let dt = cur_time - last_time;
@@ -79,11 +82,11 @@ pub fn start_loop() -> ! {
 
         //YPR
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let ypr = if state.raw_mode_enable {
-            state.raw_mode.update(accel, gyro, dt, state.flash_record, &mut flash_protocol)
-        } else {
-            MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref())
-        };
+        let (ypr1, f1, f2) = state.raw_mode.update(accel, gyro, dt);
+        if state.count % 10 == 0 {
+            ypr2 = MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref());
+        }
+
         let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let mut pres = pres as i32;
         pres -= 100000;
@@ -95,7 +98,7 @@ pub fn start_loop() -> ! {
             pres = height_filter_mpu.filter(pres);
         }
 
-        let ypr = state.calibrate.fix_ypr(ypr);
+        let ypr = state.calibrate.fix_ypr(ypr2);
         state.current_attitude.yaw = ypr.yaw;
         state.current_attitude.pitch = ypr.pitch;
         state.current_attitude.roll = ypr.roll;
@@ -184,7 +187,7 @@ pub fn start_loop() -> ! {
             // TODO autosend? state.flash_send = true;
         }
         if state.flash_record {
-            // flash_protocol.write(FlashPacket::Data(ypr.pitch.to_bits() as i16))
+            flash_protocol.write(FlashPacket::Data(f1.to_bits(), f2.to_bits(), ypr2.pitch.to_bits()))
         }
         if state.flash_send {
             while UART.as_mut_ref().buffer_left_rx() >= 128

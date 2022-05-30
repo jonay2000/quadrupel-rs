@@ -67,7 +67,7 @@ impl RawMode {
         }
     }
 
-    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32, record: bool, fp: &mut FlashProtocol) -> YawPitchRoll {
+    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32) -> (YawPitchRoll, FI32, FI32) {
         // Accel is in range [-2G, 2G]
         // Gyro is in range [-2000 deg, 2000 deg]
 
@@ -81,13 +81,11 @@ impl RawMode {
         let pitch = atan2_approx(accel_x, accel_z);
         let roll = atan2_approx(accel_y, sqrt_approx(accel_x*accel_x + accel_z * accel_z));
 
-        // TODO uncomment if butterworth before kalman-not-kalman is desired
+        let rp1 = pitch;
+        let rp2 = gyro_pitch;
 
         let (gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
         let (gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
-        if record {
-            fp.write(FlashPacket::Data(gyro_pitch.to_bits(), pitch.to_bits()));
-        }
 
         let roll = self.roll_bw_filter.filter(roll);
         let pitch = self.pitch_bw_filter.filter(pitch);
@@ -125,10 +123,10 @@ impl RawMode {
         let yaw = FI32::from_bits((self.yaw.to_bits() >> 32) as i32);
         let yaw: FI32 = self.yaw_filter.filter(yaw);
 
-        YawPitchRoll {
+        (YawPitchRoll {
             yaw,
             pitch,
             roll
-        }
+        }, rp1, rp2)
     }
 }

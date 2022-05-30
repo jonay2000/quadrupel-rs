@@ -35,7 +35,7 @@ pub enum MessageToComputer {
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Decode, Encode, Debug)]
 pub enum FlashPacket {
-    Data(i32, i32),
+    Data(i32, i32, i32),
 }
 
 impl MessageToComputer {

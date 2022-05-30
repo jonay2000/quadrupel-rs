@@ -8,6 +8,8 @@ echo "Running with binary: $BINARY"
 rust-objcopy -O binary $BINARY $BINARY.bin
 rust-objcopy -O ihex $BINARY $BINARY.hex
 
+./build_python_bindings.sh
+
 if [ -z "$HARDWARE" ]
 then
   echo "Running software..."
