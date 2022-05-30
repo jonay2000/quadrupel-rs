@@ -12,6 +12,7 @@ use crate::*;
 use embedded_hal::digital::v2::{OutputPin, PinState};
 use quadrupel_shared::message::{MessageToComputer};
 use quadrupel_shared::state::Mode;
+use quadrupel_shared::state::Mode::{Panic, Safe};
 use crate::control::modes::calibrate_mode::CalibrateMode;
 use crate::library::fixed_point::{FI32, rough_isqrt};
 
@@ -121,6 +122,12 @@ pub fn start_loop() -> ! {
                 "Warning: Battery is < 6V ({adc}), continuing assuming that this is not a drone."
             );
             adc_warning = false;
+        }
+
+        //Check max angle protection
+        if state.mode != Panic && state.mode != Safe && (ypr.pitch.abs() > FI32::from_num(0.8) || ypr.roll.abs() > FI32::from_num(0.8)) {
+            log::error!("Panic: Max angle protection activated.");
+            state.mode = Mode::Panic;
         }
 
         // Do action corresponding to current mode
