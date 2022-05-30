@@ -12,4 +12,5 @@ pub enum Mode {
     FullControl,
     IndividualMotorControl,
     Manual,
+    YawControl,
 }

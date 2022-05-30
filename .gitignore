@@ -82,3 +82,6 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 venv/
+
+__pycache__
+flash_data.txt

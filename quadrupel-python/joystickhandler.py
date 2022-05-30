@@ -50,7 +50,7 @@ state_dictionary = {
     "Panic": 1,
     "Manual": 2,
     "Calibration": 3,
-    "yaw_control": 4,
+    "YawControl": 4,
     "FullControl": 5,
     "raw": 6,
     "height_control": 7,
@@ -63,7 +63,7 @@ name_dictionary = {
     "Panic": "panic",
     "Manual": "manual",
     "Calibration": "calibration",
-    "yaw_control": "yaw control",
+    "YawControl": "yaw control",
     "FullControl": "full control",
     "raw": "raw",
     "height_control": "height control",
@@ -90,6 +90,7 @@ allowed_state_transition = {
         state_dictionary["Calibration"],
         state_dictionary["FullControl"],
         state_dictionary["IndividualMotorControl"],
+        state_dictionary["YawControl"]
     ],
     "Panic": [],
     "Manual": [
@@ -98,7 +99,7 @@ allowed_state_transition = {
     "Calibration": [
         state_dictionary["Safe"]
     ],
-    "yaw_control": [
+    "YawControl": [
         state_dictionary["Safe"]
     ],
     "FullControl": [
@@ -181,7 +182,7 @@ class JoystickHandler:
         self.reported_mode = "Safe"
         self.reported_height = 0
         self.reported_motor_values = [0] * 4
-        self.reported_i_buildup = [0] * 3
+        self.reported_i_buildup = [0] * 4
         self.reported_iteration_freq = 0
         self.mode_changed = 0
         self.reported_ypr = [0] * 3
@@ -211,7 +212,7 @@ class JoystickHandler:
                         print("bad float value")
                         return
 
-                    int_v = int(flt_v * (2 ** 16))
+                    int_v = int(flt_v * PID_MULTIPLIER)
                     self.new_pid_input = True
                     print(f"set {name} to {flt_v} ({int_v})")
 
@@ -354,9 +355,16 @@ class JoystickHandler:
 
             return f
 
+        def send_message(msg: str):
+            def f():
+                self.ser.send(f"\"{msg}\"")
+
+            return f
+
         buttons = []
         allowed = [i for i in allowed_state_transition[self.current_state] if
                    state_dictionary_reversed[i] != self.current_state]
+        i = 0
         for i in range(8):
             if i >= len(allowed):
                 break
@@ -368,12 +376,23 @@ class JoystickHandler:
                        int(fontsize * 1.3), fontSize=fontsize, text=txt)
             b.onClick = transition(allowed[i])
 
+        for txt in ["FlashStopRecording", "FlashStartRecording", "FlashRead"]:
+            b = Button(screen, half_width + 450 * (i // 4),
+                       half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+                       int(fontsize * 1.3), fontSize=fontsize, text=txt)
+            b.onClick = send_message(txt)
+            i += 1
+
         self.drone_visual = Drone(screen, (half_width, half_height), (half_width, 0))
 
         self.textboxes = {i.replace("_tb", ""): x for i in self.__dict__ if
                           isinstance(x := getattr(self, i), TextBox) and not x._disabled and "tb" in i}
         for k, v in self.textboxes.items():
-            v.setText(f"{message_control_parameters['TunePID'][k] / PID_MULTIPLIER:.00f}")
+            res = message_control_parameters['TunePID'][k] / PID_MULTIPLIER
+            if res < 0:
+                v.setText(f"{res:.02f}")
+            else:
+                v.setText(f"{res:.00f}")
 
     def submit(self):
         for name, i in self.textboxes.items():
@@ -639,7 +658,7 @@ class JoystickHandler:
             flag_r = "R" if self.current_state_raw else ""
             self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}")
             self.stats[4].setText(
-                f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f}")
+                f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f} {self.reported_i_buildup[3]:.2f}")
 
             self.stats[5].setText(
                 f"yprl: {self.yaw / 5000:.2f} {self.pitch / 5000:.2f} {self.roll / 5000:.2f} {self.lift / 10000:.2f}")
@@ -658,6 +677,9 @@ class JoystickHandler:
     def can_change_mode(self):
         ypr_margin = 30_000
         lift_margin = 5_000
+
+        if self.joystick is None:
+            return True
 
         return (-ypr_margin <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= ypr_margin
                 and -ypr_margin <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= ypr_margin

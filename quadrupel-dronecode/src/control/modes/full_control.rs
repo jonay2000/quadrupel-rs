@@ -1,3 +1,4 @@
+use quadrupel_shared::state::Mode;
 use crate::control::flight_state::FlightState;
 use crate::control::modes::ModeTrait;
 use crate::library::fixed_point::FI32;
@@ -26,6 +27,7 @@ impl ModeTrait for FullControl {
 
         if state.height_mode_enable && state.height_lock.is_none() {
             state.height_lock = Some((state.target_attitude.lift, state.current_attitude.height));
+            state.angle_mode.height_pid.buildup = FI32::ZERO;
         }
         if !state.height_mode_enable {
             state.height_lock = None;
@@ -36,7 +38,7 @@ impl ModeTrait for FullControl {
             state.height_lock = None;
         }
 
-        let motors = state.angle_mode.step(
+        let (motors, st) = state.angle_mode.step(
             dt,
             lift_goal,
             state.current_attitude.yaw,
@@ -47,7 +49,8 @@ impl ModeTrait for FullControl {
             pitch_goal,
             roll_goal,
             height_goal,
-            state.height_mode_enable
+            state.height_mode_enable,
+            state.mode == Mode::YawControl,
         );
 
         state.motor_values = motors.map(|fi32| {
@@ -57,5 +60,6 @@ impl ModeTrait for FullControl {
                     .to_num(),
             )
         });
+        state.pid_contributions = st;
     }
 }

@@ -23,10 +23,11 @@ impl UartProtocol {
         while let Some(byte) = uart.get_byte() {
             match &mut self.state {
                 UartProtocolState::WaitingForMessage => {
-                    assert!(byte > 0);
-                    self.state = UartProtocolState::ReceivingMessage {
-                        len: byte,
-                        received_count: 0,
+                    if byte != 0 {
+                        self.state = UartProtocolState::ReceivingMessage {
+                            len: byte,
+                            received_count: 0,
+                        }
                     }
                 }
                 UartProtocolState::ReceivingMessage {
