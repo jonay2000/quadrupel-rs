@@ -83,6 +83,16 @@ pub fn start_loop() -> ! {
             state.mode = Mode::Panic;
         }
 
+        //Switch between raw/non-raw mode
+        if !state.raw_mode_enable && !MPU.as_mut_ref().is_mpu_enabled() {
+            MPU.as_mut_ref().enable_mpu(I2C.as_mut_ref());
+            log::info!("MPU Enabled.");
+        }
+        if state.raw_mode_enable && MPU.as_mut_ref().is_mpu_enabled() {
+            MPU.as_mut_ref().disable_mpu(I2C.as_mut_ref());
+            log::info!("MPU Disabled.");
+        }
+
         //YPR
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
         let ypr = if state.raw_mode_enable {
