@@ -151,7 +151,7 @@ class Serial:
                     print("lost count")
                     while (b := get_byte()) != 0xab:
                         if b is not None:
-                            print(chr(b), end="")
+                            print(f"{b:02x}", end=" ")
                         pass
                     lost_count = False
 

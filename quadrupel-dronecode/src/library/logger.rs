@@ -35,7 +35,12 @@ impl Log for UartLogger {
             let x = format!("[{}] {}\n", record.level().as_str(), record.args());
             let uart = UART.as_mut_ref();
 
-            uart.send_message(MessageToComputer::Log(x.as_bytes().to_vec()));
+            let mut bytes = x.as_bytes();
+            if bytes.len() > 200 {
+                bytes = &bytes[..200];
+            }
+
+            uart.send_message(MessageToComputer::Log(bytes.to_vec()));
         }
     }
 
