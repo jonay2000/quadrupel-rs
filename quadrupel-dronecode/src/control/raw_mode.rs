@@ -81,8 +81,6 @@ impl RawMode {
         let pitch = atan2_approx(accel_x, accel_z);
         let roll = atan2_approx(accel_y, sqrt_approx(accel_x*accel_x + accel_z * accel_z));
 
-        // TODO uncomment if butterworth before kalman-not-kalman is desired
-
         let (gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
         let (gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
         if record {
