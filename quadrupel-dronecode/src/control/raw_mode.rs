@@ -21,9 +21,9 @@ pub struct RawMode {
 impl RawMode {
     pub fn new() -> Self {
         // TODO: Tune all filters (and possibly make them different across different filters)
-        let a_yi = FI32::from_num(1665.617);
-        let a_yi_1 = FI32::from_num(3213.817)/a_yi;
-        let a_yi_2 = FI32::from_num(-1552.200)/a_yi;
+        let a_yi = FI32::from_num(1058.546);
+        let a_yi_1 = FI32::from_num(2023.090)/a_yi;
+        let a_yi_2 = FI32::from_num(-968.544)/a_yi;
         let a_xi = FI32::from_num(1)/a_yi;
         let a_xi_1 = FI32::from_num(2)/a_yi;
         let a_xi_2 = FI32::from_num(1)/a_yi;
@@ -47,8 +47,8 @@ impl RawMode {
                 a_xi_2,
             ),
             roll_filter: ComplFilter::new(
-                FI32::from_num(10),
-                FI32::from_num(2000),
+                FI32::from_num(100),
+                FI32::from_num(10000),
                 false,
             ),
             pitch_bw_filter: ButterworthLowPass2nd::new(
@@ -60,8 +60,8 @@ impl RawMode {
                 a_xi_2,
             ),
             pitch_filter: ComplFilter::new(
-                FI32::from_num(10),
-                FI32::from_num(2000),
+                FI32::from_num(100),
+                FI32::from_num(10000),
                 false,
             ),
         }
@@ -87,8 +87,8 @@ impl RawMode {
         let (gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
         let (gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
 
-        let roll = self.roll_bw_filter.filter(roll);
-        let pitch = self.pitch_bw_filter.filter(pitch);
+        // let roll = self.roll_bw_filter.filter(roll);
+        // let pitch = self.pitch_bw_filter.filter(pitch);
 
         /*
         We're gonna do some trickery to convert the unit (2000 deg/second) to radians.

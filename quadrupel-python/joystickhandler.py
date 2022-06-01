@@ -662,6 +662,9 @@ class JoystickHandler:
 
             self.stats[5].setText(
                 f"yprl: {self.yaw / 5000:.2f} {self.pitch / 5000:.2f} {self.roll / 5000:.2f} {self.lift / 10000:.2f}")
+            self.stats[6].setText(
+                f"trim: {keyboard_offsets['roll']:.0f} {keyboard_offsets['pitch']:.0f} {keyboard_offsets['yaw']:.0f} {keyboard_offsets['lift']:.0f}"
+            )
 
             if self.can_change_mode():
                 self.stats[5].colour = (50, 220, 50)
@@ -679,7 +682,7 @@ class JoystickHandler:
         lift_margin = 5_000
 
         if self.joystick is None:
-            return True
+            return False
 
         return (-ypr_margin <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= ypr_margin
                 and -ypr_margin <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= ypr_margin
