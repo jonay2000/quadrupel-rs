@@ -244,7 +244,7 @@ pub fn start_loop() -> ! {
         }
 
         //Wait to cap at 1000hz
-        while TIME.as_mut_ref().get_time_us() - cur_time <= 995 {
-        }
+        // while TIME.as_mut_ref().get_time_us() - cur_time <= 995 {
+        // }
     }
 }
