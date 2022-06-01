@@ -24,6 +24,7 @@ const SAMPLE_RATE_DIVIDER: u8 = 2;
 
 pub struct QMpu6050<T: nrf51_hal::twi::Instance> {
     mpu: Mpu6050<Twi<T>>,
+    mpu_enabled: bool,
 }
 impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
     pub fn new(i2c: &mut Twi<T>) -> Self {
@@ -32,15 +33,21 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
         mpu.initialize_dmp(i2c, TIME.as_mut_ref()).unwrap();
         mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER)
             .unwrap();
-        QMpu6050 { mpu }
+        QMpu6050 { mpu, mpu_enabled: true }
+    }
+
+    pub fn is_mpu_enabled(&self) -> bool {
+        self.mpu_enabled
     }
 
     pub fn disable_mpu(&mut self, i2c: &mut Twi<T>) {
         self.mpu.disable_dmp(i2c).unwrap();
+        self.mpu_enabled = false
     }
 
     pub fn enable_mpu(&mut self, i2c: &mut Twi<T>) {
         self.mpu.enable_dmp(i2c).unwrap();
+        self.mpu_enabled = true;
     }
 
     pub fn read_mpu(&mut self, i2c: &mut Twi<T>) -> Option<YawPitchRoll> {
