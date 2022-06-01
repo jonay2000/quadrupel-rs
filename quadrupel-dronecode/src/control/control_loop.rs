@@ -123,11 +123,11 @@ pub fn start_loop() -> ! {
 
         //Check adc
         let adc = ADC.update_main(|adc| adc.read());
-        if adc > adc_filtered {
-            adc_filtered += 10;
+        adc_filtered = if adc > adc_filtered {
+            adc_filtered.saturating_add(10)
         } else {
-            adc_filtered -= 10;
-        }
+            adc_filtered.saturating_sub(10)
+        };
 
         if adc_filtered > adc_filtered && adc < 1000
         {
