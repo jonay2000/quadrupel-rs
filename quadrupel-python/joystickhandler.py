@@ -662,6 +662,9 @@ class JoystickHandler:
 
             self.stats[5].setText(
                 f"yprl: {self.yaw / 5000:.2f} {self.pitch / 5000:.2f} {self.roll / 5000:.2f} {self.lift / 10000:.2f}")
+            self.stats[6].setText(
+                f"trim: {keyboard_offsets['roll']:.0f} {keyboard_offsets['pitch']:.0f} {keyboard_offsets['yaw']:.0f} {keyboard_offsets['lift']:.0f}"
+            )
 
             if self.can_change_mode():
                 self.stats[5].colour = (50, 220, 50)
