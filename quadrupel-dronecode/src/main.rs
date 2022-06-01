@@ -35,7 +35,7 @@ use nrf51_hal::gpio::Level;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
-const HEAP_SIZE: usize = 1024; // in bytes
+const HEAP_SIZE: usize = 2048; // in bytes
 
 #[entry]
 fn main() -> ! {

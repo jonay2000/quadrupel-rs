@@ -6,9 +6,16 @@ use bincode::error::{DecodeError, EncodeError};
 use bincode::{Decode, Encode};
 
 use alloc::vec::Vec;
+use crc::{Crc, CRC_16_IBM_SDLC};
 
 #[cfg(feature = "python")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "python")]
+use std::println;
+#[cfg(feature = "python")]
+extern crate std;
+
+pub const X25: Crc<u16> = Crc::<u16>::new(&CRC_16_IBM_SDLC);
 
 #[cfg_attr(feature = "python", derive(Serialize, Deserialize))]
 #[derive(Decode, Encode, Debug)]
@@ -41,17 +48,30 @@ pub enum FlashPacket {
 impl MessageToComputer {
     pub fn encode(&self, w: &mut impl Writer) -> Result<(), EncodeError> {
         let mut encoding_space: [u8; 256] = [0u8; 256];
-        let count = bincode::encode_into_slice(self, &mut encoding_space[2..], standard())?;
-        assert!(count < 256);
-        encoding_space[1] = count as u8;
+        let count = bincode::encode_into_slice(self, &mut encoding_space[4..], standard())?;
+        assert!(count < 250);
+        encoding_space[1] = (count + 2) as u8;
         encoding_space[0] = 0xab as u8;
-        w.write(&encoding_space[..count+2])?;
+
+        let sum = X25.checksum(&encoding_space[4..count + 4]);
+        encoding_space[2] = ((sum & 0xff00) >> 8) as u8;
+        encoding_space[3] = (sum & 0x00ff) as u8;
+
+        w.write(&encoding_space[..count+4])?;
         Ok(())
     }
 
     #[cfg(feature = "python")]
     pub fn decode(r: &[u8]) -> Result<(Self, usize), DecodeError> {
-        bincode::decode_from_slice(r, standard())
+        let checksum = ((r[0] as u16) << 8) | (r[1] as u16);
+
+        let expected_checksum = X25.checksum(&r[2..]);
+
+        if checksum != expected_checksum {
+            return Err(DecodeError::OtherString(alloc::string::String::from("checksum didn't match, dropping")))
+        }
+
+        bincode::decode_from_slice(&r[2..], standard())
     }
 }
 
@@ -116,12 +136,28 @@ impl MessageToDrone {
     pub fn encode_vec(&self) -> Result<Vec<u8>, EncodeError> {
         let mut res = bincode::encode_to_vec(self, standard())?;
         assert!(res.len() < 256);
-        res.insert(0, res.len() as u8);
+        let checksum = X25.checksum(&res);
+
+        res.insert(0, (res.len() + 2) as u8);
+
+        res.insert(1, ((checksum & 0xff00) >> 8) as u8);
+        res.insert(2, (checksum & 0x00ff) as u8);
 
         Ok(res)
     }
 
     pub fn decode(r: &[u8]) -> Result<(Self, usize), DecodeError> {
-        bincode::decode_from_slice(r, standard())
+        if r.len() < 2 {
+            return Err(DecodeError::UnexpectedEnd);
+        }
+
+        let checksum = ((r[0] as u16) << 8) | (r[1] as u16);
+        let expected_checksum = X25.checksum(&r[2..]);
+
+        if checksum != expected_checksum {
+            return Err(DecodeError::OtherString(alloc::format!("checksum didn't match, dropping {checksum:04x} {expected_checksum:04x}")))
+        }
+
+        bincode::decode_from_slice(&r[2..], standard())
     }
 }
