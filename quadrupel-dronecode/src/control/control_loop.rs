@@ -40,6 +40,7 @@ pub fn start_loop() -> ! {
     let mut time_since_last_print = 0;
 
     let mut adc_filtered = 1000;
+    let mut dt_filtered = 1000;
 
     let a_yi = FI32::from_num(54818.728);
     let a_yi_1 = FI32::from_num(108973.229)/a_yi;
@@ -62,6 +63,11 @@ pub fn start_loop() -> ! {
     loop {
         let cur_time = TIME.as_mut_ref().get_time_us();
         let dt = cur_time - last_time;
+        if dt > dt_filtered {
+            dt_filtered += 1;
+        } else {
+            dt_filtered -= 1;
+        }
         last_time = cur_time;
         state.count += 1;
 
@@ -78,6 +84,16 @@ pub fn start_loop() -> ! {
         {
             log::error!("Panic: Heartbeat timeout");
             state.mode = Mode::Panic;
+        }
+
+        //Switch between raw/non-raw mode
+        if !state.raw_mode_enable && !MPU.as_mut_ref().is_mpu_enabled() {
+            MPU.as_mut_ref().enable_mpu(I2C.as_mut_ref());
+            log::info!("MPU Enabled.");
+        }
+        if state.raw_mode_enable && MPU.as_mut_ref().is_mpu_enabled() {
+            MPU.as_mut_ref().disable_mpu(I2C.as_mut_ref());
+            log::info!("MPU Disabled.");
         }
 
         //YPR
@@ -110,11 +126,11 @@ pub fn start_loop() -> ! {
 
         //Check adc
         let adc = ADC.update_main(|adc| adc.read());
-        if adc > adc_filtered {
-            adc_filtered += 10;
+        adc_filtered = if adc > adc_filtered {
+            adc_filtered.saturating_add(10)
         } else {
-            adc_filtered -= 10;
-        }
+            adc_filtered.saturating_sub(10)
+        };
 
         if adc_filtered > adc_filtered && adc < 1000
         {
@@ -214,7 +230,7 @@ pub fn start_loop() -> ! {
                 state: state.mode,
                 height: pres.to_bits() >> 16,
                 battery: adc_filtered,
-                dt,
+                dt: dt_filtered,
                 motors,
                 sensor_ypr: [ypr.yaw.to_bits(), ypr.pitch.to_bits(), ypr.roll.to_bits()],
                 input_typr: [
@@ -235,10 +251,6 @@ pub fn start_loop() -> ! {
                 raw_mode: state.raw_mode_enable,
                 pid_contributions: state.pid_contributions.map(|f| f.to_bits()),
             };
-
-            // let mut encoding_space: [u8; 256] = [0u8; 256];
-            // let count = bincode::encode_into_slice(&msg, &mut encoding_space, standard()).unwrap();
-            // log::info!("{} {:?}", count, &encoding_space[..count]);
 
             UART.as_mut_ref().send_message(msg);
         }
