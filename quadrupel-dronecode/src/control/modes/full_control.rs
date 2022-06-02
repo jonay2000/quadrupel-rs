@@ -34,7 +34,7 @@ impl ModeTrait for FullControl {
             state.height_lock = None;
         }
         let (prev_lift, height_goal) = state.height_lock.unwrap_or((state.target_attitude.lift, state.current_attitude.height));
-        if state.height_mode_enable && (prev_lift.abs_diff(state.target_attitude.lift)) > FI32::from_num(0.2)  {
+        if state.height_mode_enable && (prev_lift.abs_diff(state.target_attitude.lift)) > FI32::from_num(1.0)  {
             state.height_mode_enable = false;
             state.height_lock = None;
             log::warn!("Deactivated height mode: Throttle changed.");
