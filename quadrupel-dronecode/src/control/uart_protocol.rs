@@ -40,9 +40,8 @@ impl UartProtocol {
                         match MessageToDrone::decode(&self.buffer[..*len as usize]) {
                             Err(e) => {
                                 log::error!(
-                                    "{:?} from decoding {:?}",
-                                    e,
-                                    &self.buffer[..*len as usize]
+                                    "{:?}",
+                                    e
                                 );
                                 self.state = UartProtocolState::WaitingForMessage;
                             }
