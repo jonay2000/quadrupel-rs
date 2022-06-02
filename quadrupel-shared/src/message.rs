@@ -129,6 +129,7 @@ pub enum MessageToDrone {
     FlashStartRecording,
     FlashStopRecording,
     FlashRead,
+    AutoLand,
 }
 
 impl MessageToDrone {

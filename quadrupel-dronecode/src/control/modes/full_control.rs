@@ -25,6 +25,7 @@ impl ModeTrait for FullControl {
         let pitch_goal = raw_to_10_deg(state.target_attitude.pitch);
         let roll_goal = -raw_to_10_deg(state.target_attitude.roll);
 
+        // Height mode logic
         if state.height_mode_enable && state.height_lock.is_none() {
             state.height_lock = Some((state.target_attitude.lift, state.current_attitude.height));
             state.angle_mode.height_pid.buildup = FI32::ZERO;
@@ -36,6 +37,19 @@ impl ModeTrait for FullControl {
         if state.height_mode_enable && (prev_lift.abs_diff(state.target_attitude.lift)) > FI32::from_num(0.1)  {
             state.height_mode_enable = false;
             state.height_lock = None;
+        }
+
+        //Autoland logic
+        if state.autoland_enable && state.height_mode_enable {
+            let (_, height_locked) = &mut state.height_lock.unwrap();
+            *height_locked += dt >> 6;
+
+            if state.angle_mode.height_pid.buildup == -state.angle_mode.height_pid.cap {
+                log::info!("Landed.");
+                state.autoland_enable = false;
+                state.height_mode_enable = false;
+                state.mode = Mode::Safe;
+            }
         }
 
         let (motors, st) = state.angle_mode.step(
