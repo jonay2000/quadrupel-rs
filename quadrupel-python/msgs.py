@@ -32,7 +32,7 @@ def heartbeat() -> str:
     """
 
 def auto_land() -> str:
-    return "AutoLand"
+    return "\"AutoLand\""
 
 def motor_message(motor: int, value: int) -> str:
     return f"""

@@ -34,6 +34,7 @@ pub enum MessageToComputer {
         gyro: [i16; 3],
         height_mode: bool,
         raw_mode: bool,
+        autoland: bool,
         pid_contributions: [i32; 5],
     },
     FlashPacket(FlashPacket),

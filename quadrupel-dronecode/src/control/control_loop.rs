@@ -246,6 +246,7 @@ pub fn start_loop() -> ! {
                 gyro: [gyro.x, gyro.y, gyro.z],
                 height_mode: state.height_mode_enable,
                 raw_mode: state.raw_mode_enable,
+                autoland: state.autoland_enable,
                 pid_contributions: state.pid_contributions.map(|f| f.to_bits()),
             };
 

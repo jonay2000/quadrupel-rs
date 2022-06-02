@@ -34,9 +34,10 @@ impl ModeTrait for FullControl {
             state.height_lock = None;
         }
         let (prev_lift, height_goal) = state.height_lock.unwrap_or((state.target_attitude.lift, state.current_attitude.height));
-        if state.height_mode_enable && (prev_lift.abs_diff(state.target_attitude.lift)) > FI32::from_num(0.1)  {
+        if state.height_mode_enable && (prev_lift.abs_diff(state.target_attitude.lift)) > FI32::from_num(0.2)  {
             state.height_mode_enable = false;
             state.height_lock = None;
+            log::warn!("Deactivated height mode: Throttle changed.");
         }
 
         //Autoland logic
@@ -45,7 +46,7 @@ impl ModeTrait for FullControl {
             *height_locked += dt >> 6;
 
             if state.angle_mode.height_pid.buildup == -state.angle_mode.height_pid.cap {
-                log::info!("Landed.");
+                log::warn!("Deactivated height mode: Landed.");
                 state.autoland_enable = false;
                 state.height_mode_enable = false;
                 state.mode = Mode::Safe;

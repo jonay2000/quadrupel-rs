@@ -159,6 +159,7 @@ class JoystickHandler:
         # Setup class variables
         self.current_state_raw = False
         self.current_state_height = False
+        self.current_state_autoland = False
         self.screen = screen
         self.width = screen.get_width()
         self.height = screen.get_height()
@@ -451,6 +452,7 @@ class JoystickHandler:
                                 self.current_state = v["state"]
                                 self.current_state_height = v["height_mode"]
                                 self.current_state_raw = v["raw_mode"]
+                                self.current_state_autoland = v["autoland"]
                             else:
                                 self.mode_changed -= 1
 
@@ -459,6 +461,7 @@ class JoystickHandler:
                             self.reported_iteration_freq = 1_000_000 / v["dt"]
                             self.reported_i_buildup = v["i_buildup"]
                             self.reported_ypr = [i / (1 << 16) for i in v["sensor_ypr"]]
+                            self.reported_motor_values = v["motors"]
                         else:
                             print("msg: ", msg)
 
@@ -660,7 +663,8 @@ class JoystickHandler:
 
             flag_h = "H" if self.current_state_height else ""
             flag_r = "R" if self.current_state_raw else ""
-            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}")
+            flag_a = "A" if self.current_state_autoland else ""
+            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}{flag_a}")
             self.stats[4].setText(
                 f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f} {self.reported_i_buildup[3]:.2f}")
 
@@ -668,6 +672,9 @@ class JoystickHandler:
                 f"yprl: {self.yaw / 5000:.2f} {self.pitch / 5000:.2f} {self.roll / 5000:.2f} {self.lift / 10000:.2f}")
             self.stats[6].setText(
                 f"trim: {keyboard_offsets['roll']:.0f} {keyboard_offsets['pitch']:.0f} {keyboard_offsets['yaw']:.0f} {keyboard_offsets['lift']:.0f}"
+            )
+            self.stats[7].setText(
+                f"motors: {self.reported_motor_values}"
             )
 
             if self.can_change_mode():
