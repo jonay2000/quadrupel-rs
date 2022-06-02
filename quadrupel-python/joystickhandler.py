@@ -636,6 +636,10 @@ class JoystickHandler:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
                         self.change_state(int(chr(event.key)), event)
 
+                    if event.key == ord('['):
+                        if print_debug: print("land")
+                        self.ser.send(auto_land())
+
             if self.current_state == "Panic":
                 self.screen.fill((220, 50, 50))
             else:
