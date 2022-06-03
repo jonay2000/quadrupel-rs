@@ -187,6 +187,7 @@ class JoystickHandler:
         self.reported_iteration_freq = 0
         self.mode_changed = 0
         self.reported_ypr = [0] * 3
+        self.reported_height_tgt = 0
 
         setup_path = FILE_PATH / "setup.yml"
         print(setup_path)
@@ -362,6 +363,12 @@ class JoystickHandler:
 
             return f
 
+        def send_message_nq(msg: str):
+            def f():
+                self.ser.send(msg)
+
+            return f
+
         buttons = []
         allowed = [i for i in allowed_state_transition[self.current_state] if
                    state_dictionary_reversed[i] != self.current_state]
@@ -383,6 +390,19 @@ class JoystickHandler:
                        int(fontsize * 1.3), fontSize=fontsize, text=txt)
             b.onClick = send_message(txt)
             i += 1
+
+
+        b = Button(screen, half_width + 450 * (i // 4),
+                   half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+                   int(fontsize * 1.3), fontSize=fontsize, text="height + 1")
+        b.onClick = send_message_nq(change_height_message(1))
+        i += 1
+
+        b = Button(screen, half_width + 450 * (i // 4),
+                   half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+                   int(fontsize * 1.3), fontSize=fontsize, text="height - 1")
+        b.onClick = send_message_nq(change_height_message(-1))
+        i += 1
 
         self.drone_visual = Drone(screen, (half_width, half_height), (half_width, 0))
 
@@ -456,6 +476,7 @@ class JoystickHandler:
                             else:
                                 self.mode_changed -= 1
 
+                            self.reported_height_tgt = v["tgt_height"] / PID_MULTIPLIER
                             self.reported_height = v["height"]
                             self.reported_battery_voltage = v["battery"] / 100
                             self.reported_iteration_freq = 1_000_000 / v["dt"]
@@ -676,6 +697,8 @@ class JoystickHandler:
             self.stats[7].setText(
                 f"motors: {self.reported_motor_values}"
             )
+
+            self.stats[7].setText(f"tgt height: {self.reported_height_tgt:.2f}")
 
             if self.can_change_mode():
                 self.stats[5].colour = (50, 220, 50)

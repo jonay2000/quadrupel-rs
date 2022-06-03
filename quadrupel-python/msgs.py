@@ -1,3 +1,5 @@
+import json
+
 
 def abort() -> str:
     return change_state("Panic")
@@ -44,6 +46,17 @@ def motor_message(motor: int, value: int) -> str:
     }}
     """
 
+
+def change_height_message(change: int) -> str:
+    res = json.dumps({'ChangeHeight': change})
+    print(res)
+    return res
+
+    # return f"""
+    # {{
+    #     "ChangeHeight": {change}
+    # }}
+    # """
 
 def joystick_message(yaw: int, pitch: int, roll: int, lift: int) -> str:
     return f"""

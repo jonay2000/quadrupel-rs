@@ -24,6 +24,7 @@ pub enum MessageToComputer {
     StateInformation {
         state: Mode,
         height: i32,
+        tgt_height: i32,
         battery: u16,
         dt: u32,
         motors: [u16; 4],
@@ -91,6 +92,7 @@ pub enum MessageToDrone {
     ChangeState(Mode),
     SetHeightMode(u8),
     SetRawMode(u8),
+    ChangeHeight(i16),
     MotorValue {
         motor: Motor,
         value: MotorValue,
