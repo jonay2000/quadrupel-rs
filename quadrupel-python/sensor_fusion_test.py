@@ -7,6 +7,8 @@ from numpy.random import normal
 from scipy.fftpack import fft
 from numpy.fft import fft, ifft
 import numpy as np
+from scipy.optimize import fmin
+
 
 class Drone:
     def __init__(self, gyro_err=0.1, acc_err=0.05):
@@ -23,8 +25,42 @@ class Drone:
         self.rot = (self.rot+pi)%(2*pi)-pi
 
 class Kalman:
-    def __init__(self):
-        pass
+    def __init__(self,q_angle=0.001,q_bias=0.003,r_measure=0.03):
+        self.r_measure = r_measure
+        self.q_bias = q_bias
+        self.q_angle = q_angle
+
+        self.angle = 0
+        self.bias = 0
+
+        self.p = [[0,0],[0,0]]
+
+    def filter(self, sp, sphi, dt):
+        rate = sp - self.bias
+        self.angle += dt*rate
+
+        self.p[0][0] += dt * (dt*self.p[1][1]-self.p[0][1]- self.p[1][0] + self.q_angle)
+        self.p[0][1] -= dt*self.p[1][1]
+        self.p[1][0] -= dt*self.p[1][1]
+        self.p[1][1] += self.q_bias*dt
+
+        s = self.p[0][0] +self.r_measure
+        k = (self.p[0][0]/s,self.p[1][0]/s)
+
+        y = sphi - self.angle
+
+        self.angle += k[0]*y
+        self.bias += k[1]*y
+
+        p00 = self.p[0][0]
+        p01 = self.p[0][1]
+
+        self.p[0][0] -= k[0] * p00
+        self.p[0][1] -= k[0] * p01
+        self.p[1][0] -= k[1] * p00
+        self.p[1][1] -= k[1] * p01
+
+        return rate, self.angle
 
 def round_dist(state, goal):
 
@@ -41,7 +77,7 @@ def round_dist(state, goal):
 
 
 class Compl:
-    def __init__(self, c1=100, c2=10000):
+    def __init__(self, c1=100, c2=1000000):
         self.c1 = c1
         self.c2 = c2
 
@@ -50,6 +86,11 @@ class Compl:
 
 
     def filter(self, sp, sphi, dt):
+        # print(sp)
+        # self.phi = (1-self.c1)*(self.phi+sp) + self.c1*sphi
+        #
+        # return sp, self.phi
+
         p = sp-self.b
         self.phi = self.phi + p*dt
         e = round_dist(sphi,self.phi)
@@ -61,7 +102,7 @@ class Compl:
 
 
 drone = Drone()
-kal = Compl()
+kal = Kalman()
 
 # basic_integrator = 0
 dt= 1/856
@@ -70,35 +111,57 @@ t = 0
 with open("flash_data.txt") as f:
     data = f.readlines()
 
+# data = data[:5700]+data
+
 data = [eval(x) for x in data]
 data = [[x[0]/2**16,x[1]/2**16,x[2]/2**16] for x in data]
 
+def funct(vars):
+    # kal = Compl(vars[0],vars[1])
+    kal = Kalman(*vars)
 
-act_p = []
-act_phi = []
-measured_p = []
-measured_phi = []
-k_p = []
-k_phi = []
-dmp = []
+    global act_p,act_phi,measured_p,measured_phi,k_p,k_phi,dmp
 
-for d in data[:]:
-    t+=dt
-    sphi,sp,dmp_item = d
+    act_p = []
+    act_phi = []
+    measured_p = []
+    measured_phi = []
+    k_p = []
+    k_phi = []
+    dmp = []
 
-    measured_p.append(sp)
-    measured_phi.append(sphi)
+    t = 0
 
-    kp, kphi = kal.filter(sp, sphi, dt)
+    for d in data[:]:
+        t+=dt
+        sphi,sp,dmp_item = d
 
-    k_phi.append(kphi)
-    dmp.append(dmp_item)
+        measured_p.append(sp)
+        measured_phi.append(sphi)
 
-sos = signal.butter(2, 5, 'low', fs=856, output='sos')
+        kp, kphi = kal.filter(sp, sphi, dt)
+
+        k_phi.append(kphi)
+        dmp.append(dmp_item)
+
+    return sum(abs(x[0]-x[1])**2 for x in zip(k_phi,dmp))
+
+# sos = signal.butter(2, 5, 'low', fs=856, output='sos')
+# filtered = signal.sosfilt(sos, k_phi)
+
+#[ 0.00321373, -0.000167,    0.00483083]
+mini = fmin(funct,(0.001,0.003,0.03))
+# mini = [ 0.00321373, -0.000167,    0.00483083]
+print(mini)
+
+print("err",funct(mini))
+# funct((35.2,19945))
+
+sos = signal.butter(2, 50, 'low', fs=856, output='sos')
 filtered = signal.sosfilt(sos, k_phi)
 
 print(len(k_phi)/856)
-# plt.plot(measured_p,label="mes_p")
+# plt.plot([x*100 for x in measured_p],label="mes_p")
 # plt.plot(measured_phi,label="mes_phi")
 plt.plot(k_phi, label="k_phi", color='r')
 plt.plot(filtered, label="filtered", color='b')
@@ -138,9 +201,9 @@ plt.xlabel('Freq (Hz)')
 plt.ylabel('FFT Amplitude |X(freq)|')
 plt.xlim(0, 20)
 
-plt.subplot(122)
-plt.plot(t, ifft(X), 'r')
-plt.xlabel('Time (s)')
-plt.ylabel('Amplitude')
-plt.tight_layout()
-plt.show()
+# plt.subplot(122)
+# plt.plot(t, ifft(X), 'r')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Amplitude')
+# plt.tight_layout()
+# plt.show()

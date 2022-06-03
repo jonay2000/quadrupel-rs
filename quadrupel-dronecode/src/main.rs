@@ -5,6 +5,7 @@
 #![cfg_attr(test, test_runner(crate::test::test_runner))]
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![feature(concat_idents)]
+#![feature(let_chains)]
 
 #[macro_use]
 pub mod library;
@@ -35,7 +36,7 @@ use nrf51_hal::gpio::Level;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
-const HEAP_SIZE: usize = 2048; // in bytes
+const HEAP_SIZE: usize = 1024; // in bytes
 
 #[entry]
 fn main() -> ! {

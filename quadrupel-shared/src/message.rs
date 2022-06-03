@@ -24,6 +24,7 @@ pub enum MessageToComputer {
     StateInformation {
         state: Mode,
         height: i32,
+        tgt_height: i32,
         battery: u16,
         dt: u32,
         motors: [u16; 4],
@@ -34,6 +35,7 @@ pub enum MessageToComputer {
         gyro: [i16; 3],
         height_mode: bool,
         raw_mode: bool,
+        autoland: bool,
         pid_contributions: [i32; 5],
     },
     FlashPacket(FlashPacket),
@@ -90,6 +92,7 @@ pub enum MessageToDrone {
     ChangeState(Mode),
     SetHeightMode(u8),
     SetRawMode(u8),
+    ChangeHeight(i16),
     MotorValue {
         motor: Motor,
         value: MotorValue,
@@ -129,6 +132,7 @@ pub enum MessageToDrone {
     FlashStartRecording,
     FlashStopRecording,
     FlashRead,
+    AutoLand(bool),
 }
 
 impl MessageToDrone {

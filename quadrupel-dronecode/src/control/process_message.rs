@@ -98,5 +98,20 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
         MessageToDrone::SetRawMode(_) => {
             state.raw_mode_enable = !state.raw_mode_enable;
         }
+        MessageToDrone::ChangeHeight(v) => {
+            if state.height_mode_enable {
+                if let Some((_, height)) = &mut state.height_lock {
+                    let fiv = FI32::from(v);
+                    *height += fiv;
+                }
+            }
+        }
+        MessageToDrone::AutoLand(val) => {
+            if state.height_mode_enable && val {
+                state.autoland_enable = true;
+            } else if !val {
+                state.autoland_enable = false;
+            }
+        }
     }
 }

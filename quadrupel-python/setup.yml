@@ -1,25 +1,25 @@
 
-current: raw
+current: default
 setups:
     default:
-        height_P: 1
+        height_P: 5
         height_I: 0.1
         height_D: 0
-        height_CAP: 250
+        height_CAP: 999
         pitch_P: 150
         pitch_I: 1
         pitch_D: 400
         pitch_CAP: 60
-        yaw_P: 0
+        yaw_P: 400
         yaw_I: 0
         yaw_D: 500
         yaw_CAP: 0
         c1: 200
         c2: 10000
 
-        yaw_trim: -420000
-        pitch_trim: -110000
-        roll_trim: -10000
+        yaw_trim: 0
+        pitch_trim: 0
+        roll_trim: 0
         height_trim: 0
     zeroed:
         height_P: 0

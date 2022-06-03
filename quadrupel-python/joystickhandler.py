@@ -159,6 +159,7 @@ class JoystickHandler:
         # Setup class variables
         self.current_state_raw = False
         self.current_state_height = False
+        self.current_state_autoland = False
         self.screen = screen
         self.width = screen.get_width()
         self.height = screen.get_height()
@@ -186,6 +187,7 @@ class JoystickHandler:
         self.reported_iteration_freq = 0
         self.mode_changed = 0
         self.reported_ypr = [0] * 3
+        self.reported_height_tgt = 0
 
         setup_path = FILE_PATH / "setup.yml"
         print(setup_path)
@@ -204,7 +206,10 @@ class JoystickHandler:
 
                 for name, i in self.textboxes.items():
                     value = setup[name]
-                    i.setText(value)
+                    if value < 1:
+                        i.setText(f"{value:.04f}")
+                    else:
+                        i.setText(f"{value:.00f}")
 
                     try:
                         flt_v = float(value)
@@ -266,6 +271,7 @@ class JoystickHandler:
         b_height = half_height / 8
         b_v_start = half_height + b_height * 4
         b_v_distance = int(b_height * 1.5)
+        box_width = 120
 
         self.submit_button = Button(screen, width / 8, b_v_start + b_v_distance, 200, 50, fontSize=fontsize,
                                     text="submit", onClick=self.submit)
@@ -290,30 +296,30 @@ class JoystickHandler:
         self.label1.disable()
         self.label1.setText("height")
 
-        self.height_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance, 80, 80, fontSize=fontsize)
-        self.height_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance, 80, 80, fontSize=fontsize)
-        self.height_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance, 80, 80, fontSize=fontsize)
-        self.height_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance, 80, 80, fontSize=fontsize)
+        self.height_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance, box_width, 80, fontSize=fontsize)
+        self.height_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance, box_width, 80, fontSize=fontsize)
+        self.height_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance, box_width, 80, fontSize=fontsize)
+        self.height_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance, box_width, 80, fontSize=fontsize)
 
         self.label2 = TextBox(screen, b_start - b_width, b_v_start - b_v_distance * 2, 130, 70, fontSize=fontsize)
         self.label2.disable()
         self.label2.setText("pitch")
 
-        self.pitch_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance * 2, 80, 80, fontSize=fontsize)
-        self.pitch_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance * 2, 80, 80, fontSize=fontsize)
-        self.pitch_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance * 2, 80, 80,
+        self.pitch_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance * 2, box_width, 80, fontSize=fontsize)
+        self.pitch_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance * 2, box_width, 80, fontSize=fontsize)
+        self.pitch_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance * 2, box_width, 80,
                                   fontSize=fontsize)
-        self.pitch_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance * 2, 80, 80,
+        self.pitch_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance * 2, box_width, 80,
                                     fontSize=fontsize)
 
         self.label3 = TextBox(screen, b_start - b_width, b_v_start - b_v_distance * 3, 130, 70, fontSize=fontsize)
         self.label3.disable()
         self.label3.setText("yaw")
 
-        self.yaw_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance * 3, 80, 80, fontSize=fontsize)
-        self.yaw_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance * 3, 80, 80, fontSize=fontsize)
-        self.yaw_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance * 3, 80, 80, fontSize=fontsize)
-        self.yaw_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance * 3, 80, 80,
+        self.yaw_P_tb = TextBox(screen, b_start, b_v_start - b_v_distance * 3, box_width, 80, fontSize=fontsize)
+        self.yaw_I_tb = TextBox(screen, b_start + b_width, b_v_start - b_v_distance * 3, box_width, 80, fontSize=fontsize)
+        self.yaw_D_tb = TextBox(screen, b_start + b_width * 2, b_v_start - b_v_distance * 3, box_width, 80, fontSize=fontsize)
+        self.yaw_CAP_tb = TextBox(screen, b_start + b_width * 3, b_v_start - b_v_distance * 3, box_width, 80,
                                   fontSize=fontsize)
 
 
@@ -361,6 +367,12 @@ class JoystickHandler:
 
             return f
 
+        def send_message_nq(msg: str):
+            def f():
+                self.ser.send(msg)
+
+            return f
+
         buttons = []
         allowed = [i for i in allowed_state_transition[self.current_state] if
                    state_dictionary_reversed[i] != self.current_state]
@@ -383,14 +395,27 @@ class JoystickHandler:
             b.onClick = send_message(txt)
             i += 1
 
+
+        b = Button(screen, half_width + 450 * (i // 4),
+                   half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+                   int(fontsize * 1.3), fontSize=fontsize, text="height + 1")
+        b.onClick = send_message_nq(change_height_message(1))
+        i += 1
+
+        b = Button(screen, half_width + 450 * (i // 4),
+                   half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+                   int(fontsize * 1.3), fontSize=fontsize, text="height - 1")
+        b.onClick = send_message_nq(change_height_message(-1))
+        i += 1
+
         self.drone_visual = Drone(screen, (half_width, half_height), (half_width, 0))
 
         self.textboxes = {i.replace("_tb", ""): x for i in self.__dict__ if
                           isinstance(x := getattr(self, i), TextBox) and not x._disabled and "tb" in i}
         for k, v in self.textboxes.items():
             res = message_control_parameters['TunePID'][k] / PID_MULTIPLIER
-            if res < 0:
-                v.setText(f"{res:.02f}")
+            if res < 1:
+                v.setText(f"{res:.04f}")
             else:
                 v.setText(f"{res:.00f}")
 
@@ -451,14 +476,17 @@ class JoystickHandler:
                                 self.current_state = v["state"]
                                 self.current_state_height = v["height_mode"]
                                 self.current_state_raw = v["raw_mode"]
+                                self.current_state_autoland = v["autoland"]
                             else:
                                 self.mode_changed -= 1
 
+                            self.reported_height_tgt = v["tgt_height"] / PID_MULTIPLIER
                             self.reported_height = v["height"]
                             self.reported_battery_voltage = v["battery"] / 100
                             self.reported_iteration_freq = 1_000_000 / v["dt"]
                             self.reported_i_buildup = v["i_buildup"]
                             self.reported_ypr = [i / (1 << 16) for i in v["sensor_ypr"]]
+                            self.reported_motor_values = v["motors"]
                         else:
                             print("msg: ", msg)
 
@@ -636,6 +664,14 @@ class JoystickHandler:
                             print("Change to state", state_dictionary_reversed[int(chr(event.key))])
                         self.change_state(int(chr(event.key)), event)
 
+                    if event.key == ord('['):
+                        if print_debug: print("land")
+                        self.ser.send(auto_land())
+
+                    if event.key == ord(']'):
+                        if print_debug: print("land off")
+                        self.ser.send(auto_land(False))
+
             if self.current_state == "Panic":
                 self.screen.fill((220, 50, 50))
             else:
@@ -651,12 +687,13 @@ class JoystickHandler:
             self.drone_visual.draw()
 
             self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}V")
-            self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}")
-            self.stats[2].setText(f"height: {self.reported_height:.2f}")
+            self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}, Height: {self.reported_height:.2f}")
+            self.stats[2].setText(f"ypr: {self.reported_ypr[0]:.2f} {self.reported_ypr[1]:.2f} {self.reported_ypr[2]:.2f}")
 
             flag_h = "H" if self.current_state_height else ""
             flag_r = "R" if self.current_state_raw else ""
-            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}")
+            flag_a = "A" if self.current_state_autoland else ""
+            self.stats[3].setText(f"mode: {name_dictionary[self.current_state]} {flag_h}{flag_r}{flag_a}")
             self.stats[4].setText(
                 f"i: {self.reported_i_buildup[0]:.2f} {self.reported_i_buildup[1]:.2f} {self.reported_i_buildup[2]:.2f} {self.reported_i_buildup[3]:.2f}")
 
@@ -665,6 +702,11 @@ class JoystickHandler:
             self.stats[6].setText(
                 f"trim: {keyboard_offsets['roll']:.0f} {keyboard_offsets['pitch']:.0f} {keyboard_offsets['yaw']:.0f} {keyboard_offsets['lift']:.0f}"
             )
+            self.stats[7].setText(
+                f"motors: {self.reported_motor_values}"
+            )
+
+            self.stats[7].setText(f"tgt height: {self.reported_height_tgt:.2f}")
 
             if self.can_change_mode():
                 self.stats[5].colour = (50, 220, 50)
