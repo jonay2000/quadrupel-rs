@@ -724,7 +724,7 @@ class JoystickHandler:
         lift_margin = 5_000
 
         if self.joystick is None:
-            return True
+            return False
 
         return (-ypr_margin <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= ypr_margin
                 and -ypr_margin <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= ypr_margin
