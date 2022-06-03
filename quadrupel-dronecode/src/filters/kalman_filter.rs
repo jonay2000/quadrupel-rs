@@ -23,23 +23,6 @@ impl KalFilter {
         }
     }
 
-    pub fn round_dist(&mut self, state: FI32, goal: FI32) -> FI32 {
-        if !self.use_mod {
-            return goal - state;
-        }
-        let neutral = (goal - state).abs();
-        let left = (goal - state + 2 * FI32::PI).abs();
-        let right = (goal - state - 2 * FI32::PI).abs();
-
-        return if neutral < left && neutral < right {
-            goal - state
-        } else if left < right {
-            goal - state + 2 * FI32::PI
-        } else {
-            goal - state - 2 * FI32::PI
-        };
-    }
-
     pub fn filter(&mut self, sp: FI32, sphi: FI32, dt: FI32) -> (FI32, FI32) {
         let rate = sp - self.bias;
         self.angle += dt*rate;
@@ -54,17 +37,17 @@ impl KalFilter {
 
         let y = sphi - self.angle;
 
-        self.angle += k[0]*y;
-        self.bias += k[1]*y;
+        self.angle += k.0*y;
+        self.bias += k.1*y;
 
         let p00 = self.p[0][0];
         let p01 = self.p[0][1];
 
-        self.p[0][0] -= k[0] * p00;
-        self.p[0][1] -= k[0] * p01;
-        self.p[1][0] -= k[1] * p00;
-        self.p[1][1] -= k[1] * p01;
+        self.p[0][0] -= k.0 * p00;
+        self.p[0][1] -= k.0 * p01;
+        self.p[1][0] -= k.1 * p00;
+        self.p[1][1] -= k.1 * p01;
 
-        return rate, self.angle
+        return (rate, self.angle)
     }
 }

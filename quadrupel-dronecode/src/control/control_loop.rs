@@ -129,7 +129,7 @@ pub fn start_loop() -> ! {
             adc_filtered.saturating_sub(10)
         };
 
-        if adc_filtered > adc_filtered && adc < 1000
+        if adc_filtered > 650 && adc_filtered < 1000
         {
             log::error!("Panic: Battery low {adc_filtered} 10^-2 V");
             state.mode = Mode::Panic;
@@ -220,7 +220,7 @@ pub fn start_loop() -> ! {
 
         //Send state information
         time_since_last_print += dt;
-        if time_since_last_print > 500000 {
+        if time_since_last_print > 100000 {
             time_since_last_print = 0;
 
             let msg = MessageToComputer::StateInformation {
