@@ -36,7 +36,7 @@ use nrf51_hal::gpio::Level;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
-const HEAP_SIZE: usize = 2048; // in bytes
+const HEAP_SIZE: usize = 4096; // in bytes
 
 #[entry]
 fn main() -> ! {
@@ -58,8 +58,8 @@ fn main() -> ! {
 }
 
 #[alloc_error_handler]
-fn alloc_error(_layout: Layout) -> ! {
-    panic!("Alloc error!");
+fn alloc_error(layout: Layout) -> ! {
+    panic!("Alloc error! {layout:?}");
 }
 
 #[inline(never)]

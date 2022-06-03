@@ -41,21 +41,13 @@ pub fn start_loop() -> ! {
     let mut adc_filtered = 1000;
     let mut dt_filtered = 1000;
 
-    let a_yi = FI32::from_num(54818.728);
-    let a_yi_1 = FI32::from_num(108973.229)/a_yi;
-    let a_yi_2 = FI32::from_num(-54158.500)/a_yi;
-    let a_xi = FI32::from_num(1)/a_yi;
-    let a_xi_1 = FI32::from_num(2)/a_yi;
-    let a_xi_2 = FI32::from_num(1)/a_yi;
-    let mut height_filter_raw = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
-
     let a_yi = FI32::from_num(1291.029);
     let a_yi_1 = FI32::from_num(2478.450)/a_yi;
     let a_yi_2 = FI32::from_num(-1191.421)/a_yi;
     let a_xi = FI32::from_num(1)/a_yi;
     let a_xi_1 = FI32::from_num(2)/a_yi;
     let a_xi_2 = FI32::from_num(1)/a_yi;
-    let mut height_filter_mpu = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
+    let mut height_filter = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
 
     loop {
         let cur_time = TIME.as_mut_ref().get_time_us();
@@ -105,12 +97,7 @@ pub fn start_loop() -> ! {
         let mut pres = pres as i32;
         pres -= 100000;
         let mut pres = FI32::from_bits(pres << 16);
-
-        if state.raw_mode_enable {
-            pres = height_filter_raw.filter(pres);
-        } else {
-            pres = height_filter_mpu.filter(pres);
-        }
+        pres = height_filter.filter(pres);
 
         let ypr = state.calibrate.fix_ypr(ypr);
         state.current_attitude.yaw = ypr.yaw;
@@ -142,7 +129,7 @@ pub fn start_loop() -> ! {
         }
 
         //Check max angle protection
-        if state.mode != Panic && state.mode != Safe && state.mode != Calibration && (ypr.pitch.abs() > FI32::from_num(0.8) || ypr.roll.abs() > FI32::from_num(0.8)) {
+        if state.mode != Panic && state.mode != Safe && state.mode != Calibration && (ypr.pitch.abs() > FI32::from_num(1.1) || ypr.roll.abs() > FI32::from_num(1.1)) {
             log::error!("Panic: Max angle protection activated.");
             state.mode = Mode::Panic;
         }
