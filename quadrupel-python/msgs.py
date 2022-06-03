@@ -33,8 +33,8 @@ def heartbeat() -> str:
     }}
     """
 
-def auto_land() -> str:
-    return "\"AutoLand\""
+def auto_land(val: bool = True) -> str:
+    return json.dumps({"AutoLand": val})
 
 def motor_message(motor: int, value: int) -> str:
     return f"""

@@ -16,14 +16,14 @@ impl ModeTrait for FullControl {
         }
         let lift_goal = lift_goal_raw * FI32::from_num(25);
 
-        fn raw_to_10_deg(inp: FI32) -> FI32 {
+        fn raw_to_10_deg<const DEGREES: usize>(inp: FI32) -> FI32 {
             // * 2pi * (10/360) * (1/8) in optimal order
-            inp * 2 * FI32::PI * FI32::from_num(10) / FI32::from_num(8) / FI32::from_num(360)
+            inp * 2 * FI32::PI * FI32::from_num(DEGREES) / FI32::from_num(8) / FI32::from_num(360)
         }
 
-        let yaw_goal = state.current_attitude.yaw + raw_to_10_deg(state.target_attitude.yaw);
-        let pitch_goal = raw_to_10_deg(state.target_attitude.pitch);
-        let roll_goal = -raw_to_10_deg(state.target_attitude.roll);
+        let yaw_goal = state.current_attitude.yaw + raw_to_10_deg::<20>(state.target_attitude.yaw);
+        let pitch_goal = raw_to_10_deg::<10>(state.target_attitude.pitch);
+        let roll_goal = -raw_to_10_deg::<10>(state.target_attitude.roll);
 
         // Height mode logic
         if state.height_mode_enable && state.height_lock.is_none() {
@@ -40,12 +40,15 @@ impl ModeTrait for FullControl {
             log::warn!("Deactivated height mode: Throttle changed.");
         }
 
-        //Autoland logic
-        if state.autoland_enable && state.height_mode_enable {
-            let (_, height_locked) = &mut state.height_lock.unwrap();
-            *height_locked += dt >> 6;
 
-            if state.angle_mode.height_pid.buildup == -state.angle_mode.height_pid.cap {
+        //Autoland logic
+        if state.autoland_enable {
+            if let Some((_, height)) = &mut state.height_lock {
+                let fiv = dt >> 3;
+                *height += fiv;
+            }
+
+            if (state.angle_mode.height_pid.buildup - state.angle_mode.height_pid.cap).abs() < FI32::from_num(10) {
                 log::warn!("Deactivated height mode: Landed.");
                 state.autoland_enable = false;
                 state.height_mode_enable = false;
