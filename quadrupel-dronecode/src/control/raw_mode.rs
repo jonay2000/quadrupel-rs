@@ -47,8 +47,8 @@ impl RawMode {
                 a_xi_2,
             ),
             roll_filter: ComplFilter::new(
-                FI32::from_num(35.2),
-                FI32::from_num(1994.5),
+                FI32::from_num(22.8),
+                FI32::from_num(12000),
                 false,
             ),
             pitch_bw_filter: ButterworthLowPass2nd::new(
@@ -60,8 +60,8 @@ impl RawMode {
                 a_xi_2,
             ),
             pitch_filter: ComplFilter::new(
-                FI32::from_num(35.2),
-                FI32::from_num(1994.5),
+                FI32::from_num(22.8),
+                FI32::from_num(12000),
                 false,
             ),
         }
