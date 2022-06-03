@@ -469,7 +469,7 @@ class JoystickHandler:
                         except Exception as e:
                             print(e)
                             continue
-                        print(msg)
+                        # print(msg)
 
                         if (v := msg.get("StateInformation")) is not None:
                             if self.mode_changed <= 0:
@@ -724,7 +724,7 @@ class JoystickHandler:
         lift_margin = 5_000
 
         if self.joystick is None:
-            return False
+            return True
 
         return (-ypr_margin <= ((-1 * self.joystick.get_axis(0)) * pow(2, 19)) <= ypr_margin
                 and -ypr_margin <= ((self.joystick.get_axis(1)) * pow(2, 19)) <= ypr_margin

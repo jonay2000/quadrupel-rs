@@ -1,7 +1,9 @@
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
-
+use quadrupel_shared::message::FlashPacket;
+use crate::control::flash_protocol::FlashProtocol;
 use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
+use crate::filters::compl_filter::ComplFilter;
 use crate::filters::kalman_filter::KalFilter;
 use crate::library::fixed_point::{atan2_approx, FI32, FI64, sqrt_approx};
 use crate::library::yaw_pitch_roll::YawPitchRoll;
@@ -26,9 +28,10 @@ impl RawMode {
         let a_xi_1 = FI32::from_num(2)/a_yi;
         let a_xi_2 = FI32::from_num(1)/a_yi;
 
-        let kal_q_angle = FI64::from_num(0.00321373);
-        let kal_q_bias = FI64::from_num(-0.000167);
-        let kal_r_measure = FI64::from_num( 0.00483083);
+        //3.32858877e-05 5.51620221e-03 6.48176954e-05
+        let kal_q_angle = FI64::from_num(0.0000332858877);
+        let kal_q_bias = FI64::from_num(0.00551620221);
+        let kal_r_measure = FI64::from_num( 0.0000648176954);
 
         RawMode {
             yaw: FI64::from_num(0),

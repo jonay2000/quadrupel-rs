@@ -130,7 +130,7 @@ pub fn start_loop() -> ! {
             adc_filtered.saturating_sub(10)
         };
 
-        if adc_filtered > 650 && adc_filtered < 1000
+        if state.mode != Safe && adc_filtered > 650 && adc_filtered < 1000
         {
             log::error!("Panic: Battery low {adc_filtered} 10^-2 V");
             state.mode = Mode::Panic;
