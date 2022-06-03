@@ -1,9 +1,7 @@
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
-use quadrupel_shared::message::FlashPacket;
-use crate::control::flash_protocol::FlashProtocol;
+
 use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
-use crate::filters::compl_filter::ComplFilter;
 use crate::filters::kalman_filter::KalFilter;
 use crate::library::fixed_point::{atan2_approx, FI32, FI64, sqrt_approx};
 use crate::library::yaw_pitch_roll::YawPitchRoll;
@@ -28,9 +26,9 @@ impl RawMode {
         let a_xi_1 = FI32::from_num(2)/a_yi;
         let a_xi_2 = FI32::from_num(1)/a_yi;
 
-        let kal_q_angle = FI32::from_num(0.00321373);
-        let kal_q_bias = FI32::from_num(-0.000167);
-        let kal_r_measure = FI32::from_num( 0.00483083);
+        let kal_q_angle = FI64::from_num(0.00321373);
+        let kal_q_bias = FI64::from_num(-0.000167);
+        let kal_r_measure = FI64::from_num( 0.00483083);
 
         RawMode {
             yaw: FI64::from_num(0),
@@ -81,7 +79,7 @@ impl RawMode {
         }
     }
 
-    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32, record: bool, fp: &mut FlashProtocol) -> YawPitchRoll {
+    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32) -> (YawPitchRoll, FI32, FI32) {
         // Accel is in range [-2G, 2G]
         // Gyro is in range [-2000 deg, 2000 deg]
 
@@ -95,11 +93,11 @@ impl RawMode {
         let pitch = atan2_approx(accel_x, accel_z);
         let roll = atan2_approx(accel_y, sqrt_approx(accel_x*accel_x + accel_z * accel_z));
 
-        let (gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
+        let rp1 = pitch;
+        let rp2 = gyro_pitch;
+
+        let (_gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
         let (_gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
-        if record {
-            fp.write(FlashPacket::Data(gyro_pitch.to_bits(), pitch.to_bits()));
-        }
 
         let roll = self.roll_bw_filter.filter(roll);
         let pitch = self.pitch_bw_filter.filter(pitch);
@@ -137,10 +135,10 @@ impl RawMode {
         let yaw = FI32::from_bits((self.yaw.to_bits() >> 32) as i32);
         let yaw: FI32 = self.yaw_filter.filter(yaw);
 
-        YawPitchRoll {
+        (YawPitchRoll {
             yaw,
             pitch,
             roll
-        }
+        }, rp1, rp2)
     }
 }
