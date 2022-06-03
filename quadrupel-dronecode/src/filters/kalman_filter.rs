@@ -1,29 +1,34 @@
-use crate::library::fixed_point::FI32;
+use crate::library::fixed_point::{FI32, FI64};
 
 pub struct KalFilter {
-    r_measure : FI32,
-    q_bias: FI32,
-    q_angle : FI32,
+    r_measure : FI64,
+    q_bias: FI64,
+    q_angle : FI64,
 
-    angle : FI32,
-    bias : FI32,
+    angle : FI64,
+    bias : FI64,
 
-    p : [[FI32; 2]; 2],
+    p : [[FI64; 2]; 2],
 }
 
 impl KalFilter {
-    pub fn new(q_angle:FI32,q_bias:FI32,r_measure:FI32) -> Self {
+    pub fn new(q_angle:FI64,q_bias:FI64,r_measure:FI64) -> Self {
         KalFilter {
             r_measure,
             q_bias,
             q_angle,
-            angle: FI32::ZERO,
-            bias: FI32::ZERO,
-            p: [[FI32::ZERO;2];2],
+            angle: FI64::ZERO,
+            bias: FI64::ZERO,
+            p: [[FI64::ZERO;2];2],
         }
     }
 
     pub fn filter(&mut self, sp: FI32, sphi: FI32, dt: FI32) -> (FI32, FI32) {
+        let sp = FI64::from_num(sp);
+        let sphi = FI64::from_num(sphi);
+        let dt = FI64::from_num(dt);
+
+
         let rate = sp - self.bias;
         self.angle += dt*rate;
 
@@ -48,6 +53,6 @@ impl KalFilter {
         self.p[1][0] -= k.1 * p00;
         self.p[1][1] -= k.1 * p01;
 
-        return (rate, self.angle)
+        return (FI32::from_num(rate), FI32::from_num(self.angle))
     }
 }

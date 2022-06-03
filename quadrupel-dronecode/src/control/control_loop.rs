@@ -237,7 +237,7 @@ pub fn start_loop() -> ! {
                 battery: adc_filtered,
                 dt: dt_filtered,
                 motors,
-                sensor_ypr: [ypr.yaw.to_bits(), ypr.pitch.to_bits(), ypr.roll.to_bits()],
+                sensor_ypr: [ypr2.yaw.to_bits(), ypr2.pitch.to_bits(), ypr2.roll.to_bits()],
                 input_typr: [
                     state.target_attitude.lift.to_bits(),
                     state.target_attitude.yaw.to_bits(),
