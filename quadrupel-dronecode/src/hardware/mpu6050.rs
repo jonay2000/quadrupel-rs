@@ -4,6 +4,7 @@ use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
 use mpu6050_dmp::sensor::Mpu6050;
 use nrf51_hal::Twi;
+use mpu6050_dmp::config::DigitalLowPassFilter;
 use crate::TIME;
 
 // THIS NUMBER HAS A LARGE IMPACT ON PERFORMANCE
@@ -21,6 +22,9 @@ use crate::TIME;
 // 4 = 10k  us
 // ... increasing in increments of 2500 us
 
+const SAMPLE_RATE_DIVIDER_MPU: u8 = 0;
+const SAMPLE_RATE_DIVIDER_RAW: u8 = 0;
+
 pub struct QMpu6050<T: nrf51_hal::twi::Instance> {
     mpu: Mpu6050<Twi<T>>,
     mpu_enabled: bool,
@@ -30,8 +34,9 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
         let mut mpu = Mpu6050::new(i2c).unwrap();
 
         mpu.initialize_dmp(i2c, TIME.as_mut_ref()).unwrap();
-        mpu.set_sample_rate_divider(i2c, 2)
+        mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER_MPU)
             .unwrap();
+        mpu.set_digital_lowpass_filter(i2c, DigitalLowPassFilter::Filter1).unwrap(); //TODO consider different settings
         QMpu6050 { mpu, mpu_enabled: true }
     }
 
@@ -40,14 +45,16 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
     }
 
     pub fn disable_mpu(&mut self, i2c: &mut Twi<T>) {
-        self.mpu.set_sample_rate_divider(i2c, 1).unwrap();
+        self.mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER_RAW).unwrap();
         self.mpu.disable_dmp(i2c).unwrap();
+        self.mpu.disable_fifo(i2c).unwrap();
         self.mpu_enabled = false
     }
 
     pub fn enable_mpu(&mut self, i2c: &mut Twi<T>) {
-        self.mpu.set_sample_rate_divider(i2c, 2).unwrap();
+        self.mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER_MPU).unwrap();
         self.mpu.enable_dmp(i2c).unwrap();
+        self.mpu.enable_fifo(i2c).unwrap();
         self.mpu_enabled = true;
     }
 
