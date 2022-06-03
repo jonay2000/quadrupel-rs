@@ -226,6 +226,11 @@ pub fn start_loop() -> ! {
             let msg = MessageToComputer::StateInformation {
                 state: state.mode,
                 height: pres.to_bits() >> 16,
+                tgt_height: if let Some((_, i)) = state.height_lock {
+                    i.to_bits()
+                } else {
+                    0
+                },
                 battery: adc_filtered,
                 dt: dt_filtered,
                 motors,
