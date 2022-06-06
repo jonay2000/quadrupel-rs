@@ -1,4 +1,4 @@
-use crate::hardware::{HWCell, MOTORS};
+use crate::hardware::MOTORS;
 use crate::Level;
 use cortex_m::peripheral::NVIC;
 use embedded_hal::digital::v2::OutputPin;

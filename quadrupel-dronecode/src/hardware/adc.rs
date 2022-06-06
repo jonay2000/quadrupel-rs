@@ -1,5 +1,4 @@
 use crate::hardware;
-use crate::hardware::HWCell;
 use cortex_m::peripheral::NVIC;
 use nrf51_pac::interrupt;
 use nrf51_pac::Interrupt;
