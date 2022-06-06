@@ -4,7 +4,7 @@ use quadrupel_shared::state::Mode;
 use quadrupel_shared::MotorValue;
 
 static MINIMAL_HOVERING_MOTOR_VALUE: MotorValue = 400;
-static PANIC_MOTOR_REDUCTION_SPEED: u16 = 5;
+static PANIC_MOTOR_REDUCTION_SPEED: u16 = 1;
 
 pub struct PanicMode;
 

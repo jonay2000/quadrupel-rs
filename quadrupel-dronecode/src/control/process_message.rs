@@ -106,5 +106,12 @@ pub fn process_message(message: MessageToDrone, state: &mut FlightState) {
                 }
             }
         }
+        MessageToDrone::AutoLand(val) => {
+            if state.height_mode_enable && val {
+                state.autoland_enable = true;
+            } else if !val {
+                state.autoland_enable = false;
+            }
+        }
     }
 }

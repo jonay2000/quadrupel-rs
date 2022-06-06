@@ -41,21 +41,13 @@ pub fn start_loop() -> ! {
     let mut adc_filtered = 1000;
     let mut dt_filtered = 1000;
 
-    let a_yi = FI32::from_num(54818.728);
-    let a_yi_1 = FI32::from_num(108973.229)/a_yi;
-    let a_yi_2 = FI32::from_num(-54158.500)/a_yi;
-    let a_xi = FI32::from_num(1)/a_yi;
-    let a_xi_1 = FI32::from_num(2)/a_yi;
-    let a_xi_2 = FI32::from_num(1)/a_yi;
-    let mut height_filter_raw = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
-
     let a_yi = FI32::from_num(1291.029);
     let a_yi_1 = FI32::from_num(2478.450)/a_yi;
     let a_yi_2 = FI32::from_num(-1191.421)/a_yi;
     let a_xi = FI32::from_num(1)/a_yi;
     let a_xi_1 = FI32::from_num(2)/a_yi;
     let a_xi_2 = FI32::from_num(1)/a_yi;
-    let mut height_filter_mpu = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
+    let mut height_filter = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
 
     loop {
         let cur_time = TIME.as_mut_ref().get_time_us();
@@ -96,7 +88,8 @@ pub fn start_loop() -> ! {
         //YPR
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
         let ypr = if state.raw_mode_enable {
-            state.raw_mode.update(accel, gyro, dt, state.flash_record, &mut flash_protocol)
+            let (ypr, _, _) = state.raw_mode.update(accel, gyro, dt);
+            ypr
         } else {
             MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref())
         };
@@ -104,12 +97,7 @@ pub fn start_loop() -> ! {
         let mut pres = pres as i32;
         pres -= 100000;
         let mut pres = FI32::from_bits(pres << 16);
-
-        if state.raw_mode_enable {
-            pres = height_filter_raw.filter(pres);
-        } else {
-            pres = height_filter_mpu.filter(pres);
-        }
+        pres = height_filter.filter(pres);
 
         let ypr = state.calibrate.fix_ypr(ypr);
         state.current_attitude.yaw = ypr.yaw;
@@ -129,7 +117,7 @@ pub fn start_loop() -> ! {
             adc_filtered.saturating_sub(10)
         };
 
-        if adc_filtered > adc_filtered && adc < 1000
+        if state.mode != Safe && adc_filtered > 650 && adc_filtered < 1000
         {
             log::error!("Panic: Battery low {adc_filtered} 10^-2 V");
             state.mode = Mode::Panic;
@@ -141,7 +129,7 @@ pub fn start_loop() -> ! {
         }
 
         //Check max angle protection
-        if state.mode != Panic && state.mode != Safe && state.mode != Calibration && (ypr.pitch.abs() > FI32::from_num(0.8) || ypr.roll.abs() > FI32::from_num(0.8)) {
+        if state.mode != Panic && state.mode != Safe && state.mode != Calibration && (ypr.pitch.abs() > FI32::from_num(1.1) || ypr.roll.abs() > FI32::from_num(1.1)) {
             log::error!("Panic: Max angle protection activated.");
             state.mode = Mode::Panic;
         }
@@ -220,7 +208,7 @@ pub fn start_loop() -> ! {
 
         //Send state information
         time_since_last_print += dt;
-        if time_since_last_print > 500000 {
+        if time_since_last_print > 100000 {
             time_since_last_print = 0;
 
             let msg = MessageToComputer::StateInformation {
@@ -251,6 +239,7 @@ pub fn start_loop() -> ! {
                 gyro: [gyro.x, gyro.y, gyro.z],
                 height_mode: state.height_mode_enable,
                 raw_mode: state.raw_mode_enable,
+                autoland: state.autoland_enable,
                 pid_contributions: state.pid_contributions.map(|f| f.to_bits()),
             };
 

@@ -24,6 +24,7 @@ pub struct FlightState {
 
     pub height_mode_enable: bool,
     pub raw_mode_enable: bool,
+    pub autoland_enable: bool,
 
     pub height_lock: Option<(FI32, FI32)>,
     pub pid_contributions: [FI32; 5],
@@ -106,6 +107,7 @@ impl Default for FlightState {
             calibrate: Calibrate::new(),
             height_lock: None,
             height_mode_enable: false,
+            autoland_enable: false,
             raw_mode_enable: false,
             pid_contributions: [FI32::ZERO; 5],
             cs: [FI32::ZERO; 2]

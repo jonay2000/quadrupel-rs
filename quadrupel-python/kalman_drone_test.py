@@ -19,8 +19,44 @@ class Drone:
         self.rot = (self.rot+pi)%(2*pi)-pi
 
 class Kalman:
-    def __init__(self):
-        pass
+    def __init__(self, q_angle=0.01, q_bias=0.03, r_measure=0.03):
+        self.q_angle = q_angle
+        self.q_bias = q_bias
+        self.r_measure = r_measure
+
+        self.angle = 0
+        self.bias = 0
+
+        self.p = [[0,0],[0,0]]
+
+    def filter(self, sp, sphi, dt):
+        rate = sp - self.bias
+        self.angle += dt*rate
+
+        self.p[0][0] += dt * (dt*self.p[1][1]-self.p[0][1]-self.p[1][0]+self.q_angle)
+        self.p[0][1] -= dt * self.p[1][1]
+        self.p[1][0] -= dt * self.p[1][1]
+        self.p[1][1] += self.q_bias * dt
+
+        s = self.p[0][0] + self.r_measure
+        k = [self.p[0][0]/s,self.p[1][0]/s]
+        y = sphi - self.angle
+        self.angle += k[0]*y
+        self.bias += k[1]*y
+
+        p00 = self.p[0][0]
+        p01 = self.p[0][1]
+
+        self.p[0][0] -= k[0] * p00
+        self.p[0][1] -= k[0] * p01
+        self.p[1][0] -= k[1] * p00
+        self.p[1][1] -= k[1] * p01
+
+
+        return sp, self.angle
+
+
+
 
 def round_dist(state, goal):
 
@@ -57,7 +93,7 @@ class Compl:
 
 
 drone = Drone()
-kal = Compl()
+kal = Kalman()
 
 # basic_integrator = 0
 dt= 1/1260

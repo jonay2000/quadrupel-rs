@@ -2,9 +2,9 @@ use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
 use quadrupel_shared::message::FlashPacket;
 use crate::control::flash_protocol::FlashProtocol;
-use crate::control::flight_state::FlightState;
 use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
 use crate::filters::compl_filter::ComplFilter;
+use crate::filters::kalman_filter::KalFilter;
 use crate::library::fixed_point::{atan2_approx, FI32, FI64, sqrt_approx};
 use crate::library::yaw_pitch_roll::YawPitchRoll;
 
@@ -13,9 +13,9 @@ pub struct RawMode {
     yaw: FI64,
     yaw_filter: ButterworthLowPass2nd,
     roll_bw_filter: ButterworthLowPass2nd,
-    roll_filter: ComplFilter,
+    roll_filter: KalFilter,
     pitch_bw_filter: ButterworthLowPass2nd,
-    pitch_filter: ComplFilter,
+    pitch_filter: KalFilter,
 }
 
 impl RawMode {
@@ -27,6 +27,11 @@ impl RawMode {
         let a_xi = FI32::from_num(1)/a_yi;
         let a_xi_1 = FI32::from_num(2)/a_yi;
         let a_xi_2 = FI32::from_num(1)/a_yi;
+
+        //3.32858877e-05 5.51620221e-03 6.48176954e-05
+        let kal_q_angle = FI64::from_num(0.0000332858877);
+        let kal_q_bias = FI64::from_num(0.00551620221);
+        let kal_r_measure = FI64::from_num( 0.0000648176954);
 
         RawMode {
             yaw: FI64::from_num(0),
@@ -46,10 +51,15 @@ impl RawMode {
                 a_xi_1,
                 a_xi_2,
             ),
-            roll_filter: ComplFilter::new(
-                FI32::from_num(22.8),
-                FI32::from_num(12000),
-                false,
+            // roll_filter: ComplFilter::new(
+            //     FI32::from_num(22.8),
+            //     FI32::from_num(12000),
+            //     false,
+            // ),
+            roll_filter: KalFilter::new(
+                kal_q_angle,
+                kal_q_bias,
+                kal_r_measure,
             ),
             pitch_bw_filter: ButterworthLowPass2nd::new(
                 a_yi,
@@ -59,15 +69,20 @@ impl RawMode {
                 a_xi_1,
                 a_xi_2,
             ),
-            pitch_filter: ComplFilter::new(
-                FI32::from_num(22.8),
-                FI32::from_num(12000),
-                false,
+            // pitch_filter: ComplFilter::new(
+            //     FI32::from_num(22.8),
+            //     FI32::from_num(12000),
+            //     false,
+            // ),
+            pitch_filter: KalFilter::new(
+                kal_q_angle,
+                kal_q_bias,
+                kal_r_measure,
             ),
         }
     }
 
-    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32, record: bool, fp: &mut FlashProtocol) -> YawPitchRoll {
+    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32) -> (YawPitchRoll, FI32, FI32) {
         // Accel is in range [-2G, 2G]
         // Gyro is in range [-2000 deg, 2000 deg]
 
@@ -81,11 +96,11 @@ impl RawMode {
         let pitch = atan2_approx(accel_x, accel_z);
         let roll = atan2_approx(accel_y, sqrt_approx(accel_x*accel_x + accel_z * accel_z));
 
-        let (gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
-        let (gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
-        if record {
-            fp.write(FlashPacket::Data(gyro_pitch.to_bits(), pitch.to_bits()));
-        }
+        let rp1 = pitch;
+        let rp2 = gyro_pitch;
+
+        let (_gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
+        let (_gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
 
         let roll = self.roll_bw_filter.filter(roll);
         let pitch = self.pitch_bw_filter.filter(pitch);
@@ -123,10 +138,10 @@ impl RawMode {
         let yaw = FI32::from_bits((self.yaw.to_bits() >> 32) as i32);
         let yaw: FI32 = self.yaw_filter.filter(yaw);
 
-        YawPitchRoll {
+        (YawPitchRoll {
             yaw,
             pitch,
             roll
-        }
+        }, rp1, rp2)
     }
 }
