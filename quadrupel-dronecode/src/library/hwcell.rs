@@ -15,13 +15,15 @@ pub struct HWCell<IntSafety: InterruptSafety, T> {
 
 impl<IntSafety: InterruptSafety, T> HWCell<IntSafety, T> {
     /// Read the content of the cell.
-    /// # SAFETY: This should not be called from an interrupt
+    /// # SAFETY:
+    /// This should not be called from an interrupt
     pub fn read_main<U>(&self, f: impl FnOnce(&T) -> U) -> U where Self: HwCellMainUpdateImpl<T> {
         self.update_main(|t| f(t))
     }
 
     /// Read the content of the cell from the main thread, returns a copy.
-    /// # SAFETY: This should not be called from an interrupt
+    /// # SAFETY:
+    /// This should not be called from an interrupt
     pub fn get(&self) -> T
         where
             T: Copy,
@@ -41,6 +43,9 @@ impl<IntSafety: InterruptSafety, T> HWCell<IntSafety, T> {
         }
     }
 
+    /// Read the content of the cell from the main thread, returns a copy.
+    /// # SAFETY:
+    /// This should not be called from an interrupt
     pub fn update_main<U>(&self, f: impl FnOnce(&mut T) -> U) -> U where Self: HwCellMainUpdateImpl<T> {
         self.update_impl(f)
     }
@@ -54,7 +59,9 @@ impl<T> HwCellMainUpdateImpl<T> for HWCell<SafeWhenInterruptsOff, T> {
 }
 
 impl<T> HWCell<SafeWhenInterruptsOff, T> {
-    pub fn update_interrupt<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {
+    /// # Safety:
+    /// Should only be called from an interrupt
+    pub unsafe fn update_interrupt<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {
         unsafe { f(&mut *self.cell.get()) }
     }
 }
@@ -66,8 +73,10 @@ impl<T> HwCellMainUpdateImpl<T> for HWCell<SafeFromInterrupt, T> {
 }
 
 impl<T> HWCell<SafeFromInterrupt, T> {
-    pub fn update_interrupt<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {
-        unsafe { f(&mut *self.cell.get()) }
+    /// # Safety:
+    /// should only be called from an interrupt
+    pub unsafe fn update_interrupt<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {
+        f(&mut *self.cell.get())
     }
 
     pub fn as_ref(&self) -> &T {
@@ -81,7 +90,7 @@ impl<T> HWCell<SafeFromInterrupt, T> {
 
 impl<T> HwCellMainUpdateImpl<T> for HWCell<UnsafeFromInterrupt, T> {
     fn update_impl<U>(&self, f: impl FnOnce(&mut T) -> U) -> U {
-        unsafe { f(&mut *self.cell.get()) }
+        unsafe{f(&mut *self.cell.get())}
     }
 }
 
