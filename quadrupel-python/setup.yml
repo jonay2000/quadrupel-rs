@@ -3,8 +3,8 @@ current: default
 setups:
     default:
         height_P: 5
-        height_I: 0.1
-        height_D: 0
+        height_I: 0.005
+        height_D: 1
         height_CAP: 999
         pitch_P: 150
         pitch_I: 1

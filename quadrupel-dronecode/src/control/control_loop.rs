@@ -41,13 +41,32 @@ pub fn start_loop() -> ! {
     let mut adc_filtered = 1000;
     let mut dt_filtered = 1000;
 
-    let a_yi = FI32::from_num(1291.029);
-    let a_yi_1 = FI32::from_num(2478.450)/a_yi;
-    let a_yi_2 = FI32::from_num(-1191.421)/a_yi;
+    // 1.5 hz
+    // let a_yi = FI32::from_num(1291.029);
+    // let a_yi_1 = FI32::from_num(2478.450)/a_yi;
+    // let a_yi_2 = FI32::from_num(-1191.421)/a_yi;
+    // let a_xi = FI32::from_num(1)/a_yi;
+    // let a_xi_1 = FI32::from_num(2)/a_yi;
+    // let a_xi_2 = FI32::from_num(1)/a_yi;
+
+    // 3 hz
+    let a_yi = FI32::from_num(335.438);
+    let a_yi_1 = FI32::from_num(617.113)/a_yi;
+    let a_yi_2 = FI32::from_num(-285.675)/a_yi;
     let a_xi = FI32::from_num(1)/a_yi;
     let a_xi_1 = FI32::from_num(2)/a_yi;
     let a_xi_2 = FI32::from_num(1)/a_yi;
     let mut height_filter = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
+
+    // 5 hz DONT USE
+    // let a_yi = FI32::from_num(126.915);
+    // let a_yi_1 = FI32::from_num(220.028)/a_yi;
+    // let a_yi_2 = FI32::from_num(-987.114)/a_yi;
+    // let a_xi = FI32::from_num(1)/a_yi;
+    // let a_xi_1 = FI32::from_num(2)/a_yi;
+    // let a_xi_2 = FI32::from_num(1)/a_yi;
+    // let mut height_filter = ButterworthLowPass2nd::new(a_yi, a_yi_1, a_yi_2, a_xi, a_xi_1, a_xi_2);
+
 
     loop {
         let cur_time = TIME.as_mut_ref().get_time_us();

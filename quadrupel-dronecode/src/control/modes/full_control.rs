@@ -44,7 +44,7 @@ impl ModeTrait for FullControl {
         //Autoland logic
         if state.autoland_enable {
             if let Some((_, height)) = &mut state.height_lock {
-                let fiv = dt >> 4;
+                let fiv = dt >> 2;
                 *height += fiv;
             }
 
