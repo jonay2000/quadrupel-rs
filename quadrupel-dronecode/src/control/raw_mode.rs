@@ -26,9 +26,9 @@ impl RawMode {
         let a_xi_2 = FI32::from_num(1)/a_yi;
 
         //3.32858877e-05 5.51620221e-03 6.48176954e-05
-        let kal_q_angle = FI64::from_num(0.0000332858877);
-        let kal_q_bias = FI64::from_num(0.00551620221);
-        let kal_r_measure = FI64::from_num( 0.0000648176954);
+        let kal_q_angle = FI64::from_num(0.0000459274);
+        let kal_q_bias = FI64::from_num(-0.00000013829);
+        let kal_r_measure = FI64::from_num( 0.000015617);
 
         RawMode {
             yaw: FI64::from_num(0),
@@ -96,8 +96,8 @@ impl RawMode {
         let rp1 = pitch;
         let rp2 = gyro_pitch;
 
-        let (_gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, FI32::from_bits(dt as i32));
-        let (_gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, FI32::from_bits(dt as i32));
+        let (_gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, dt);
+        let (_gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, dt);
 
         let roll = self.roll_bw_filter.filter(roll);
         let pitch = self.pitch_bw_filter.filter(pitch);

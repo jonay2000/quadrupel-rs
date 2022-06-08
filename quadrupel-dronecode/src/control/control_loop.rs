@@ -188,7 +188,8 @@ pub fn start_loop() -> ! {
             // TODO autosend? state.flash_send = true;
         }
         if state.flash_record {
-            // flash_protocol.write(FlashPacket::Data(ypr.pitch.to_bits() as i16))
+            state.mode = Mode::Safe;
+            // flash_protocol.write(FlashPacket::Data(f1.to_bits(), f2.to_bits(), ypr2.pitch.to_bits()))
         }
         if state.flash_send {
             while UART.as_mut_ref().buffer_left_rx() >= 128

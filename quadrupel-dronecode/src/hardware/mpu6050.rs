@@ -36,7 +36,7 @@ impl<T: nrf51_hal::twi::Instance> QMpu6050<T> {
         mpu.initialize_dmp(i2c, TIME.as_mut_ref()).unwrap();
         mpu.set_sample_rate_divider(i2c, SAMPLE_RATE_DIVIDER_MPU)
             .unwrap();
-        mpu.set_digital_lowpass_filter(i2c, DigitalLowPassFilter::Filter1).unwrap(); //TODO consider different settings
+        mpu.set_digital_lowpass_filter(i2c, DigitalLowPassFilter::Filter5).unwrap(); //TODO consider different settings
         QMpu6050 { mpu, mpu_enabled: true }
     }
 

@@ -23,10 +23,10 @@ impl KalFilter {
         }
     }
 
-    pub fn filter(&mut self, sp: FI32, sphi: FI32, dt: FI32) -> (FI32, FI32) {
+    pub fn filter(&mut self, sp: FI32, sphi: FI32, dt: u32) -> (FI32, FI32) {
         let sp = FI64::from_num(sp);
         let sphi = FI64::from_num(sphi);
-        let dt = FI64::from_num(dt);
+        let dt = FI64::from_num(dt) / FI64::from_num(1000000);
 
 
         let rate = sp - self.bias;
