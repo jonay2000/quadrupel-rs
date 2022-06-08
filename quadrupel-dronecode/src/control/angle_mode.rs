@@ -55,10 +55,10 @@ impl AngleMode {
         };
 
         return ([
-            (lift - height_offset - yaw_offset + pitch_offset).max(FI32::from_num(0)),
-            (lift - height_offset + yaw_offset - roll_offset).max(FI32::from_num(0)),
-            (lift - height_offset - yaw_offset - pitch_offset).max(FI32::from_num(0)),
-            (lift - height_offset + yaw_offset + roll_offset).max(FI32::from_num(0)),
+            (lift - height_offset - yaw_offset + pitch_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
+            (lift - height_offset + yaw_offset - roll_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
+            (lift - height_offset - yaw_offset - pitch_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
+            (lift - height_offset + yaw_offset + roll_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
         ], [lift, height_offset, yaw_offset, pitch_offset, roll_offset]);
     }
 }
