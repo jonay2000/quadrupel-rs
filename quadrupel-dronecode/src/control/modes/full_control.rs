@@ -71,6 +71,7 @@ impl ModeTrait for FullControl {
             height_goal,
             state.height_mode_enable,
             state.mode == Mode::YawControl,
+            state.raw_mode_enable
         );
 
         state.motor_values = motors.map(|fi32| {

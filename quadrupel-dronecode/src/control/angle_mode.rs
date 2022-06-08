@@ -29,6 +29,7 @@ impl AngleMode {
         height_goal: FI32,
         enable_height: bool,
         yaw_control: bool,
+        raw_mode: bool,
     ) -> ([FI32; 4], [FI32; 5]) {
         let yaw_offset = if ENABLE_YAW && lift > 0 {
             self.yaw_pid.step(dt, yaw_state, None, yaw_goal)
@@ -54,11 +55,20 @@ impl AngleMode {
             FI32::from_num(0)
         };
 
-        return ([
-            (lift - height_offset - yaw_offset + pitch_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
-            (lift - height_offset + yaw_offset - roll_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
-            (lift - height_offset - yaw_offset - pitch_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
-            (lift - height_offset + yaw_offset + roll_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
-        ], [lift, height_offset, yaw_offset, pitch_offset, roll_offset]);
+        if raw_mode {
+            return ([
+                        (lift - height_offset - yaw_offset + pitch_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
+                        (lift - height_offset + yaw_offset - roll_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
+                        (lift - height_offset - yaw_offset - pitch_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
+                        (lift - height_offset + yaw_offset + roll_offset).max(FI32::from_num(0)).min(lift + FI32::from_num(100)),
+                    ], [lift, height_offset, yaw_offset, pitch_offset, roll_offset]);
+        } else {
+            return ([
+                        (lift - height_offset - yaw_offset + pitch_offset).max(FI32::from_num(0)),
+                        (lift - height_offset + yaw_offset - roll_offset).max(FI32::from_num(0)),
+                        (lift - height_offset - yaw_offset - pitch_offset).max(FI32::from_num(0)),
+                        (lift - height_offset + yaw_offset + roll_offset).max(FI32::from_num(0)),
+                    ], [lift, height_offset, yaw_offset, pitch_offset, roll_offset]);
+        }
     }
 }
