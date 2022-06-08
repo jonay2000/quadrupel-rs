@@ -469,7 +469,7 @@ class JoystickHandler:
                         except Exception as e:
                             print(e)
                             continue
-                        print(msg)
+                        # print(msg)
 
                         if (v := msg.get("StateInformation")) is not None:
                             if self.mode_changed <= 0:

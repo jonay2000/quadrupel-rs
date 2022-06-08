@@ -52,8 +52,8 @@ where
         self.disable_interrupts(i2c)?;
         self.set_fifo_enabled(i2c, Fifo::all_disabled())?;
         self.set_accel_full_scale(i2c, AccelFullScale::G2)?;
-        self.set_sample_rate_divider(i2c, 4)?;
-        self.set_digital_lowpass_filter(i2c, DigitalLowPassFilter::Filter1)?;
+        self.set_sample_rate_divider(i2c, 0)?;
+        self.set_digital_lowpass_filter(i2c, DigitalLowPassFilter::Filter0)?;
         self.load_firmware(i2c)?;
         self.boot_firmware(i2c)?;
         self.set_gyro_full_scale(i2c, GyroFullScale::Deg2000)?;
@@ -262,6 +262,12 @@ where
     pub fn enable_fifo(&mut self, i2c: &mut I2c) -> Result<(), Error<I2c>> {
         let mut value = self.read_register(i2c, Register::UserCtrl)?;
         value |= 1 << 6;
+        self.write_register(i2c, Register::UserCtrl, value)
+    }
+
+    pub fn disable_fifo(&mut self, i2c: &mut I2c) -> Result<(), Error<I2c>> {
+        let mut value = self.read_register(i2c, Register::UserCtrl)?;
+        value &= !(1 << 6);
         self.write_register(i2c, Register::UserCtrl, value)
     }
 
