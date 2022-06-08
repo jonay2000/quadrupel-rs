@@ -186,7 +186,7 @@ class JoystickHandler:
         self.reported_i_buildup = [0] * 4
         self.reported_iteration_freq = 0
         self.mode_changed = 0
-        self.reported_ypr = [0] * 3
+        self.reported_ypr = [0] * 5
         self.reported_height_tgt = 0
 
         setup_path = FILE_PATH / "setup.yml"
@@ -232,7 +232,7 @@ class JoystickHandler:
         width = screen.get_width()
         height = screen.get_height()
 
-        fontsize = int(30 + width / 150)
+        fontsize = int(20 + width / 150)
 
         half_width = width // 2
         half_height = height // 2
@@ -383,27 +383,27 @@ class JoystickHandler:
 
             txt = name_dictionary[state_dictionary_reversed[allowed[i]]]
 
-            b = Button(screen, half_width + 450 * (i // 4),
-                       half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+            b = Button(screen, half_width + 450 * (i // 6),
+                       half_height + (i % 6) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
                        int(fontsize * 1.3), fontSize=fontsize, text=txt)
             b.onClick = transition(allowed[i])
 
         for txt in ["FlashStopRecording", "FlashStartRecording", "FlashRead"]:
-            b = Button(screen, half_width + 450 * (i // 4),
-                       half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+            b = Button(screen, half_width + 450 * (i // 6),
+                       half_height + (i % 6) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
                        int(fontsize * 1.3), fontSize=fontsize, text=txt)
             b.onClick = send_message(txt)
             i += 1
 
 
-        b = Button(screen, half_width + 450 * (i // 4),
-                   half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+        b = Button(screen, half_width + 450 * (i // 6),
+                   half_height + (i % 6) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
                    int(fontsize * 1.3), fontSize=fontsize, text="height + 1")
         b.onClick = send_message_nq(change_height_message(1))
         i += 1
 
-        b = Button(screen, half_width + 450 * (i // 4),
-                   half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+        b = Button(screen, half_width + 450 * (i // 6),
+                   half_height + (i % 6) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
                    int(fontsize * 1.3), fontSize=fontsize, text="height - 1")
         b.onClick = send_message_nq(change_height_message(-1))
         i += 1
@@ -683,12 +683,12 @@ class JoystickHandler:
             self.output1.setText("M1: " + str(self.slider1.getValue()))
             self.output2.setText("M2: " + str(self.slider2.getValue()))
             self.output3.setText("M3: " + str(self.slider3.getValue()))
-            self.drone_visual.rot = self.reported_ypr
+            self.drone_visual.rot = self.reported_ypr[:3]
             self.drone_visual.draw()
 
             self.stats[0].setText(f"Voltage: {self.reported_battery_voltage:.2f}V")
             self.stats[1].setText(f"Freq: {self.reported_iteration_freq:.2f}, Height: {self.reported_height:.2f}")
-            self.stats[2].setText(f"ypr: {self.reported_ypr[0]:.2f} {self.reported_ypr[1]:.2f} {self.reported_ypr[2]:.2f}")
+            self.stats[2].setText(f"ypr: {self.reported_ypr[0]:.2f} {self.reported_ypr[1]:.2f} {self.reported_ypr[2]:.2f} {self.reported_ypr[3]:.2f} {self.reported_ypr[4]:.2f}")
 
             flag_h = "H" if self.current_state_height else ""
             flag_r = "R" if self.current_state_raw else ""

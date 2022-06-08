@@ -79,7 +79,7 @@ impl RawMode {
         }
     }
 
-    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32) -> (YawPitchRoll, FI32, FI32) {
+    pub fn update(&mut self, accel: Accel, gyro: Gyro, dt: u32) -> (YawPitchRoll, YawPitchRoll, FI32, FI32) {
         // Accel is in range [-2G, 2G]
         // Gyro is in range [-2000 deg, 2000 deg]
 
@@ -96,8 +96,8 @@ impl RawMode {
         let rp1 = pitch;
         let rp2 = gyro_pitch;
 
-        let (_gyro_roll, roll) = self.roll_filter.filter(gyro_roll, roll, dt);
-        let (_gyro_pitch, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, dt);
+        let (roll_deriv, roll) = self.roll_filter.filter(gyro_roll, roll, dt);
+        let (pitch_deriv, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, dt);
 
         let roll = self.roll_bw_filter.filter(roll);
         let pitch = self.pitch_bw_filter.filter(pitch);
@@ -139,6 +139,10 @@ impl RawMode {
             yaw,
             pitch,
             roll
+        }, YawPitchRoll {
+            yaw: FI32::ZERO,
+            pitch: pitch_deriv,
+            roll: roll_deriv,
         }, rp1, rp2)
     }
 }

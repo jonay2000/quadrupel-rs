@@ -37,7 +37,8 @@ pub struct CurrentAttitude {
     pub pitch: FI32,
     pub roll: FI32,
     pub height: FI32,
-    pub yaw_rate: FI32,
+    pub pitch_rate: Option<FI32>,
+    pub roll_rate: Option<FI32>,
 }
 
 pub struct TargetAttitude {
@@ -62,7 +63,8 @@ impl Default for FlightState {
                 pitch: FI32::from_num(0),
                 roll: FI32::from_num(0),
                 height: FI32::from_num(0),
-                yaw_rate: FI32::from_num(0),
+                pitch_rate: None,
+                roll_rate: None,
             },
             target_attitude: TargetAttitude {
                 yaw: FI32::from_num(0),
