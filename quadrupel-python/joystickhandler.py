@@ -232,7 +232,7 @@ class JoystickHandler:
         width = screen.get_width()
         height = screen.get_height()
 
-        fontsize = int(30 + width / 150)
+        fontsize = int(20 + width / 150)
 
         half_width = width // 2
         half_height = height // 2
@@ -383,27 +383,27 @@ class JoystickHandler:
 
             txt = name_dictionary[state_dictionary_reversed[allowed[i]]]
 
-            b = Button(screen, half_width + 450 * (i // 4),
-                       half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+            b = Button(screen, half_width + 450 * (i // 6),
+                       half_height + (i % 6) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
                        int(fontsize * 1.3), fontSize=fontsize, text=txt)
             b.onClick = transition(allowed[i])
 
         for txt in ["FlashStopRecording", "FlashStartRecording", "FlashRead"]:
-            b = Button(screen, half_width + 450 * (i // 4),
-                       half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+            b = Button(screen, half_width + 450 * (i // 6),
+                       half_height + (i % 6) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
                        int(fontsize * 1.3), fontSize=fontsize, text=txt)
             b.onClick = send_message(txt)
             i += 1
 
 
-        b = Button(screen, half_width + 450 * (i // 4),
-                   half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+        b = Button(screen, half_width + 450 * (i // 6),
+                   half_height + (i % 6) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
                    int(fontsize * 1.3), fontSize=fontsize, text="height + 1")
         b.onClick = send_message_nq(change_height_message(1))
         i += 1
 
-        b = Button(screen, half_width + 450 * (i // 4),
-                   half_height + (i % 4) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
+        b = Button(screen, half_width + 450 * (i // 6),
+                   half_height + (i % 6) * int(fontsize * 1.3) + 40 + 5 * int(fontsize * 1.3), 400,
                    int(fontsize * 1.3), fontSize=fontsize, text="height - 1")
         b.onClick = send_message_nq(change_height_message(-1))
         i += 1
