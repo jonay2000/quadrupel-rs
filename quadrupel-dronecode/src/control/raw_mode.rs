@@ -18,14 +18,32 @@ pub struct RawMode {
 
 impl RawMode {
     pub fn new() -> Self {
+        // 30 hz
         // TODO: Tune all filters (and possibly make them different across different filters)
-        let a_yi = FI32::from_num(127.874);
-        let a_yi_1 = FI32::from_num(221.826)/a_yi;
-        let a_yi_2 = FI32::from_num(-97.952)/a_yi;
+        let a_yi = FI32::from_num(35.894);
+        let a_yi_1 = FI32::from_num(52.961)/a_yi;
+        let a_yi_2 = FI32::from_num(-21.667)/a_yi;
         let a_xi = FI32::from_num(1)/a_yi;
         let a_xi_1 = FI32::from_num(2)/a_yi;
         let a_xi_2 = FI32::from_num(1)/a_yi;
 
+        // 15 hz
+        // let a_yi = FI32::from_num(127.874);
+        // let a_yi_1 = FI32::from_num(221.826)/a_yi;
+        // let a_yi_2 = FI32::from_num(-97.952)/a_yi;
+        // let a_xi = FI32::from_num(1)/a_yi;
+        // let a_xi_1 = FI32::from_num(2)/a_yi;
+        // let a_xi_2 = FI32::from_num(1)/a_yi;
+
+        // 10 hz
+        // let a_yi = FI32::from_num(276.115);
+        // let a_yi_1 = FI32::from_num(503.273)/a_yi;
+        // let a_yi_2 = FI32::from_num(-231.158)/a_yi;
+        // let a_xi = FI32::from_num(1)/a_yi;
+        // let a_xi_1 = FI32::from_num(2)/a_yi;
+        // let a_xi_2 = FI32::from_num(1)/a_yi;
+
+        // 3.32858877e-05 5.51620221e-03 6.48176954e-05
         let a_yi_a = FI32::from_num(4.841);
         let a_yi_1_a = FI32::from_num(1.789)/a_yi;
         let a_yi_2_a = FI32::from_num(-0.948)/a_yi;
