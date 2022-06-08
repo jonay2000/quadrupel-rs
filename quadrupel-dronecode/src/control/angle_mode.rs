@@ -19,7 +19,9 @@ impl AngleMode {
         lift: FI32,
         yaw_state: FI32,
         pitch_state: FI32,
+        pitch_state_deriv: Option<FI32>,
         roll_state: FI32,
+        roll_state_deriv: Option<FI32>,
         height_state: FI32,
         yaw_goal: FI32,
         pitch_goal: FI32,
@@ -29,25 +31,25 @@ impl AngleMode {
         yaw_control: bool,
     ) -> ([FI32; 4], [FI32; 5]) {
         let yaw_offset = if ENABLE_YAW && lift > 0 {
-            self.yaw_pid.step(dt, yaw_state, yaw_goal)
+            self.yaw_pid.step(dt, yaw_state, None, yaw_goal)
         } else {
             FI32::from_num(0)
         };
 
         let pitch_offset = if ENABLE_PITCH && !yaw_control && lift > 0 {
-            self.pitch_pid.step(dt, pitch_state, pitch_goal)
+            self.pitch_pid.step(dt, pitch_state, pitch_state_deriv, pitch_goal)
         } else {
             FI32::from_num(0)
         };
 
         let roll_offset = if ENABLE_ROLL && !yaw_control && lift > 0 {
-            self.roll_pid.step(dt, roll_state, roll_goal)
+            self.roll_pid.step(dt, roll_state, roll_state_deriv, roll_goal)
         } else {
             FI32::from_num(0)
         };
 
         let height_offset = if enable_height && lift > 0 {
-            self.height_pid.step(dt, height_state, height_goal)
+            self.height_pid.step(dt, height_state, None, height_goal)
         } else {
             FI32::from_num(0)
         };

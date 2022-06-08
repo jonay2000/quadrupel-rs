@@ -87,11 +87,11 @@ pub fn start_loop() -> ! {
 
         //YPR
         let (accel, gyro) = MPU.as_mut_ref().read_accel_gyro(I2C.as_mut_ref());
-        let ypr = if state.raw_mode_enable {
-            let (ypr, _, _) = state.raw_mode.update(accel, gyro, dt);
-            ypr
+        let (ypr, dyrp) = if state.raw_mode_enable {
+            let (ypr, dypr, _, _) = state.raw_mode.update(accel, gyro, dt);
+            (ypr, Some(dypr))
         } else {
-            MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref())
+            (MPU.as_mut_ref().block_read_mpu(I2C.as_mut_ref()), None)
         };
         let (pres, _temp) = BARO.as_mut_ref().read_both(I2C.as_mut_ref());
         let mut pres = pres as i32;
@@ -104,6 +104,8 @@ pub fn start_loop() -> ! {
         state.current_attitude.pitch = ypr.pitch;
         state.current_attitude.roll = ypr.roll;
         state.current_attitude.height = pres;
+        state.current_attitude.pitch_rate = dyrp.map(|dyrp| dyrp.pitch);
+        state.current_attitude.roll_rate = dyrp.map(|dyrp| dyrp.roll);
 
         //Read other hardware
         let motors = MOTORS.update_main(|motors| motors.get_motors());
@@ -223,7 +225,7 @@ pub fn start_loop() -> ! {
                 battery: adc_filtered,
                 dt: dt_filtered,
                 motors,
-                sensor_ypr: [ypr.yaw.to_bits(), ypr.pitch.to_bits(), ypr.roll.to_bits()],
+                sensor_ypr: [ypr.yaw.to_bits(), ypr.pitch.to_bits(), ypr.roll.to_bits(), dyrp.map(|dyrp| dyrp.pitch).unwrap_or(FI32::ZERO).to_bits(), dyrp.map(|dyrp| dyrp.roll).unwrap_or(FI32::ZERO).to_bits()],
                 input_typr: [
                     state.target_attitude.lift.to_bits(),
                     state.target_attitude.yaw.to_bits(),
