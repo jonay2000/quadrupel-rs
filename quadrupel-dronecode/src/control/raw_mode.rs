@@ -1,9 +1,6 @@
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
-use quadrupel_shared::message::FlashPacket;
-use crate::control::flash_protocol::FlashProtocol;
 use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
-use crate::filters::compl_filter::ComplFilter;
 use crate::filters::kalman_filter::KalFilter;
 use crate::library::fixed_point::{atan2_approx, FI32, FI64, sqrt_approx};
 use crate::library::yaw_pitch_roll::YawPitchRoll;
@@ -21,9 +18,9 @@ pub struct RawMode {
 impl RawMode {
     pub fn new() -> Self {
         // TODO: Tune all filters (and possibly make them different across different filters)
-        let a_yi = FI32::from_num(49.792);
-        let a_yi_1 = FI32::from_num(77.727)/a_yi;
-        let a_yi_2 = FI32::from_num(-31.934)/a_yi;
+        let a_yi = FI32::from_num(127.874);
+        let a_yi_1 = FI32::from_num(221.826)/a_yi;
+        let a_yi_2 = FI32::from_num(-97.952)/a_yi;
         let a_xi = FI32::from_num(1)/a_yi;
         let a_xi_1 = FI32::from_num(2)/a_yi;
         let a_xi_2 = FI32::from_num(1)/a_yi;
