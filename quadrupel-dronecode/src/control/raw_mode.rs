@@ -13,6 +13,7 @@ pub struct RawMode {
     roll_filter: KalFilter,
     pitch_bw_filter: ButterworthLowPass2nd,
     pitch_filter: KalFilter,
+    accel_bw_filter: [ButterworthLowPass2nd; 2],
 }
 
 impl RawMode {
@@ -24,6 +25,10 @@ impl RawMode {
         let a_xi = FI32::from_num(1)/a_yi;
         let a_xi_1 = FI32::from_num(2)/a_yi;
         let a_xi_2 = FI32::from_num(1)/a_yi;
+
+        let a_yi_a = FI32::from_num(4.841);
+        let a_yi_1_a = FI32::from_num(1.789)/a_yi;
+        let a_yi_2_a = FI32::from_num(-0.948)/a_yi;
 
         //3.32858877e-05 5.51620221e-03 6.48176954e-05
         let kal_q_angle = FI64::from_num(0.0000459274);
@@ -76,6 +81,22 @@ impl RawMode {
                 kal_q_bias,
                 kal_r_measure,
             ),
+            accel_bw_filter: [ButterworthLowPass2nd::new(
+                a_yi_a,
+                a_yi_1_a,
+                a_yi_2_a,
+                a_xi,
+                a_xi_1,
+                a_xi_2,
+            ),
+                ButterworthLowPass2nd::new(
+                    a_yi_a,
+                    a_yi_1_a,
+                    a_yi_2_a,
+                    a_xi,
+                    a_xi_1,
+                    a_xi_2,
+                )]
         }
     }
 
@@ -86,6 +107,7 @@ impl RawMode {
         let accel_x: FI32 = FI32::from_bits(accel.x as i32);
         let accel_y: FI32 = FI32::from_bits(accel.y as i32);
         let accel_z: FI32 = FI32::from_bits(accel.z as i32);
+
         let gyro_pitch: FI32 = FI32::from_bits(gyro.x as i32);
         let gyro_roll: FI32 = FI32::from_bits(gyro.y as i32);
         let gyro_yaw: FI32 = FI32::from_bits(gyro.z as i32);
@@ -96,9 +118,10 @@ impl RawMode {
         let rp1 = pitch;
         let rp2 = gyro_pitch;
 
+        let roll = self.accel_bw_filter[0].filter(roll);
+        let pitch = self.accel_bw_filter[1].filter(pitch);
         let (roll_deriv, roll) = self.roll_filter.filter(gyro_roll, roll, dt);
         let (pitch_deriv, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, dt);
-
         let roll = self.roll_bw_filter.filter(roll);
         let pitch = self.pitch_bw_filter.filter(pitch);
 

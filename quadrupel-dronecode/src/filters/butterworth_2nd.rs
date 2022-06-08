@@ -1,5 +1,6 @@
 use crate::library::fixed_point::FI32;
 
+#[derive(Clone)]
 pub struct ButterworthLowPass2nd {
     pub a_yi: FI32,
     pub a_yi_1: FI32,
