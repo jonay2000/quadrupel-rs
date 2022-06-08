@@ -142,8 +142,8 @@ impl RawMode {
         };
         let dypr = YawPitchRoll {
             yaw: FI32::ZERO,
-            pitch: gyro_pitch,
-            roll: gyro_roll,
+            pitch: pitch_deriv,
+            roll: roll_deriv,
         };
 
         (ypr, dypr, rp1, rp2)
