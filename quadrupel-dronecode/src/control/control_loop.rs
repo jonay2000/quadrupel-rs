@@ -101,7 +101,7 @@ pub fn start_loop() -> ! {
         let mut pres = FI32::from_bits(pres << 16);
         pres = height_filter.filter(pres);
 
-        let ypr = state.calibrate.fix_ypr(ypr2);
+        let ypr = state.calibrate.fix_ypr(ypr1);
         state.current_attitude.yaw = ypr.yaw;
         state.current_attitude.pitch = ypr.pitch;
         state.current_attitude.roll = ypr.roll;
@@ -190,6 +190,7 @@ pub fn start_loop() -> ! {
             // TODO autosend? state.flash_send = true;
         }
         if state.flash_record {
+            state.mode = Mode::Safe;
             flash_protocol.write(FlashPacket::Data(f1.to_bits(), f2.to_bits(), ypr2.pitch.to_bits()))
         }
         if state.flash_send {
