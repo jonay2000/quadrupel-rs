@@ -33,6 +33,8 @@ use cortex_m_semihosting::hprintln;
 use crate::control::control_loop;
 use crate::control::uart_protocol::UartProtocol;
 use nrf51_hal::gpio::Level;
+use crate::filters::kalman_filter::KalFilter;
+use crate::library::fixed_point::{FI32, FI64};
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -52,6 +54,10 @@ fn main() -> ! {
     let pn = nrf51_hal::pac::Peripherals::take().unwrap();
 
     init_hardware(pc, pn);
+
+    let mut kalman = KalFilter::new(FI64::from_num(0.001), FI64::from_num(0.002), FI64::from_num(0.003));
+    let (v1, v2) = kalman.filter(FI32::from_num(0.1), FI32::from_num(0.2), 1000);
+    log::info!("{} {}", v1, v2);
 
     log::info!("Control loop start.");
     control_loop::start_loop()

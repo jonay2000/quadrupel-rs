@@ -135,14 +135,17 @@ impl RawMode {
         let yaw = FI32::from_bits((self.yaw.to_bits() >> 32) as i32);
         let yaw: FI32 = self.yaw_filter.filter(yaw);
 
-        (YawPitchRoll {
+        let ypr = YawPitchRoll {
             yaw,
             pitch,
             roll
-        }, YawPitchRoll {
+        };
+        let dypr = YawPitchRoll {
             yaw: FI32::ZERO,
-            pitch: pitch_deriv,
-            roll: roll_deriv,
-        }, rp1, rp2)
+            pitch: gyro_pitch,
+            roll: gyro_roll,
+        };
+
+        (ypr, dypr, rp1, rp2)
     }
 }
