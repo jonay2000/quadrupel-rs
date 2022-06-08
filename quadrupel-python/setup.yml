@@ -1,5 +1,5 @@
 
-current: default
+current: raw
 setups:
     default:
         height_P: 5
@@ -51,9 +51,9 @@ setups:
         pitch_I: 0
         pitch_D: 50
         pitch_CAP: 0
-        yaw_P: 400
+        yaw_P: 50
         yaw_I: 0
-        yaw_D: 500
+        yaw_D: 50
         yaw_CAP: 0
         c1: 35.2
         c2: 1994.5
