@@ -53,6 +53,6 @@ impl KalFilter {
         self.p[1][0] -= k.1 * p00;
         self.p[1][1] -= k.1 * p01;
 
-        return (FI32::from_num(rate), FI32::from_num(self.angle))
+        return (FI32::from_num(rate * dt), FI32::from_num(self.angle))
     }
 }
