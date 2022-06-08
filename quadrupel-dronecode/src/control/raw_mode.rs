@@ -49,9 +49,9 @@ impl RawMode {
         let a_yi_2_a = FI32::from_num(-0.948)/a_yi;
 
         //3.32858877e-05 5.51620221e-03 6.48176954e-05
-        let kal_q_angle = FI64::from_num(0.0000459274);
-        let kal_q_bias = FI64::from_num(-0.00000013829);
-        let kal_r_measure = FI64::from_num( 0.000015617);
+        let kal_q_angle = FI64::from_num(0.001);
+        let kal_q_bias = FI64::from_num(0.003);
+        let kal_r_measure = FI64::from_num( 0.03);
 
         RawMode {
             yaw: FI64::from_num(0),
