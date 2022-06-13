@@ -1,6 +1,7 @@
 use mpu6050_dmp::accel::Accel;
 use mpu6050_dmp::gyro::Gyro;
 use crate::filters::butterworth_2nd::ButterworthLowPass2nd;
+use crate::filters::compl_filter::ComplFilter;
 use crate::filters::kalman_filter::KalFilter;
 use crate::library::fixed_point::{atan2_approx, FI32, FI64, sqrt_approx};
 use crate::library::yaw_pitch_roll::YawPitchRoll;
@@ -10,9 +11,11 @@ pub struct RawMode {
     yaw: FI64,
     yaw_filter: ButterworthLowPass2nd,
     roll_bw_filter: ButterworthLowPass2nd,
-    roll_filter: KalFilter,
+    // roll_filter: KalFilter,
+    roll_filter: ComplFilter,
     pitch_bw_filter: ButterworthLowPass2nd,
-    pitch_filter: KalFilter,
+    // pitch_filter: KalFilter,
+    pitch_filter: ComplFilter,
     accel_bw_filter: [ButterworthLowPass2nd; 2],
 }
 
@@ -71,16 +74,16 @@ impl RawMode {
                 a_xi_1,
                 a_xi_2,
             ),
-            // roll_filter: ComplFilter::new(
-            //     FI32::from_num(22.8),
-            //     FI32::from_num(12000),
-            //     false,
-            // ),
-            roll_filter: KalFilter::new(
-                kal_q_angle,
-                kal_q_bias,
-                kal_r_measure,
+            roll_filter: ComplFilter::new(
+                FI64::from_num(200),
+                FI64::from_num(12000000),
+                false,
             ),
+            // roll_filter: KalFilter::new(
+            //     kal_q_angle,
+            //     kal_q_bias,
+            //     kal_r_measure,
+            // ),
             pitch_bw_filter: ButterworthLowPass2nd::new(
                 a_yi,
                 a_yi_1,
@@ -89,16 +92,16 @@ impl RawMode {
                 a_xi_1,
                 a_xi_2,
             ),
-            // pitch_filter: ComplFilter::new(
-            //     FI32::from_num(22.8),
-            //     FI32::from_num(12000),
-            //     false,
-            // ),
-            pitch_filter: KalFilter::new(
-                kal_q_angle,
-                kal_q_bias,
-                kal_r_measure,
+            pitch_filter: ComplFilter::new(
+                FI64::from_num(200),
+                FI64::from_num(12000000),
+                false,
             ),
+            // pitch_filter: KalFilter::new(
+            //     kal_q_angle,
+            //     kal_q_bias,
+            //     kal_r_measure,
+            // ),
             accel_bw_filter: [ButterworthLowPass2nd::new(
                 a_yi_a,
                 a_yi_1_a,
@@ -136,12 +139,12 @@ impl RawMode {
         let rp1 = pitch;
         let rp2 = gyro_pitch;
 
-        let roll = self.accel_bw_filter[0].filter(roll);
-        let pitch = self.accel_bw_filter[1].filter(pitch);
+        // let roll = self.accel_bw_filter[0].filter(roll);
+        // let pitch = self.accel_bw_filter[1].filter(pitch);
         let (roll_deriv, roll) = self.roll_filter.filter(gyro_roll, roll, dt);
         let (pitch_deriv, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, dt);
-        let roll = self.roll_bw_filter.filter(roll);
-        let pitch = self.pitch_bw_filter.filter(pitch);
+        // let roll = self.roll_bw_filter.filter(roll);
+        // let pitch = self.pitch_bw_filter.filter(pitch);
 
         /*
         We're gonna do some trickery to convert the unit (2000 deg/second) to radians.

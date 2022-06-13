@@ -43,7 +43,8 @@ impl PID {
     pub fn step(&mut self, dt: FI32, state: FI32, state_deriv: Option<FI32>, goal: FI32) -> FI32 {
         let err = self.round_dist(state, goal);
 
-        let rot_spd = state_deriv.unwrap_or(self.round_dist(state, self.last_state));
+        let rot_spd = state_deriv
+            .unwrap_or_else(|| self.round_dist(state, self.last_state));
 
         let p_term = err * self.kp;
         let d_term = rot_spd * self.kd / dt;

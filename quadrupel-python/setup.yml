@@ -6,8 +6,8 @@ setups:
         height_I: 0.005
         height_D: 1
         height_CAP: 999
-        pitch_P: 150
-        pitch_I: 1
+        pitch_P: 250
+        pitch_I: 3
         pitch_D: 400
         pitch_CAP: 60
         yaw_P: 400
@@ -47,13 +47,13 @@ setups:
         height_I: 0
         height_D: 0
         height_CAP: 0
-        pitch_P: 80
+        pitch_P: 40
         pitch_I: 0
-        pitch_D: 50
+        pitch_D: 30
         pitch_CAP: 0
-        yaw_P: 50
+        yaw_P: 0
         yaw_I: 0
-        yaw_D: 50
+        yaw_D: 0
         yaw_CAP: 0
         c1: 35.2
         c2: 1994.5
