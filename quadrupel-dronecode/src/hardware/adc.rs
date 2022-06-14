@@ -1,5 +1,4 @@
 use crate::hardware;
-use crate::hardware::HWCell;
 use cortex_m::peripheral::NVIC;
 use nrf51_pac::interrupt;
 use nrf51_pac::Interrupt;
@@ -10,7 +9,7 @@ pub struct QAdc {
 }
 
 #[interrupt]
-fn ADC() {
+unsafe fn ADC() {
     hardware::ADC.update_interrupt(|adc| {
         adc.adc.events_end.reset();
         // Battery voltage = (result*1.2*3/255*2) = RESULT*0.007058824
