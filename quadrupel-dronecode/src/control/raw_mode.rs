@@ -11,11 +11,11 @@ pub struct RawMode {
     yaw: FI64,
     yaw_filter: ButterworthLowPass2nd,
     roll_bw_filter: ButterworthLowPass2nd,
-    // roll_filter: KalFilter,
-    roll_filter: ComplFilter,
+    roll_filter: KalFilter,
+    // roll_filter: ComplFilter,
     pitch_bw_filter: ButterworthLowPass2nd,
-    // pitch_filter: KalFilter,
-    pitch_filter: ComplFilter,
+    pitch_filter: KalFilter,
+    // pitch_filter: ComplFilter,
     accel_bw_filter: [ButterworthLowPass2nd; 2],
 }
 
@@ -23,9 +23,18 @@ impl RawMode {
     pub fn new() -> Self {
         // 30 hz
         // TODO: Tune all filters (and possibly make them different across different filters)
-        let a_yi = FI32::from_num(35.894);
-        let a_yi_1 = FI32::from_num(52.961)/a_yi;
-        let a_yi_2 = FI32::from_num(-21.667)/a_yi;
+        // let a_yi = FI32::from_num(35.894);
+        // let a_yi_1 = FI32::from_num(52.961)/a_yi;
+        // let a_yi_2 = FI32::from_num(-21.667)/a_yi;
+        // let a_xi = FI32::from_num(1)/a_yi;
+        // let a_xi_1 = FI32::from_num(2)/a_yi;
+        // let a_xi_2 = FI32::from_num(1)/a_yi;
+
+        // 165 hz
+        // TODO: Tune all filters (and possibly make them different across different filters)
+        let a_yi = FI32::from_num(2.186);
+        let a_yi_1 = FI32::from_num(-1.300)/a_yi;
+        let a_yi_2 = FI32::from_num(-0.513)/a_yi;
         let a_xi = FI32::from_num(1)/a_yi;
         let a_xi_1 = FI32::from_num(2)/a_yi;
         let a_xi_2 = FI32::from_num(1)/a_yi;
@@ -52,9 +61,9 @@ impl RawMode {
         let a_yi_2_a = FI32::from_num(-0.948)/a_yi;
 
         //3.32858877e-05 5.51620221e-03 6.48176954e-05
-        let kal_q_angle = FI64::from_num(0.001);
-        let kal_q_bias = FI64::from_num(0.003);
-        let kal_r_measure = FI64::from_num( 0.03);
+        let kal_q_angle = FI64::from_num(0.0460);
+        let kal_q_bias = FI64::from_num(-0.00144);
+        let kal_r_measure = FI64::from_num( 0.00239);
 
         RawMode {
             yaw: FI64::from_num(0),
@@ -74,16 +83,16 @@ impl RawMode {
                 a_xi_1,
                 a_xi_2,
             ),
-            roll_filter: ComplFilter::new(
-                FI64::from_num(200),
-                FI64::from_num(12000000),
-                false,
-            ),
-            // roll_filter: KalFilter::new(
-            //     kal_q_angle,
-            //     kal_q_bias,
-            //     kal_r_measure,
+            // roll_filter: ComplFilter::new(
+            //     FI64::from_num(200),
+            //     FI64::from_num(12000000),
+            //     false,
             // ),
+            roll_filter: KalFilter::new(
+                kal_q_angle,
+                kal_q_bias,
+                kal_r_measure,
+            ),
             pitch_bw_filter: ButterworthLowPass2nd::new(
                 a_yi,
                 a_yi_1,
@@ -92,16 +101,16 @@ impl RawMode {
                 a_xi_1,
                 a_xi_2,
             ),
-            pitch_filter: ComplFilter::new(
-                FI64::from_num(200),
-                FI64::from_num(12000000),
-                false,
-            ),
-            // pitch_filter: KalFilter::new(
-            //     kal_q_angle,
-            //     kal_q_bias,
-            //     kal_r_measure,
+            // pitch_filter: ComplFilter::new(
+            //     FI64::from_num(200),
+            //     FI64::from_num(12000000),
+            //     false,
             // ),
+            pitch_filter: KalFilter::new(
+                kal_q_angle,
+                kal_q_bias,
+                kal_r_measure,
+            ),
             accel_bw_filter: [ButterworthLowPass2nd::new(
                 a_yi_a,
                 a_yi_1_a,
@@ -145,6 +154,9 @@ impl RawMode {
         let (pitch_deriv, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, dt);
         // let roll = self.roll_bw_filter.filter(roll);
         // let pitch = self.pitch_bw_filter.filter(pitch);
+
+        let roll_deriv = self.roll_bw_filter.filter(roll_deriv);
+        let pitch_deriv = self.pitch_bw_filter.filter(pitch_deriv);
 
         /*
         We're gonna do some trickery to convert the unit (2000 deg/second) to radians.
