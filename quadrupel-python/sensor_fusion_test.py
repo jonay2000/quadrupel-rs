@@ -1,3 +1,4 @@
+import random
 from math import sin, pi
 from scipy import signal
 import matplotlib.pyplot as plt
@@ -47,7 +48,8 @@ class Kalman:
         s = self.p[0][0] +self.r_measure
         k = (self.p[0][0]/s,self.p[1][0]/s)
 
-        y = sphi - self.angle
+        # y = round_dist(self.angle,sphi)
+        y = sphi-self.angle
 
         self.angle += k[0]*y
         self.bias += k[1]*y
@@ -102,23 +104,58 @@ class Compl:
 
 
 drone = Drone()
-kal = Kalman()
+# kal = Kalman(0.001,0.002,0.003)
+#
+# for _ in range(1000):
+#     v = kal.filter(1,0.2,0.001)
+#     print(v)
+#     v = kal.filter(-1,-0.2,0.001)
+#     print(v)
+
+
+
+
+
+
+
+print("AAAA")
 
 # basic_integrator = 0
-dt= 1/856
+dt= 1/420
 t = 0
 
-with open("flash_data.txt") as f:
+with open("flash_data (5).txt") as f:
     data = f.readlines()
 
 # data = data[:5700]+data
 
 data = [eval(x) for x in data]
-data = [[x[0]/2**16,x[1]/2**16,x[2]/2**16] for x in data]
+# data = [[x[0]/2**16,x[1]/2**16+random.random(),x[2]/2**16,0] for x in data]
+data = [[x[0]/2**16,-x[1]/2**16,x[2]/2**16,0] for x in data]
+
+
+shift = 5
+for x in range(len(data)-shift):
+    data[x][3] = sum(data[x+i][2] for i in range(shift))/shift
+shift = 3
+for x in range(len(data)-shift):
+    data[x][3] = data[x+shift][3]
+
+# data = data[:-50]
+data = data[200:10000]
+# [ 0.0398288  -0.00017332  0.00222042]
+
+# angles = [x[0] for x in data]
+# myfilt = signal.butter(2, 100, 'low', fs=500, output='sos')
+# filtered = signal.sosfilt(myfilt, angles)
+# for x in range(len(angles)):
+#     data[x][0]=filtered[x]
+
 
 def funct(vars):
     # kal = Compl(vars[0],vars[1])
-    kal = Kalman(*vars)
+    kal = Kalman(*vars[:-1])
+    qq = vars[-1]
 
     global act_p,act_phi,measured_p,measured_phi,k_p,k_phi,dmp
 
@@ -134,12 +171,12 @@ def funct(vars):
 
     for d in data[:]:
         t+=dt
-        sphi,sp,dmp_item = d
+        sphi,sp,old_dmp,dmp_item = d
 
         measured_p.append(sp)
         measured_phi.append(sphi)
 
-        kp, kphi = kal.filter(sp, sphi, dt)
+        kp, kphi = kal.filter(sp*qq, sphi, dt)
 
         k_phi.append(kphi)
         dmp.append(dmp_item)
@@ -150,21 +187,23 @@ def funct(vars):
 # filtered = signal.sosfilt(sos, k_phi)
 
 #[ 0.00321373, -0.000167,    0.00483083]
-mini = fmin(funct,(0.001,0.003,0.03))
-# mini = [ 0.00321373, -0.000167,    0.00483083]
+# mini = fmin(funct,(10,50000))
+mini = fmin(funct,(0.01, 0.003, 0.03,16/360*2*3.1415))
+# mini = [ 3.32858877e-05, 5.51620221e-03, 6.48176954e-05]
+# mini = [ 0.01, 0.003, 0.03]
 print(mini)
 
 print("err",funct(mini))
 # funct((35.2,19945))
 
-sos = signal.butter(2, 50, 'low', fs=856, output='sos')
+sos = signal.butter(2, 15, 'low', fs=856, output='sos')
 filtered = signal.sosfilt(sos, k_phi)
 
 print(len(k_phi)/856)
-# plt.plot([x*100 for x in measured_p],label="mes_p")
+plt.plot([x*10 for x in measured_p],label="mes_p")
 # plt.plot(measured_phi,label="mes_phi")
 plt.plot(k_phi, label="k_phi", color='r')
-plt.plot(filtered, label="filtered", color='b')
+# plt.plot(filtered, label="filtered", color='b')
 plt.plot(dmp, label='dmp', color='g')
 plt.legend()
 plt.show()
