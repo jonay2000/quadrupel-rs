@@ -29,8 +29,9 @@ impl KalFilter {
         let dt = FI64::from_num(dt) / FI64::from_num(1000000);
 
 
-        let rate = sp - self.bias;
-        self.angle += dt*rate;
+        let rate = 0;
+        // let rate = sp - self.bias;
+        // self.angle += dt*rate;
 
         self.p[0][0] += dt * (dt*self.p[1][1]-self.p[0][1]- self.p[1][0] + self.q_angle);
         self.p[0][1] -= dt*self.p[1][1];

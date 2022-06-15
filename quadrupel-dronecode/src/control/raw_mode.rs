@@ -7,6 +7,8 @@ use crate::library::fixed_point::{atan2_approx, FI32, FI64, sqrt_approx};
 use crate::library::yaw_pitch_roll::YawPitchRoll;
 
 pub struct RawMode {
+    state: [FI32; 2],
+    last_state: [FI32; 2],
     //TODO add filters
     yaw: FI64,
     yaw_filter: ButterworthLowPass2nd,
@@ -30,22 +32,30 @@ impl RawMode {
         // let a_xi_1 = FI32::from_num(2)/a_yi;
         // let a_xi_2 = FI32::from_num(1)/a_yi;
 
-        // 165 hz
-        // TODO: Tune all filters (and possibly make them different across different filters)
-        let a_yi = FI32::from_num(2.186);
-        let a_yi_1 = FI32::from_num(-1.300)/a_yi;
-        let a_yi_2 = FI32::from_num(-0.513)/a_yi;
-        let a_xi = FI32::from_num(1)/a_yi;
-        let a_xi_1 = FI32::from_num(2)/a_yi;
-        let a_xi_2 = FI32::from_num(1)/a_yi;
-
-        // 15 hz
-        // let a_yi = FI32::from_num(127.874);
-        // let a_yi_1 = FI32::from_num(221.826)/a_yi;
-        // let a_yi_2 = FI32::from_num(-97.952)/a_yi;
+        // 25hz
+        // let a_yi = FI32::from_num(49.792);
+        // let a_yi_1 = FI32::from_num(77.727)/a_yi;
+        // let a_yi_2 = FI32::from_num(-32.934)/a_yi;
         // let a_xi = FI32::from_num(1)/a_yi;
         // let a_xi_1 = FI32::from_num(2)/a_yi;
         // let a_xi_2 = FI32::from_num(1)/a_yi;
+
+        // 165 hz
+        // TODO: Tune all filters (and possibly make them different across different filters)
+        // let a_yi = FI32::from_num(2.186);
+        // let a_yi_1 = FI32::from_num(-1.300)/a_yi;
+        // let a_yi_2 = FI32::from_num(-0.513)/a_yi;
+        // let a_xi = FI32::from_num(1)/a_yi;
+        // let a_xi_1 = FI32::from_num(2)/a_yi;
+        // let a_xi_2 = FI32::from_num(1)/a_yi;
+
+        // 15 hz
+        let a_yi = FI32::from_num(127.874);
+        let a_yi_1 = FI32::from_num(221.826)/a_yi;
+        let a_yi_2 = FI32::from_num(-97.952)/a_yi;
+        let a_xi = FI32::from_num(1)/a_yi;
+        let a_xi_1 = FI32::from_num(2)/a_yi;
+        let a_xi_2 = FI32::from_num(1)/a_yi;
 
         // 10 hz
         // let a_yi = FI32::from_num(276.115);
@@ -61,11 +71,13 @@ impl RawMode {
         let a_yi_2_a = FI32::from_num(-0.948)/a_yi;
 
         //3.32858877e-05 5.51620221e-03 6.48176954e-05
-        let kal_q_angle = FI64::from_num(0.0460);
-        let kal_q_bias = FI64::from_num(-0.00144);
-        let kal_r_measure = FI64::from_num( 0.00239);
+        let kal_q_angle = FI64::from_num(0.016);
+        let kal_q_bias = FI64::from_num(0.0037);
+        let kal_r_measure = FI64::from_num( 0.00067);
 
         RawMode {
+            state: [0; 2].map(|_| FI32::from_num(0)),
+            last_state: [0; 2].map(|_| FI32::from_num(0)),
             yaw: FI64::from_num(0),
             yaw_filter: ButterworthLowPass2nd::new(
                 a_yi,
@@ -150,13 +162,26 @@ impl RawMode {
 
         // let roll = self.accel_bw_filter[0].filter(roll);
         // let pitch = self.accel_bw_filter[1].filter(pitch);
-        let (roll_deriv, roll) = self.roll_filter.filter(gyro_roll, roll, dt);
-        let (pitch_deriv, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, dt);
-        // let roll = self.roll_bw_filter.filter(roll);
+        let (__roll_deriv, roll) = self.roll_filter.filter(gyro_roll, roll, dt);
+        let (__pitch_deriv, pitch) = self.pitch_filter.filter(gyro_pitch, pitch, dt);
+
+
+        let sdt = FI32::from_num(FI64::from_num(dt) / FI64::from_num(1000000));
+
+        self.state[0] = self.roll_bw_filter.filter(
+            (self.state[0] - self.last_state[0]) / sdt
+        );
+        self.state[1] = self.roll_bw_filter.filter(
+            (self.state[1] - self.last_state[1]) / sdt
+        );
+
+        self.last_state[0] = roll;
+        self.last_state[1] = pitch;
+
         // let pitch = self.pitch_bw_filter.filter(pitch);
 
-        let roll_deriv = self.roll_bw_filter.filter(roll_deriv);
-        let pitch_deriv = self.pitch_bw_filter.filter(pitch_deriv);
+        // let roll_deriv = self.roll_bw_filter.filter(roll_deriv);
+        // let pitch_deriv = self.pitch_bw_filter.filter(pitch_deriv);
 
         /*
         We're gonna do some trickery to convert the unit (2000 deg/second) to radians.
@@ -198,8 +223,8 @@ impl RawMode {
         };
         let dypr = YawPitchRoll {
             yaw: FI32::ZERO,
-            pitch: pitch_deriv,
-            roll: roll_deriv,
+            pitch: self.state[0],
+            roll: self.state[1],
         };
 
         (ypr, dypr, rp1, rp2)
